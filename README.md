@@ -62,8 +62,10 @@ Overige instellingen in code:
 - **Producten**: `src/content/products/*.md` (schema in `src/content.config.ts`). Prijzen, gratis voorwaarde, max. aantallen, specs, FAQ. `/products.json` wordt hieruit gegenereerd en door Make gebruikt om bedragen te berekenen, dus prijzen hoef je maar op één plek aan te passen.
   - Specs met de waarde `TODO` worden niet getoond op de site.
 - **Sectorpagina's** (`/voor/[sector]`): `src/content/sectors/*.md`. Nieuwe sector = nieuw bestand; pagina, sitemap, OG-afbeelding en `llms.txt` volgen automatisch.
-- **Productfoto's/mockups**: zet ze in **`src/assets/products/`** (niet in `public/`, want alleen daar worden ze automatisch naar AVIF/WebP met `srcset` omgezet) en noem de bestandsnaam in `afbeeldingen:` van het product, bv. `afbeeldingen: [kaartenset-hero.png]`. Zonder foto toont de site een SVG-illustratie.
-- **Logo**: `public/assets/brand/logo-icon.svg` en `public/favicon.svg` zijn nu een nagetekende placeholder.
+- **Productfoto's/mockups**: staan in **`src/assets/products/`** (niet in `public/`, want alleen daar worden ze automatisch naar AVIF/WebP met `srcset` omgezet). Koppel ze via `afbeeldingen:` (+ `afbeeldingAlts:` voor de alt-teksten) in het product; de eerste foto is de hoofdfoto, de rest verschijnt in de galerij. Foto's worden volledig getoond op een achtergrond in hun eigen randkleur.
+- **Maatwerk**: `aanpasbaar: true` in een product toont het blok "in je eigen huisstijl" (met `kaart-qr-maatwerk-voorbeeld.webp`). In de aanvraag kiest de klant "standaard" of "eigen ontwerp" (`ontwerp` in de payload).
+- **Logo**: officiële bronbestanden in `src/assets/brand/`. Het icoon is als SVG nagebouwd in `src/components/layout/Logo.astro` (kleur `--color-logo: #1818FF`); `public/favicon.svg`, `public/apple-touch-icon.png` en `public/assets/brand/logo-512.png` (voor Google/schema) zijn daaruit gemaakt.
+- **`src/assets/referentie/`**: beeld ter inspiratie (bv. van concurrenten); wordt niet op de site gebruikt.
 
 ## Structuur
 

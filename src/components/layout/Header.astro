@@ -1,12 +1,12 @@
 ---
 import { brand, mainNav } from '@/config/brand';
-import { url, asset } from '@/lib/url';
+import { url } from '@/lib/url';
+import Logo from './Logo.astro';
 ---
 <header class="sticky top-0 z-40 bg-white/85 backdrop-blur supports-[backdrop-filter]:bg-white/70">
   <div class="container-rp flex h-[72px] items-center justify-between gap-4">
     <a href={`${brand.mainSiteUrl}/`} class="flex items-center gap-2 font-medium text-ink" aria-label="Review Plus – naar de homepage">
-      <img src={asset(brand.logo)} alt="" width="22" height="22" />
-      <span class="text-[1.05rem]">Review Plus</span>
+      <Logo size={22} wordmark />
     </a>
 
     <nav aria-label="Hoofdmenu" class="hidden lg:block">

@@ -47,6 +47,11 @@ export interface LeadPayload {
   };
   producten: LeadLine[];
   totem_demo: boolean;
+  /** Standaard Review Plus-ontwerp of maatwerk in de huisstijl van de klant. */
+  ontwerp: {
+    type: 'standaard' | 'eigen';
+    wensen: string | null;
+  };
   heeft_betaalde_extras: boolean;
   /** Alleen indicatief; Make herberekent het bedrag uit /products.json. */
   bedrag_extras_indicatief: number;

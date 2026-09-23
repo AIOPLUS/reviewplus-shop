@@ -41,6 +41,12 @@ export const shopFaq = [
       "Ja. Extra kaarten en totems voeg je toe in dezelfde aanvraag. Je betaalt alleen voor de extra's, met iDEAL, Bancontact of creditcard.",
   },
   {
+    vraag: 'Kunnen de kaarten en totems in onze eigen huisstijl?',
+    antwoord:
+      'Ja. Kies bij je aanvraag voor "eigen ontwerp", dan maken we de NFC-kaarten en de totem met jouw logo, kleuren en tekst. We nemen contact met je op over het ontwerp en de mogelijkheden.',
+    // TODO: Jordan bepaalt of maatwerk binnen de gratis actie valt of extra kost, en vult dat hier aan.
+  },
+  {
     vraag: 'Hoe snel worden de kaarten verstuurd?',
     antwoord: 'We versturen je kaartenset zo snel mogelijk na je aanvraag, los van je demo.', // TODO: Jordan vult levertijd in
   },

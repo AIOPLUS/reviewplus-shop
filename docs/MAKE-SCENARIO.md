@@ -84,7 +84,8 @@ Payload-contract: zie [LEAD-PAYLOAD.md](LEAD-PAYLOAD.md). Secrets (Turnstile sec
 
 11. **Interne melding** naar Jordan: e-mail of WhatsApp (bv. via Twilio/WhatsApp Business-module) met bedrijf, plaats, producten, totem ja/nee, bron/campagne en de link naar de deal: `https://focus.teamleader.eu/deal_detail.php?id={{deal_id}}` (controleer de URL-vorm in jouw Teamleader).
 
-12. **Fulfilment**: Google Sheets → Add row in "Te verzenden" voor de **gratis kaartenset** (altijd direct, los van de demo). De totem wordt hier **niet** toegevoegd (dat doet scenario D). Betaalde extra's worden pas toegevoegd na betaling (scenario C).
+12. **Fulfilment**: Google Sheets → Add row in "Te verzenden" voor de **gratis kaartenset** (altijd direct, los van de demo). Voeg een kolom `ontwerp` toe (`standaard`/`eigen`).
+    - **Eigen ontwerp** (`ontwerp.type = "eigen"`): zet de rij op status *Ontwerp nodig* in plaats van *te verzenden*, maak een Teamleader-taak "Ontwerp maken voor {{bedrijf}}" met `ontwerp.wensen`, en stuur de klant een mail met het verzoek om het logo (SVG/PNG) te mailen. Pas na goedkeuring van het ontwerp gaat de status naar *te verzenden*. `TODO: Jordan bepaalt of maatwerk gratis is binnen de actie of een prijs krijgt (dan via Mollie of offerte).` De totem wordt hier **niet** toegevoegd (dat doet scenario D). Betaalde extra's worden pas toegevoegd na betaling (scenario C).
 
 13. **Nieuwsbrief**: als `toestemming.nieuwsbrief = true` → toevoegen aan de nieuwsbrieflijst.
 

@@ -157,6 +157,24 @@ const reviewCounts = ['0-10', '11-50', '51-100', '101-250', '250+', 'weet-niet']
               <span class="text-ink-soft">Na het versturen kies je een moment. Je kaarten gaan hoe dan ook al onderweg.</span></span>
           </label>
 
+          <fieldset class="grid gap-3" data-field="ontwerp">
+            <legend class="mb-1 text-sm font-medium">Ontwerp van je kaarten en totem</legend>
+            <div class="grid gap-2 md:grid-cols-2">
+              <label class="flex cursor-pointer gap-3 rounded-xl border border-line-strong p-4 has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50">
+                <input type="radio" name="ontwerp" value="standaard" checked class="mt-0.5 size-5 shrink-0 accent-brand-600" />
+                <span><strong class="font-medium">Standaard Review Plus-ontwerp</strong><br /><span class="text-sm text-ink-soft">Direct leverbaar.</span></span>
+              </label>
+              <label class="flex cursor-pointer gap-3 rounded-xl border border-line-strong p-4 has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50">
+                <input type="radio" name="ontwerp" value="eigen" class="mt-0.5 size-5 shrink-0 accent-brand-600" />
+                <span><strong class="font-medium">Eigen ontwerp in mijn huisstijl</strong><br /><span class="text-sm text-ink-soft">We nemen contact op over je logo, kleuren en de mogelijkheden.</span></span>
+              </label>
+            </div>
+            <div hidden data-ontwerp-wensen>
+              <Field id="ontwerp_wensen" label="Wensen voor het ontwerp" type="textarea" maxlength={500}
+                hint="Bijvoorbeeld kleuren, tekst of platform (Google, Tripadvisor). Je logo kun je later per mail sturen." />
+            </div>
+          </fieldset>
+
           <div class="grid gap-5 md:grid-cols-2">
             <Field id="reviewtool" label="Welke reviewtool gebruik je nu?" type="select" options={reviewTools} />
             <Field id="reviews" label="Hoeveel Google-reviews heb je ongeveer?" type="select" options={reviewCounts} />

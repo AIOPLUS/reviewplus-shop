@@ -36,6 +36,10 @@ const products = defineCollection({
     }),
     voordelen: z.array(z.string()),
     afbeeldingen: z.array(z.string()).default([]),
+    /** Beschrijving per afbeelding (alt-tekst), zelfde volgorde als afbeeldingen. */
+    afbeeldingAlts: z.array(z.string()).default([]),
+    /** Kan in eigen huisstijl (logo, kleuren, tekst) worden gemaakt. */
+    aanpasbaar: z.boolean().default(false),
     status: z.enum(['beschikbaar', 'binnenkort', 'uitverkocht']),
     volgorde: z.number().default(0),
     faq,

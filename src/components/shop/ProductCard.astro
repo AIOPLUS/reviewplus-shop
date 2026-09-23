@@ -15,8 +15,9 @@ const statusLabel = { beschikbaar: '', binnenkort: 'Binnenkort', uitverkocht: 'T
 ---
 <article class="card flex flex-col overflow-hidden">
   <a href={url(`/${p.slug}`)} class="relative block aspect-[4/3] overflow-hidden" tabindex="-1" aria-hidden="true">
-    <ProductVisual product={p} sizes="(min-width: 810px) 45vw, 100vw" />
+    <ProductVisual product={p} alt={p.afbeeldingAlts[0]} sizes="(min-width: 810px) 45vw, 100vw" />
     <span class="chip absolute left-4 top-4 !bg-white shadow-sm">{isTotem ? 'Gratis bij je demo' : 'Altijd gratis'}</span>
+    {p.aanpasbaar && <span class="chip absolute right-4 top-4 !bg-white shadow-sm">Ook in eigen huisstijl</span>}
   </a>
   <div class="flex flex-1 flex-col gap-4 p-6">
     <div class="grid gap-2">

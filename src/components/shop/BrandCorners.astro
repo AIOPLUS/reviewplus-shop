@@ -1,0 +1,19 @@
+---
+/** Merkmotief van de kaarten en totem: blauwe kwart-ellipsen met rasterlijnen in de onderhoeken. Puur decoratief. */
+interface Props {
+  class?: string;
+}
+const { class: cls = '' } = Astro.props;
+const lines = (flip: boolean) =>
+  [40, 90, 140].map((x) => `<path d="M${flip ? 240 - x : x} 70V240"/>`).join('') + [140, 195].map((y) => `<path d="M${flip ? 60 : 0} ${y}H${flip ? 240 : 180}"/>`).join('');
+---
+<div class={`pointer-events-none absolute inset-x-0 bottom-0 flex justify-between ${cls}`} aria-hidden="true">
+  <svg viewBox="0 0 240 240" class="h-28 w-28 md:h-44 md:w-44">
+    <path d="M0 240V40A240 200 0 0 1 240 240Z" fill="var(--color-logo)" />
+    <g stroke="#fff" stroke-opacity=".28" stroke-width="2" set:html={lines(false)} />
+  </svg>
+  <svg viewBox="0 0 240 240" class="h-28 w-28 md:h-44 md:w-44">
+    <path d="M240 240V40A240 200 0 0 0 0 240Z" fill="var(--color-logo)" />
+    <g stroke="#fff" stroke-opacity=".28" stroke-width="2" set:html={lines(true)} />
+  </svg>
+</div>

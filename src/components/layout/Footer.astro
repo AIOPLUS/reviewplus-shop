@@ -1,7 +1,8 @@
 ---
 import { brand, footerNav } from '@/config/brand';
 import { PIXELS } from '@/config/site';
-import { url, asset } from '@/lib/url';
+import { url } from '@/lib/url';
+import Logo from './Logo.astro';
 
 const hasPixels = Boolean(PIXELS.metaPixelId || PIXELS.gadsId);
 const socials = [
@@ -14,8 +15,8 @@ const year = new Date().getFullYear();
 <footer class="mt-24 border-t border-brand-200 bg-brand-50">
   <div class="container-rp grid gap-12 py-14 lg:grid-cols-[1.2fr_2fr]">
     <div class="grid content-start gap-5">
-      <a href={`${brand.mainSiteUrl}/`} class="flex items-center gap-2 font-medium">
-        <img src={asset(brand.logo)} alt="" width="22" height="22" /> Review Plus
+      <a href={`${brand.mainSiteUrl}/`} class="w-fit" aria-label="Review Plus – naar de homepage">
+        <Logo size={22} wordmark />
       </a>
       <form class="grid gap-2" data-newsletter novalidate>
         <label for="nb-email" class="text-sm font-medium">Abonneer op onze nieuwsbrief</label>

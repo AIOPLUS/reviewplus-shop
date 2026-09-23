@@ -10,7 +10,8 @@ export const brand = {
   demoBookingUrl:
     'https://cloud.teamleader.eu/review-plus/bookings/u/review1/t/demonstratie-met-review-plus-2/',
   email: 'support@reviewplus.io',
-  logo: '/assets/brand/logo-icon.svg',
+  /** Rasterlogo voor schema.org/Google (min. 112px). Icoon zelf: components/layout/Logo.astro */
+  logo: '/assets/brand/logo-512.png',
   // TODO: Jordan vult de echte profielen in (de huidige site linkt naar algemene placeholders).
   social: {
     linkedin: '',

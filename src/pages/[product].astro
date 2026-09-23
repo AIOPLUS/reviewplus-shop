@@ -5,6 +5,7 @@ import PriceTag from '@/components/shop/PriceTag.astro';
 import Faq from '@/components/shop/Faq.astro';
 import CtaBand from '@/components/shop/CtaBand.astro';
 import TotemPromo from '@/components/shop/TotemPromo.astro';
+import MaatwerkBlok from '@/components/shop/MaatwerkBlok.astro';
 import { getProducts, visibleSpecs, type Product } from '@/lib/catalog';
 import { breadcrumbSchema, faqSchema, productSchema } from '@/lib/schema';
 import { formatPrice } from '@/lib/format';
@@ -51,12 +52,31 @@ const title = `${p.naam}: ${isTotem ? 'gratis bij je demo' : 'gratis aanvragen'}
   </nav>
 
   <section class="container-rp grid gap-10 py-8 lg:grid-cols-2 lg:py-12" data-product-view={p.slug}>
-    <div class="card aspect-[4/3] overflow-hidden !rounded-[var(--radius-panel)]">
-      <ProductVisual product={p} eager />
+    <div class="grid content-start gap-3" data-gallery>
+      <div class="card relative aspect-square overflow-hidden !rounded-[var(--radius-panel)]">
+        {(p.afbeeldingen.length ? p.afbeeldingen : ['']).map((_, i) => (
+          <div class="absolute inset-0" data-slide={i} hidden={i !== 0}>
+            <ProductVisual product={p} index={i} alt={p.afbeeldingAlts[i]} eager={i === 0} sizes="(min-width: 1200px) 560px, (min-width: 810px) 50vw, 100vw" />
+          </div>
+        ))}
+      </div>
+      {p.afbeeldingen.length > 1 && (
+        <div class="grid grid-cols-4 gap-2" role="group" aria-label="Productfoto's">
+          {p.afbeeldingen.map((_, i) => (
+            <button type="button" data-thumb={i} aria-pressed={i === 0 ? 'true' : 'false'} aria-label={`Foto ${i + 1}: ${p.afbeeldingAlts[i] ?? p.naam}`}
+              class="aspect-square cursor-pointer overflow-hidden rounded-2xl border-2 border-transparent aria-pressed:border-brand-600">
+              <ProductVisual product={p} index={i} alt="" sizes="120px" />
+            </button>
+          ))}
+        </div>
+      )}
     </div>
 
     <div class="grid content-start gap-6">
-      <p class="chip w-fit">{isTotem ? 'Gratis bij het inplannen van een demo' : 'Altijd gratis, 1 set per bedrijf'}</p>
+      <div class="flex flex-wrap gap-2">
+        <p class="chip">{isTotem ? 'Gratis bij het inplannen van een demo' : 'Altijd gratis, 1 set per bedrijf'}</p>
+        {p.aanpasbaar && <a href="#maatwerk-title" class="chip !bg-white ring-1 ring-brand-200 hover:!bg-brand-50">Ook in eigen huisstijl</a>}
+      </div>
       <h1 class="text-4xl md:text-5xl">{p.naam}</h1>
       <p class="text-lg leading-relaxed text-ink-soft">{p.samenvatting}</p>
       <PriceTag product={p} size="lg" />
@@ -116,6 +136,7 @@ const title = `${p.naam}: ${isTotem ? 'gratis bij je demo' : 'gratis aanvragen'}
     )}
   </section>
 
+  {p.aanpasbaar && <MaatwerkBlok focus={p.type === 'totem' ? 'totem' : 'kaartenset'} />}
   {!isTotem && totem && <TotemPromo totem={totem} />}
   <Faq items={p.faq} />
   <CtaBand />
@@ -123,6 +144,16 @@ const title = `${p.naam}: ${isTotem ? 'gratis bij je demo' : 'gratis aanvragen'}
   <script>
     import { track } from '@/lib/client/analytics';
     import { getCart, setExtra } from '@/lib/client/cart';
+
+    document.querySelectorAll<HTMLElement>('[data-gallery]').forEach((g) => {
+      const thumbs = g.querySelectorAll<HTMLButtonElement>('[data-thumb]');
+      thumbs.forEach((t) =>
+        t.addEventListener('click', () => {
+          g.querySelectorAll<HTMLElement>('[data-slide]').forEach((s) => (s.hidden = s.dataset.slide !== t.dataset.thumb));
+          thumbs.forEach((x) => x.setAttribute('aria-pressed', String(x === t)));
+        }),
+      );
+    });
 
     const view = document.querySelector<HTMLElement>('[data-product-view]');
     if (view) track('product_view', { product: view.dataset.productView ?? '' });

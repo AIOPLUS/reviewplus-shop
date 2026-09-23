@@ -5,6 +5,7 @@ import ProductVisual from '@/components/shop/ProductVisual.astro';
 import HowItWorks from '@/components/shop/HowItWorks.astro';
 import TotemPromo from '@/components/shop/TotemPromo.astro';
 import SocialProof from '@/components/shop/SocialProof.astro';
+import MaatwerkBlok from '@/components/shop/MaatwerkBlok.astro';
 import Faq from '@/components/shop/Faq.astro';
 import CtaBand from '@/components/shop/CtaBand.astro';
 import { getProducts, getSectors } from '@/lib/catalog';
@@ -62,6 +63,7 @@ const totem = products.find((p) => p.type === 'totem')!;
   </section>
 
   <TotemPromo totem={totem} />
+  <MaatwerkBlok />
   <SocialProof />
 
   <section class="container-rp py-12" aria-labelledby="sectoren-title">

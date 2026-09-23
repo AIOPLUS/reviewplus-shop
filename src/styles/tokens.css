@@ -19,6 +19,8 @@
   --color-brand-800: #002a80;
   --color-brand-900: #001a52;
   --color-sky: #0099ff;
+  --color-logo: #1818ff; /* officiële logokleur (gemeten op logo-bestand) */
+  --color-navy: #0f1d44; /* tekstkleur op kaarten/totem */
 
   --color-ink: #171717;
   --color-ink-soft: #4b5563;

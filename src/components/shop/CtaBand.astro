@@ -1,5 +1,6 @@
 ---
 import { url } from '@/lib/url';
+import BrandCorners from './BrandCorners.astro';
 interface Props {
   title?: string;
   text?: string;
@@ -13,9 +14,11 @@ const {
 const q = sector ? `?sector=${sector}` : '';
 ---
 <section class="container-rp py-16">
-  <div class="grid-bg grid justify-items-center gap-5 rounded-[var(--radius-panel)] border border-brand-200 bg-brand-50 px-6 py-14 text-center">
-    <h2 class="max-w-2xl text-3xl md:text-4xl">{title}</h2>
-    <p class="max-w-xl text-ink-soft">{text}</p>
-    <a href={url(`/aanvragen${q}`)} class="btn btn-primary btn-lg">Vraag gratis aan</a>
+  <div class="relative grid justify-items-center gap-5 overflow-hidden rounded-[var(--radius-panel)] border border-brand-200 bg-white px-6 pb-36 pt-14 text-center md:pb-24">
+    <p class="text-sm font-medium tracking-wide text-brand-600">Laat je review achter. <span class="text-ink">Tap. Review.</span></p>
+    <h2 class="relative max-w-2xl text-3xl md:text-4xl">{title}</h2>
+    <p class="relative max-w-xl text-ink-soft">{text}</p>
+    <a href={url(`/aanvragen${q}`)} class="btn btn-primary btn-lg relative">Vraag gratis aan</a>
+    <BrandCorners />
   </div>
 </section>

@@ -1,0 +1,45 @@
+---
+/**
+ * Kaarten en totems in eigen huisstijl. Prijzen/voorwaarden voor maatwerk zijn nog niet bekend:
+ * TODO: Jordan bepaalt of maatwerk binnen de gratis actie valt en wat het kost (zie ook actievoorwaarden).
+ */
+import ProductVisual from './ProductVisual.astro';
+import { url } from '@/lib/url';
+
+interface Props {
+  /** Welke producten noemen we: beide, of alleen kaarten/totem op de productpagina. */
+  focus?: 'beide' | 'kaartenset' | 'totem';
+  sector?: string;
+}
+const { focus = 'beide', sector } = Astro.props;
+const what = { beide: 'NFC-kaarten en totems', kaartenset: 'NFC-kaarten', totem: 'NFC-totems' }[focus];
+const q = new URLSearchParams({ ontwerp: 'eigen', ...(sector ? { sector } : {}) }).toString();
+---
+<section class="container-rp py-12" aria-labelledby="maatwerk-title">
+  <div class="card grid items-center gap-8 overflow-hidden p-0 md:grid-cols-[1fr_1.1fr]">
+    <div class="aspect-[1.15] md:h-full md:aspect-auto">
+      <ProductVisual
+        product={{ type: 'kaartenset', naam: 'Maatwerk', afbeeldingen: [] }}
+        file="kaart-qr-maatwerk-voorbeeld.webp"
+        alt="Voorbeeld van maatwerk: een reviewkaart in de huisstijl van een café, naast de standaard Review Plus-kaart"
+        fit="cover"
+        sizes="(min-width: 810px) 45vw, 100vw"
+      />
+    </div>
+    <div class="grid gap-4 p-6 md:p-10 md:pl-0">
+      <p class="eyebrow">Nieuw: maatwerk</p>
+      <h2 id="maatwerk-title" class="text-3xl">{what} in je eigen huisstijl</h2>
+      <p class="text-ink-soft">
+        Liever je eigen logo, kleuren en tekst? We maken de {what} ook volledig in de stijl van jouw bedrijf,
+        met NFC-chip en QR-code die naar jouw reviewpagina verwijzen.
+      </p>
+      <ul class="grid gap-2 text-ink-soft">
+        <li class="flex gap-3"><span class="text-brand-600" aria-hidden="true">✓</span> Jouw logo, kleuren en tekst</li>
+        <li class="flex gap-3"><span class="text-brand-600" aria-hidden="true">✓</span> NFC én QR-code, gekoppeld aan Review Plus</li>
+        <li class="flex gap-3"><span class="text-brand-600" aria-hidden="true">✓</span> Voor Google, Tripadvisor en andere reviewplatformen</li>
+      </ul>
+      <p class="text-sm text-muted">Kies bij je aanvraag voor "eigen ontwerp", dan nemen we contact met je op over het ontwerp en de mogelijkheden.</p>
+      <div><a href={url(`/aanvragen?${q}`)} class="btn btn-primary">Vraag aan in eigen ontwerp</a></div>
+    </div>
+  </div>
+</section>

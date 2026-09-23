@@ -76,6 +76,11 @@ export function initFlow(): void {
   const field = (name: string) => form.elements.namedItem(name) as HTMLInputElement | HTMLSelectElement | null;
   const val = (name: string) => (field(name)?.value ?? '').trim();
   const country = (): CountryCode => ((form.querySelector<HTMLInputElement>('input[name=land]:checked')?.value as CountryCode) || 'NL');
+  const ontwerp = (): 'standaard' | 'eigen' =>
+    form.querySelector<HTMLInputElement>('input[name=ontwerp]:checked')?.value === 'eigen' ? 'eigen' : 'standaard';
+  const syncOntwerp = () => {
+    $('[data-ontwerp-wensen]')!.hidden = ontwerp() !== 'eigen';
+  };
 
   let step = 1;
   let started = false;
@@ -280,6 +285,7 @@ export function initFlow(): void {
       const n = cart.extras[p.slug] ?? 0;
       if (n) items.push(`<li>${n}× extra ${esc(p.extraEenheid)} (${esc(p.naam)}): ${formatPrice(n * p.prijsExtra)}</li>`);
     }
+    items.push(`<li>Ontwerp: <strong>${ontwerp() === 'eigen' ? 'eigen ontwerp in je huisstijl (we nemen contact op)' : 'standaard Review Plus-ontwerp'}</strong></li>`);
     items.push('<li>Verzending: <strong>gratis</strong></li>');
     $('[data-review]')!.innerHTML = `
       <dl class="grid gap-3 md:grid-cols-2">
@@ -406,6 +412,10 @@ export function initFlow(): void {
       },
       producten,
       totem_demo: cart.totemDemo,
+      ontwerp: {
+        type: ontwerp(),
+        wensen: ontwerp() === 'eigen' ? val('ontwerp_wensen') || null : null,
+      },
       heeft_betaalde_extras: producten.some((l) => l.extra > 0),
       bedrag_extras_indicatief: Math.round(extrasAmount(cart) * 100) / 100,
       vragen: {
@@ -575,6 +585,10 @@ export function initFlow(): void {
     const t = e.target as HTMLInputElement;
     if (t.name === 'land') applyCountry();
     if (t.name === 'reviewtool') $('[data-reviewtool-other]')!.hidden = t.value !== 'anders';
+    if (t.name === 'ontwerp') {
+      syncOntwerp();
+      if (step === 3) renderReview();
+    }
     saveDraft();
   });
   form.addEventListener('focusout', (e) => {
@@ -639,6 +653,11 @@ export function initFlow(): void {
   const sectorEl = field('sector') as HTMLSelectElement;
   if (presetSector && !sectorEl.value && Array.from(sectorEl.options).some((o) => o.value === presetSector)) sectorEl.value = presetSector;
   $('[data-reviewtool-other]')!.hidden = val('reviewtool') !== 'anders';
+  if (new URLSearchParams(window.location.search).get('ontwerp') === 'eigen') {
+    const eigen = form.querySelector<HTMLInputElement>('input[name=ontwerp][value=eigen]');
+    if (eigen) eigen.checked = true;
+  }
+  syncOntwerp();
   applyCountry();
   updateMapsLink();
   writeJSON('session', DRAFT_KEY, draft);

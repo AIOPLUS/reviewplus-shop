@@ -5,6 +5,7 @@ import ProductVisual from '@/components/shop/ProductVisual.astro';
 import HowItWorks from '@/components/shop/HowItWorks.astro';
 import TotemPromo from '@/components/shop/TotemPromo.astro';
 import SocialProof from '@/components/shop/SocialProof.astro';
+import MaatwerkBlok from '@/components/shop/MaatwerkBlok.astro';
 import Faq from '@/components/shop/Faq.astro';
 import CtaBand from '@/components/shop/CtaBand.astro';
 import { getProducts, getSectors, type Product, type Sector } from '@/lib/catalog';
@@ -82,6 +83,7 @@ const q = `?sector=${s.slug}`;
   </section>
 
   <TotemPromo totem={totem} sector={s.slug} />
+  <MaatwerkBlok sector={s.slug} />
   <SocialProof />
   <Faq items={s.faq} />
   <CtaBand sector={s.slug} />

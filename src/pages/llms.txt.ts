@@ -23,6 +23,7 @@ ${productLines.join('\n')}
 - Eén gratis kaartenset en één gratis totem per bedrijf; de totem is gratis bij het inplannen van een demo.
 - Verzending is altijd gratis, levering in Nederland en België.
 - Geen verplichting tot een abonnement.
+- Kaarten en totems zijn ook in de eigen huisstijl van het bedrijf te maken (maatwerk: logo, kleuren, tekst).
 - Volledige voorwaarden: ${absoluteUrl('/actievoorwaarden')}
 
 ## Belangrijke pagina's

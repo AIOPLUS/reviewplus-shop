@@ -1,19 +1,23 @@
 import type { APIRoute, GetStaticPaths } from 'astro';
-import sharp from 'sharp';
+import sharp, { type OverlayOptions } from 'sharp';
+import { join } from 'node:path';
 import { getProducts, getSectors } from '@/lib/catalog';
 import { formatPrice } from '@/lib/format';
 
-/** Open Graph-afbeeldingen (1200×630) per product en sectorpagina, bij het builden gegenereerd. */
+/** Open Graph-afbeeldingen (1200×630) per product en sectorpagina, bij het builden gegenereerd met de productfoto. */
 type Og = {
   title: string;
   sub: string;
   badge: string;
+  image: string;
 };
 
 export const getStaticPaths: GetStaticPaths = async () => {
   const [products, sectors] = await Promise.all([getProducts(), getSectors()]);
+  const set = products.find((p) => p.type === 'kaartenset');
+  const setImage = set?.afbeeldingen[0] ?? '';
   const paths: { params: { slug: string }; props: Og }[] = [
-    { params: { slug: 'shop' }, props: { title: 'Gratis NFC-reviewkaarten voor jouw bedrijf', sub: 'Gratis verzonden in Nederland en België', badge: 'Review Plus Shop' } },
+    { params: { slug: 'shop' }, props: { title: 'Gratis NFC-reviewkaarten voor jouw bedrijf', sub: 'Gratis verzonden in Nederland en België', badge: 'Review Plus Shop', image: setImage } },
   ];
   for (const p of products) {
     paths.push({
@@ -22,18 +26,19 @@ export const getStaticPaths: GetStaticPaths = async () => {
         title: p.naam,
         sub: `t.w.v. ${formatPrice(p.normalePrijs)}, ${p.gratisVoorwaarde === 'bij-demo' ? 'nu gratis bij je demo' : 'nu gratis'}`,
         badge: 'Gratis',
+        image: p.afbeeldingen[0] ?? '',
       },
     });
   }
   for (const s of sectors) {
-    paths.push({ params: { slug: `voor-${s.slug}` }, props: { title: s.heroTitel, sub: 'Gratis NFC-reviewkaarten · NL & BE', badge: s.naam } });
+    paths.push({ params: { slug: `voor-${s.slug}` }, props: { title: s.heroTitel, sub: 'Gratis NFC-reviewkaarten · NL & BE', badge: s.naam, image: setImage } });
   }
   return paths;
 };
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 
-function wrap(text: string, max = 20): string[] {
+function wrap(text: string, max: number): string[] {
   const words = text.split(/\s+/);
   const lines: string[] = [];
   let line = '';
@@ -47,21 +52,36 @@ function wrap(text: string, max = 20): string[] {
   return lines.slice(0, 3);
 }
 
+const LOGO = '<path d="M0 0H386V410A386 410 0 0 1 0 0Z"/><rect x="520" width="386" height="410"/><path d="M386 548V958H0A386 410 0 0 1 386 548Z"/><rect x="520" y="548" width="386" height="410"/>';
+const PHOTO = { x: 700, y: 60, w: 440, h: 510, r: 32 };
+
 export const GET: APIRoute = async ({ props }) => {
-  const { title, sub, badge } = props as Og;
-  const lines = wrap(title);
+  const { title, sub, badge, image } = props as Og;
+  const lines = wrap(title, 17);
+  const titleY = 285;
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
-  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#173EDD"/><stop offset="1" stop-color="#0040C1"/></linearGradient></defs>
-  <rect width="1200" height="630" fill="url(#g)"/>
-  <g stroke="#ffffff" stroke-opacity=".07">${Array.from({ length: 22 }, (_, i) => `<path d="M${i * 56} 0V630"/>`).join('')}${Array.from({ length: 12 }, (_, i) => `<path d="M0 ${i * 56}H1200"/>`).join('')}</g>
-  <g transform="translate(80 80)" fill="#fff"><path d="M15 15H3A12 12 0 0 1 15 3z"/><rect x="17" y="3" width="12" height="12" rx="2"/><rect x="3" y="17" width="12" height="12" rx="2"/><path d="M17 17h12A12 12 0 0 1 17 29z"/></g>
-  <text x="124" y="106" font-family="Poppins, Arial, sans-serif" font-size="28" font-weight="500" fill="#fff">Review Plus</text>
-  <rect x="80" y="170" rx="22" ry="22" width="${Math.max(140, badge.length * 17 + 48)}" height="44" fill="#ffffff" fill-opacity=".16"/>
-  <text x="104" y="200" font-family="Poppins, Arial, sans-serif" font-size="22" font-weight="500" fill="#fff">${esc(badge)}</text>
-  ${lines.map((l, i) => `<text x="80" y="${300 + i * 76}" font-family="Poppins, Arial, sans-serif" font-size="60" font-weight="600" fill="#fff">${esc(l)}</text>`).join('')}
-  <text x="80" y="${300 + lines.length * 76 + 20}" font-family="Poppins, Arial, sans-serif" font-size="30" fill="#D1E0FF">${esc(sub)}</text>
-  <g transform="translate(860 190) rotate(6)"><rect width="250" height="158" rx="18" fill="#fff"/><g fill="none" stroke="#0040C1" stroke-width="6" stroke-linecap="round"><path d="M40 60a18 18 0 0 1 0 28"/><path d="M52 50a32 32 0 0 1 0 48"/><path d="M64 40a46 46 0 0 1 0 68"/></g><text x="96" y="84" font-family="Poppins, Arial, sans-serif" font-size="20" font-weight="600" fill="#0040C1">Tik voor</text><text x="96" y="110" font-family="Poppins, Arial, sans-serif" font-size="20" font-weight="600" fill="#0040C1">een review</text></g>
+  <rect width="1200" height="630" fill="#ffffff"/>
+  <path d="M0 630V545A150 85 0 0 1 150 630Z" fill="#1818FF"/>
+  <g stroke="#ffffff" stroke-opacity=".25" stroke-width="2">${[40, 90].map((x) => `<path d="M${x} 560V630"/>`).join('')}<path d="M0 595H130"/></g>
+  <g transform="translate(80 70) scale(0.0355)" fill="#1818FF">${LOGO}</g>
+  <text x="124" y="97" font-family="Poppins, Arial, sans-serif" font-size="28" fill="#0f1d44"><tspan font-weight="700">Review</tspan> Plus</text>
+  <rect x="80" y="150" rx="22" ry="22" width="${Math.max(120, badge.length * 15 + 44)}" height="44" fill="#EFF4FF"/>
+  <text x="102" y="180" font-family="Poppins, Arial, sans-serif" font-size="22" font-weight="600" fill="#1818FF">${esc(badge)}</text>
+  ${lines.map((l, i) => `<text x="80" y="${titleY + i * 64}" font-family="Poppins, Arial, sans-serif" font-size="54" font-weight="700" fill="#0f1d44">${esc(l)}</text>`).join('')}
+  <text x="80" y="${titleY + lines.length * 64 + 8}" font-family="Poppins, Arial, sans-serif" font-size="26" fill="#4b5563">${esc(sub)}</text>
+  <rect x="${PHOTO.x}" y="${PHOTO.y}" width="${PHOTO.w}" height="${PHOTO.h}" rx="${PHOTO.r}" fill="#EFF4FF"/>
 </svg>`;
-  const png = await sharp(Buffer.from(svg)).png({ compressionLevel: 9 }).toBuffer();
+
+  const layers: OverlayOptions[] = [];
+  if (image) {
+    const mask = Buffer.from(`<svg width="${PHOTO.w}" height="${PHOTO.h}"><rect width="${PHOTO.w}" height="${PHOTO.h}" rx="${PHOTO.r}" fill="#fff"/></svg>`);
+    const photo = await sharp(join(process.cwd(), 'src/assets/products', image))
+      .resize(PHOTO.w, PHOTO.h, { fit: 'cover', position: 'centre' })
+      .composite([{ input: mask, blend: 'dest-in' }])
+      .png()
+      .toBuffer();
+    layers.push({ input: photo, left: PHOTO.x, top: PHOTO.y });
+  }
+  const png = await sharp(Buffer.from(svg)).composite(layers).png({ compressionLevel: 9 }).toBuffer();
   return new Response(new Uint8Array(png), { headers: { 'Content-Type': 'image/png' } });
 };
