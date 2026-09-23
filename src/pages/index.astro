@@ -1,4 +1,5 @@
 ---
+import VoorraadTeller from '@/components/shop/VoorraadTeller.astro';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import ProductCard from '@/components/shop/ProductCard.astro';
 import ProductVisual from '@/components/shop/ProductVisual.astro';
@@ -40,6 +41,7 @@ const totem = products.find((p) => p.type === 'totem')!;
           <a href={url('/aanvragen')} class="btn btn-primary btn-lg">Vraag gratis aan</a>
           <a href="#producten" class="btn btn-secondary btn-lg">Bekijk de producten</a>
         </div>
+        <VoorraadTeller class="max-w-md" />
         <ul class="flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink-soft">
           <li class="flex items-center gap-2"><span class="text-brand-600" aria-hidden="true">✓</span> 1 set per bedrijf</li>
           <li class="flex items-center gap-2"><span class="text-brand-600" aria-hidden="true">✓</span> Geen abonnement nodig</li>
@@ -47,7 +49,7 @@ const totem = products.find((p) => p.type === 'totem')!;
         </ul>
       </div>
       <div class="card aspect-[4/3] overflow-hidden !rounded-[var(--radius-panel)] shadow-[var(--shadow-glow)]">
-        <ProductVisual product={set} eager sizes="(min-width: 1200px) 560px, 100vw" />
+        <ProductVisual product={set} alt={set.afbeeldingAlts[0]} eager padding="sm" sizes="(min-width: 1200px) 560px, 100vw" />
       </div>
     </div>
   </section>

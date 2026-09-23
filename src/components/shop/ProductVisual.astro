@@ -1,11 +1,13 @@
 ---
 /**
- * Productfoto uit src/assets/products (AVIF/WebP met srcset via astro:assets), volledig zichtbaar
- * (object-contain) op een achtergrond in de randkleur van de foto. Zonder foto: SVG-illustratie.
+ * Productfoto uit src/assets/products (AVIF/WebP met srcset via astro:assets).
+ * - Uitgeknipte foto (transparant): op een zacht blauw podium met slagschaduw.
+ * - Gewone foto: volledig zichtbaar op een achtergrond in de randkleur van de foto.
+ * Zonder foto: eenvoudige SVG-illustratie.
  */
 import { Picture } from 'astro:assets';
 import type { Product } from '@/lib/catalog';
-import { edgeColor, productImage } from '@/lib/images';
+import { edgeColor, isCutout, productImage } from '@/lib/images';
 
 interface Props {
   product: Pick<Product, 'type' | 'naam' | 'afbeeldingen'>;
@@ -16,30 +18,42 @@ interface Props {
   sizes?: string;
   eager?: boolean;
   fit?: 'contain' | 'cover';
+  /** Ruimte rond een uitgeknipte foto (percentage van het kader). */
+  padding?: 'sm' | 'md' | 'lg';
+  /** Podium-achtergrond tonen achter een uitgeknipte foto (uit = transparant, bv. op een gekleurd blok). */
+  stage?: boolean;
   class?: string;
 }
 
 const {
-  product, index = 0, file, alt, sizes = '(min-width: 1200px) 560px, (min-width: 810px) 45vw, 100vw', eager = false, fit = 'contain', class: cls = '',
+  product, index = 0, file, alt, sizes = '(min-width: 1200px) 560px, (min-width: 810px) 45vw, 100vw', eager = false, fit = 'contain',
+  padding = 'md', stage = true, class: cls = '',
 } = Astro.props;
 
 const name = file ?? product.afbeeldingen[index];
 const img = productImage(name);
-const bg = img && name ? await edgeColor(name) : undefined;
+const cutout = img && name ? await isCutout(name) : false;
+const bg = img && name && !cutout ? await edgeColor(name) : undefined;
+const pad = { sm: 'p-[4%]', md: 'p-[8%]', lg: 'p-[12%]' }[padding];
 const isTotem = product.type === 'totem';
+const widths = img ? [400, 700, 1000, 1400].filter((w) => w <= img.width * 1.1) : [];
 ---
-{img ? (
+{img && cutout ? (
+  <div class={`rp-stage flex h-full w-full items-center justify-center ${stage ? '' : 'rp-stage--bare'} ${pad} ${cls}`}>
+    <Picture src={img} alt={alt ?? product.naam} formats={['avif', 'webp']} widths={widths} sizes={sizes}
+      loading={eager ? 'eager' : 'lazy'} fetchpriority={eager ? 'high' : 'auto'} pictureAttributes={{ class: 'block h-full w-full' }}
+      class="rp-cutout h-full w-full object-contain" />
+  </div>
+) : img ? (
   <div class={`flex h-full w-full items-center justify-center ${cls}`} style={`background:${bg}`}>
-    <Picture src={img} alt={alt ?? product.naam} formats={['avif', 'webp']} widths={[400, 700, 1000, 1400].filter((w) => w <= img.width * 1.1)} sizes={sizes}
+    <Picture src={img} alt={alt ?? product.naam} formats={['avif', 'webp']} widths={widths} sizes={sizes}
       loading={eager ? 'eager' : 'lazy'} fetchpriority={eager ? 'high' : 'auto'} pictureAttributes={{ class: 'block h-full w-full' }}
       class={`h-full w-full ${fit === 'contain' ? 'object-contain' : 'object-cover'}`} />
   </div>
 ) : isTotem ? (
   <svg viewBox="0 0 400 300" role="img" aria-label={`Illustratie: ${product.naam}`} class={`h-full w-full ${cls}`}>
     <rect width="400" height="300" fill="#EFF4FF" />
-    <ellipse cx="200" cy="262" rx="92" ry="10" fill="#0040C1" opacity=".12" />
     <path d="M140 258 170 58h60l30 200z" fill="#1818FF" />
-    <text x="200" y="202" text-anchor="middle" fill="#fff" font-family="Poppins, sans-serif" font-size="15" font-weight="500">Tik hier</text>
   </svg>
 ) : (
   <svg viewBox="0 0 400 300" role="img" aria-label={`Illustratie: ${product.naam}`} class={`h-full w-full ${cls}`}>

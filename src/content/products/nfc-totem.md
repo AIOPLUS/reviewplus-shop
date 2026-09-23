@@ -24,17 +24,13 @@ voordelen:
   - Klant tikt of scant en staat direct op je reviewpagina
   - Werkt zonder app, met NFC én QR-code
   - Gekoppeld aan jouw Review Plus-account
-  - Ook te krijgen in je eigen huisstijl
-afbeeldingen: [totem-mockup.webp, totem-ontwerp.png]
+afbeeldingen: [totem-standaard-uitgeknipt.webp, totem-ontwerp.png]
 afbeeldingAlts:
-  - "Review Plus NFC-totem: staande tafelstandaard met \"Laat je review achter\""
+  - "Review Plus NFC-totem: L-vormige acrylaat tafelstandaard met \"Laat je review achter\", vijf sterren en \"Tap. Review.\""
   - "Ontwerp van de NFC-totem met Review Plus-logo, vijf sterren en \"Tap. Review.\""
-aanpasbaar: true
 status: beschikbaar
 volgorde: 2
 faq:
-  - vraag: Kan de totem in mijn eigen huisstijl?
-    antwoord: Ja. Kies bij je aanvraag voor "eigen ontwerp", dan maken we de totem met jouw logo, kleuren en tekst. We nemen contact met je op over het ontwerp en de mogelijkheden.
   - vraag: Hoe krijg ik de totem gratis?
     antwoord: Vink bij je aanvraag de totem aan en plan daarna een korte demo van Review Plus in. Zodra je demo is ingepland, versturen we de totem, gratis en ook gratis verzonden.
   - vraag: Moet ik na de demo een abonnement nemen?

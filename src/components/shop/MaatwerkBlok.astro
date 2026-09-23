@@ -1,45 +1,46 @@
 ---
 /**
- * Kaarten en totems in eigen huisstijl. Prijzen/voorwaarden voor maatwerk zijn nog niet bekend:
- * TODO: Jordan bepaalt of maatwerk binnen de gratis actie valt en wat het kost (zie ook actievoorwaarden).
+ * Upsell: QR-reviewkaarten in de eigen huisstijl van de klant. Betaald en geen onderdeel van de gratis actie.
+ * Alleen QR-kaarten: NFC-kaarten en totems zijn (voorlopig) alleen in het standaard Review Plus-ontwerp verkrijgbaar.
+ * TODO: Jordan vult prijzen/pakketten in zodra die vastliggen (nu: voorstel op aanvraag).
  */
 import ProductVisual from './ProductVisual.astro';
 import { url } from '@/lib/url';
 
 interface Props {
-  /** Welke producten noemen we: beide, of alleen kaarten/totem op de productpagina. */
-  focus?: 'beide' | 'kaartenset' | 'totem';
   sector?: string;
 }
-const { focus = 'beide', sector } = Astro.props;
-const what = { beide: 'NFC-kaarten en totems', kaartenset: 'NFC-kaarten', totem: 'NFC-totems' }[focus];
-const q = new URLSearchParams({ ontwerp: 'eigen', ...(sector ? { sector } : {}) }).toString();
+const { sector } = Astro.props;
+const q = new URLSearchParams({ maatwerk: '1', ...(sector ? { sector } : {}) }).toString();
 ---
 <section class="container-rp py-12" aria-labelledby="maatwerk-title">
-  <div class="card grid items-center gap-8 overflow-hidden p-0 md:grid-cols-[1fr_1.1fr]">
-    <div class="aspect-[1.15] md:h-full md:aspect-auto">
+  <div class="card grid items-center overflow-hidden p-0 md:grid-cols-[1fr_1.1fr]">
+    <div class="aspect-[1.2] md:h-full md:aspect-auto">
       <ProductVisual
-        product={{ type: 'kaartenset', naam: 'Maatwerk', afbeeldingen: [] }}
-        file="kaart-qr-maatwerk-voorbeeld.webp"
-        alt="Voorbeeld van maatwerk: een reviewkaart in de huisstijl van een café, naast de standaard Review Plus-kaart"
-        fit="cover"
+        product={{ type: 'kaartenset', naam: 'QR-reviewkaart op maat', afbeeldingen: [] }}
+        file="kaart-qr-maatwerk-voorbeeld-uitgeknipt.webp"
+        alt="Voorbeeld van een QR-reviewkaart in de huisstijl van een café, naast een standaard Review Plus-kaart met QR-code"
+        padding="sm"
         sizes="(min-width: 810px) 45vw, 100vw"
       />
     </div>
-    <div class="grid gap-4 p-6 md:p-10 md:pl-0">
-      <p class="eyebrow">Nieuw: maatwerk</p>
-      <h2 id="maatwerk-title" class="text-3xl">{what} in je eigen huisstijl</h2>
+    <div class="grid gap-4 p-6 md:p-10">
+      <p class="eyebrow">Upgrade · betaald maatwerk</p>
+      <h2 id="maatwerk-title" class="text-3xl">QR-reviewkaarten in je eigen huisstijl</h2>
       <p class="text-ink-soft">
-        Liever je eigen logo, kleuren en tekst? We maken de {what} ook volledig in de stijl van jouw bedrijf,
-        met NFC-chip en QR-code die naar jouw reviewpagina verwijzen.
+        Wil je nog meer reviews? QR-kaarten in de look van je eigen zaak vallen meer op en passen naadloos bij je tafel,
+        balie of rekeningmapje. Zo geef je je resultaten een extra boost.
       </p>
       <ul class="grid gap-2 text-ink-soft">
         <li class="flex gap-3"><span class="text-brand-600" aria-hidden="true">✓</span> Jouw logo, kleuren en tekst</li>
-        <li class="flex gap-3"><span class="text-brand-600" aria-hidden="true">✓</span> NFC én QR-code, gekoppeld aan Review Plus</li>
+        <li class="flex gap-3"><span class="text-brand-600" aria-hidden="true">✓</span> Met QR-code, gekoppeld aan jouw reviewpagina in Review Plus</li>
         <li class="flex gap-3"><span class="text-brand-600" aria-hidden="true">✓</span> Voor Google, Tripadvisor en andere reviewplatformen</li>
       </ul>
-      <p class="text-sm text-muted">Kies bij je aanvraag voor "eigen ontwerp", dan nemen we contact met je op over het ontwerp en de mogelijkheden.</p>
-      <div><a href={url(`/aanvragen?${q}`)} class="btn btn-primary">Vraag aan in eigen ontwerp</a></div>
+      <p class="rounded-2xl bg-brand-50 p-3 text-sm text-ink-soft">
+        Maatwerk is betaald en geen onderdeel van de gratis actie. Het gaat om QR-kaarten: de NFC-kaarten en de totem zijn
+        alleen verkrijgbaar in het standaard Review Plus-ontwerp. Geef bij je aanvraag aan dat je interesse hebt, dan sturen we je een voorstel.
+      </p>
+      <div><a href={url(`/aanvragen?${q}`)} class="btn btn-primary">Vraag gratis aan + voorstel QR-kaarten</a></div>
     </div>
   </div>
 </section>

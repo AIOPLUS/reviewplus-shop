@@ -1,0 +1,104 @@
+---
+/**
+ * Voorraadteller gratis kaartensets: toont het ECHTE aantal resterende sets (maxSets − verwerkte aanvragen).
+ * Het getal komt uit Make (PUBLIC_STOCK_URL → { "remaining": number }). Zonder bron: het maximum.
+ * Telt bij het laden zichtbaar af van het maximum naar het actuele aantal.
+ */
+import { ACTIE } from '@/config/site';
+import { url } from '@/lib/url';
+
+interface Props {
+  variant?: 'licht' | 'compact';
+  class?: string;
+}
+const { variant = 'licht', class: cls = '' } = Astro.props;
+const max = ACTIE.maxSets;
+const nf = new Intl.NumberFormat('nl-NL');
+const eind = new Date(`${ACTIE.eindDatum}T12:00:00`).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+---
+<div class={`rp-stock ${variant === 'compact' ? 'text-sm' : ''} ${cls}`} data-stock data-max={max} data-src={ACTIE.stockUrl} data-end={ACTIE.eindDatum}>
+  <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+    <p class="font-medium text-ink" data-stock-text>
+      Nog <strong class="tabular-nums text-brand-600" data-stock-count>{nf.format(max)}</strong> van de {nf.format(max)} gratis sets beschikbaar
+    </p>
+  </div>
+  <div class="mt-2 h-2.5 overflow-hidden rounded-full bg-brand-100" role="progressbar" aria-label="Gratis sets beschikbaar"
+    aria-valuemin="0" aria-valuemax={max} aria-valuenow={max} data-stock-bar>
+    <div class="h-full w-full rounded-full bg-gradient-to-r from-brand-500 to-[var(--color-logo)] transition-[width] duration-700" data-stock-fill></div>
+  </div>
+  <p class="mt-1.5 text-xs text-muted"><span data-stock-end>Actie geldig t/m {eind} of zolang de voorraad strekt · </span><a href={url('/actievoorwaarden')} class="underline hover:text-brand-600">Actievoorwaarden</a></p>
+</div>
+
+<script>
+  import { readJSON, writeJSON } from '@/lib/client/storage';
+
+  const CACHE_KEY = 'rp_stock_v1';
+  const CACHE_MS = 5 * 60 * 1000;
+  const nf = new Intl.NumberFormat('nl-NL');
+
+  async function remainingFrom(src: string, max: number): Promise<number | null> {
+    if (!src) return null;
+    const cached = readJSON<{ at: number; remaining: number } | null>('session', CACHE_KEY, null);
+    if (cached && Date.now() - cached.at < CACHE_MS) return cached.remaining;
+    try {
+      const res = await fetch(src, { headers: { Accept: 'application/json' }, cache: 'no-store' });
+      if (!res.ok) return null;
+      const json = (await res.json()) as { remaining?: unknown };
+      const n = Number(json.remaining);
+      if (!Number.isFinite(n)) return null;
+      const remaining = Math.max(0, Math.min(max, Math.round(n)));
+      writeJSON('session', CACHE_KEY, { at: Date.now(), remaining });
+      return remaining;
+    } catch {
+      return null;
+    }
+  }
+
+  function render(el: HTMLElement, value: number, max: number): void {
+    const count = el.querySelector<HTMLElement>('[data-stock-count]');
+    const fill = el.querySelector<HTMLElement>('[data-stock-fill]');
+    const bar = el.querySelector<HTMLElement>('[data-stock-bar]');
+    if (count) count.textContent = nf.format(value);
+    if (fill) fill.style.width = `${(value / max) * 100}%`;
+    bar?.setAttribute('aria-valuenow', String(value));
+  }
+
+  function countDown(el: HTMLElement, from: number, to: number, max: number): void {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce || from === to) return render(el, to, max);
+    const duration = Math.min(1800, 600 + (from - to) * 4);
+    const start = performance.now();
+    const step = (now: number) => {
+      const t = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      render(el, Math.round(from - (from - to) * eased), max);
+      if (t < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+
+  function ended(el: HTMLElement, max: number, message: string): void {
+    const text = el.querySelector<HTMLElement>('[data-stock-text]');
+    if (text) text.innerHTML = `${message} <span class="font-normal text-ink-soft">Plan een demo, dan kijken we wat we voor je kunnen doen.</span>`;
+    el.querySelector<HTMLElement>('[data-stock-end]')?.setAttribute('hidden', '');
+    render(el, 0, max);
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-stock]').forEach(async (el) => {
+    const max = Number(el.dataset.max) || 1000;
+    // Na de laatste actiedag (lokale tijd, einde van de dag) is de actie voorbij
+    const end = el.dataset.end ? new Date(`${el.dataset.end}T23:59:59`) : null;
+    if (end && Date.now() > end.getTime()) return ended(el, max, 'De actie is afgelopen.');
+    const remaining = await remainingFrom(el.dataset.src || '', max);
+    if (remaining === null) return; // geen bron: het maximum blijft staan
+    if (remaining === 0) return ended(el, max, 'Alle gratis sets zijn vergeven.');
+    // Pas aftellen als de teller in beeld komt
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) {
+        io.disconnect();
+        countDown(el, max, remaining, max);
+      }
+    });
+    io.observe(el);
+  });
+</script>

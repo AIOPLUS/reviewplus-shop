@@ -23,20 +23,14 @@ voordelen:
   - Werkt met iedere moderne smartphone, zonder app
   - QR-code op de kaart voor telefoons zonder NFC
   - Gekoppeld aan jouw eigen reviewpagina via Review Plus
-  - Ook te krijgen in je eigen huisstijl
   - Handig bij de kassa, op tafel of bij de rekening
-afbeeldingen: [kaarten-mockup.png, kaart-voor-en-achterkant.webp, kaart-reviewzijde.webp, kaart-logozijde.webp]
+afbeeldingen: [kaart-reviewzijde-3d-uitgeknipt.webp, kaart-logozijde-3d-uitgeknipt.webp]
 afbeeldingAlts:
-  - "Twee Review Plus NFC-reviewkaarten: de voorkant met \"Laat je review achter\" en de achterkant met het logo"
-  - "Voor- en achterkant van de Review Plus NFC-kaart"
-  - "NFC-kaart met de tekst \"Laat je review achter. Tap. Review.\""
-  - "Achterkant van de NFC-kaart met Review Plus-logo en \"tap to review\""
-aanpasbaar: true
+  - "Review Plus NFC-reviewkaart met de tekst \"Laat je review achter.\", vijf sterren en \"Tap. Review.\""
+  - "Achterkant van de Review Plus NFC-reviewkaart met logo, vijf sterren en \"Tap. Review.\""
 status: beschikbaar
 volgorde: 1
 faq:
-  - vraag: Kan ik de kaarten in mijn eigen huisstijl krijgen?
-    antwoord: Ja. Kies bij je aanvraag voor "eigen ontwerp", dan maken we de kaarten met jouw logo, kleuren en tekst. We nemen contact met je op over het ontwerp en de mogelijkheden.
   - vraag: Is de kaartenset echt gratis?
     antwoord: Ja. Bedrijven met een KvK-nummer (Nederland) of KBO-nummer (België) ontvangen één set van drie kaarten gratis, ook de verzending is gratis. Je zit nergens aan vast.
   - vraag: Kan ik extra kaarten bestellen?

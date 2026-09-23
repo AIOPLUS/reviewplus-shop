@@ -1,4 +1,5 @@
 ---
+import VoorraadTeller from '@/components/shop/VoorraadTeller.astro';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import ProductCard from '@/components/shop/ProductCard.astro';
 import ProductVisual from '@/components/shop/ProductVisual.astro';
@@ -49,10 +50,11 @@ const q = `?sector=${s.slug}`;
           <a href={url(`/aanvragen${q}`)} class="btn btn-primary btn-lg">Vraag gratis aan</a>
           <a href="#voorbeelden" class="btn btn-secondary btn-lg">Zo gebruik je ze</a>
         </div>
+        <VoorraadTeller class="max-w-md" />
         <p class="text-sm text-ink-soft">{s.heroTekst}</p>
       </div>
       <div class="card aspect-[4/3] overflow-hidden !rounded-[var(--radius-panel)] shadow-[var(--shadow-glow)]">
-        <ProductVisual product={set} eager />
+        <ProductVisual product={set} alt={set.afbeeldingAlts[0]} eager padding="sm" />
       </div>
     </div>
   </section>

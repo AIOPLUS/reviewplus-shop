@@ -1,6 +1,6 @@
 # Make.com-scenario's voor de shop
 
-De site is statisch (GitHub Pages). Alle logica loopt via Make. Er zijn **vijf scenario's**:
+De site is statisch (GitHub Pages). Alle logica loopt via Make. Er zijn **zes scenario's**:
 
 | # | Scenario | Trigger |
 |---|---|---|
@@ -9,6 +9,7 @@ De site is statisch (GitHub Pages). Alle logica loopt via Make. Er zijn **vijf s
 | C | Mollie-betaling verwerkt | Custom webhook (Mollie `webhookUrl`) |
 | D | Demo ingepland → totem verzenden | Teamleader: nieuwe afspraak (Watch events / webhook) |
 | E | Herinneringen totem | Schema (dagelijks) |
+| F | Voorraadteller gratis sets | Custom webhook (GET vanaf de site) |
 
 Payload-contract: zie [LEAD-PAYLOAD.md](LEAD-PAYLOAD.md). Secrets (Turnstile secret, Mollie API-key, Teamleader-koppeling) staan **alleen in Make**, nooit in de site of in GitHub.
 
@@ -46,6 +47,7 @@ Payload-contract: zie [LEAD-PAYLOAD.md](LEAD-PAYLOAD.md). Secrets (Turnstile sec
    - Zet `duplicate: true` in de response.
 
 6. **Data store** → Add record (`lead_ref`, `email`, `bedrijfsnummer`, `totem_demo`, `aangemaakt = now`, `payload`).
+   **Voorraadteller**: alleen bij een geldige, niet-dubbele aanvraag → Data store `shop_teller` → record `gratis_sets`: `uitgegeven = uitgegeven + 1` (zie scenario F). Staat de teller al op 1000, of is het na de einddatum? Verwerk de aanvraag dan niet als gratis set: stuur een vriendelijke mail en zet `"ok": true` met een notitie in Teamleader.
 
 7. **Mollie-betaling** (alleen als `heeft_betaalde_extras = true`):
    1. HTTP → `GET https://shop.reviewplus.io/products.json` (fase 2: `https://www.reviewplus.io/shop/products.json`).
@@ -84,8 +86,8 @@ Payload-contract: zie [LEAD-PAYLOAD.md](LEAD-PAYLOAD.md). Secrets (Turnstile sec
 
 11. **Interne melding** naar Jordan: e-mail of WhatsApp (bv. via Twilio/WhatsApp Business-module) met bedrijf, plaats, producten, totem ja/nee, bron/campagne en de link naar de deal: `https://focus.teamleader.eu/deal_detail.php?id={{deal_id}}` (controleer de URL-vorm in jouw Teamleader).
 
-12. **Fulfilment**: Google Sheets → Add row in "Te verzenden" voor de **gratis kaartenset** (altijd direct, los van de demo). Voeg een kolom `ontwerp` toe (`standaard`/`eigen`).
-    - **Eigen ontwerp** (`ontwerp.type = "eigen"`): zet de rij op status *Ontwerp nodig* in plaats van *te verzenden*, maak een Teamleader-taak "Ontwerp maken voor {{bedrijf}}" met `ontwerp.wensen`, en stuur de klant een mail met het verzoek om het logo (SVG/PNG) te mailen. Pas na goedkeuring van het ontwerp gaat de status naar *te verzenden*. `TODO: Jordan bepaalt of maatwerk gratis is binnen de actie of een prijs krijgt (dan via Mollie of offerte).` De totem wordt hier **niet** toegevoegd (dat doet scenario D). Betaalde extra's worden pas toegevoegd na betaling (scenario C).
+12. **Fulfilment**: Google Sheets → Add row in "Te verzenden" voor de **gratis kaartenset** (altijd direct, los van de demo, altijd het standaardontwerp).
+    - **Maatwerk-upsell** (`maatwerk.interesse = true`): los van de gratis verzending. Maak in Teamleader een aparte **deal/offerte** "QR-kaarten op maat {{bedrijf}}" (of een taak voor jezelf) met `maatwerk.wensen`, en stuur de klant een mail met het verzoek om het logo (SVG/PNG). Maatwerk bestaat alleen uit QR-reviewkaarten; NFC-kaarten en totems zijn (voorlopig) niet op maatwerk verkrijgbaar. Na akkoord op voorstel en ontwerp: factuur/Mollie-betaallink, daarna productie. `TODO: Jordan legt prijzen/pakketten vast.` De totem wordt hier **niet** toegevoegd (dat doet scenario D). Betaalde extra's worden pas toegevoegd na betaling (scenario C).
 
 13. **Nieuwsbrief**: als `toestemming.nieuwsbrief = true` → toevoegen aan de nieuwsbrieflijst.
 
@@ -142,6 +144,21 @@ De site toont dan de demo-stap (als de totem gekozen is) of `/bedankt`, of bij a
 De site post JSON vanuit de browser naar `hook.*.make.com`. Omdat het `Content-Type: application/json` is, doet de browser eerst een *preflight* (`OPTIONS`). Test dit direct na het aanmaken van de webhook: verstuur een testaanvraag vanaf de live shop en kijk in de browser-console (tabblad Netwerk).
 - Werkt het: niets te doen.
 - CORS-fout: controleer dat de Webhook response-module de header `Access-Control-Allow-Origin` meestuurt. Blijft de preflight falen, meld het dan: dan passen we de site aan zodat hij `text/plain` stuurt (geen preflight) en zet je in Make een *Parse JSON*-module na de webhook.
+
+## Scenario F: voorraadteller gratis sets
+
+De site toont "Nog X van de 1000 gratis sets beschikbaar". X is het **echte** aantal: 1000 min het aantal verwerkte, niet-dubbele aanvragen. De teller daalt dus niet door bezoeken, alleen door aanvragen.
+
+1. **Data store** `shop_teller` met één record, sleutel `gratis_sets`, veld `uitgegeven` (getal, start op 0). Scenario A verhoogt dit (stap 6).
+2. **Custom webhook** `shop-voorraad` (GET).
+3. Data store → Get record `gratis_sets`.
+4. **Webhook response**: status `200`, headers `Content-Type: application/json`, `Access-Control-Allow-Origin: https://shop.reviewplus.io`, `Cache-Control: max-age=60`, body:
+   ```json
+   { "remaining": {{max(0; 1000 - uitgegeven)}} }
+   ```
+5. Zet de webhook-URL in GitHub → Settings → Variables → `PUBLIC_STOCK_URL` en draai de deploy opnieuw.
+
+Kosten: de site vraagt de stand maximaal één keer per 5 minuten per bezoeker op (sessionStorage-cache), dus reken op ongeveer één Make-operatie per bezoek. Maximum en einddatum staan in `src/config/site.ts` (`ACTIE.maxSets`, `ACTIE.eindDatum`); houd het getal 1000 in Make gelijk aan `maxSets`.
 
 ## Checklist testen
 

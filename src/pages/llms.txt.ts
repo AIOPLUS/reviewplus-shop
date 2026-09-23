@@ -3,7 +3,7 @@ import { getProducts, getSectors } from '@/lib/catalog';
 import { absoluteUrl } from '@/lib/url';
 import { brand } from '@/config/brand';
 import { formatPrice } from '@/lib/format';
-import { PRICE_NOTE } from '@/config/site';
+import { ACTIE, PRICE_NOTE } from '@/config/site';
 
 export const GET: APIRoute = async () => {
   const [products, sectors] = await Promise.all([getProducts(), getSectors()]);
@@ -22,8 +22,9 @@ ${productLines.join('\n')}
 - Alleen voor bedrijven met een KvK-nummer (NL) of KBO-nummer (BE).
 - Eén gratis kaartenset en één gratis totem per bedrijf; de totem is gratis bij het inplannen van een demo.
 - Verzending is altijd gratis, levering in Nederland en België.
+- De actie is beperkt tot maximaal ${ACTIE.maxSets} gratis kaartensets en loopt tot en met ${ACTIE.eindDatum} (of zolang de voorraad strekt).
 - Geen verplichting tot een abonnement.
-- Kaarten en totems zijn ook in de eigen huisstijl van het bedrijf te maken (maatwerk: logo, kleuren, tekst).
+- NFC-kaarten en totems zijn alleen verkrijgbaar in het standaard Review Plus-ontwerp. Betaald maatwerk (geen onderdeel van de gratis actie): QR-reviewkaarten in de eigen huisstijl van het bedrijf (logo, kleuren, tekst); prijs op aanvraag.
 - Volledige voorwaarden: ${absoluteUrl('/actievoorwaarden')}
 
 ## Belangrijke pagina's

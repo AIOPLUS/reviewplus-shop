@@ -1,4 +1,5 @@
 ---
+import VoorraadTeller from '@/components/shop/VoorraadTeller.astro';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Field from '@/components/flow/Field.astro';
 import { getProducts, getSectors, toPublic } from '@/lib/catalog';
@@ -53,6 +54,7 @@ const reviewCounts = ['0-10', '11-50', '51-100', '101-250', '250+', 'weet-niet']
           In drie korte stappen vraag je je gratis NFC 3-kaartenset aan, ook gratis verzonden in Nederland en België.
           Kies je voor de totem, dan plan je daarna een korte demo in en is de totem ook gratis.
         </p>
+        <VoorraadTeller variant="compact" class="max-w-md" />
       </header>
 
       <div role="status" aria-live="polite" class="mt-6 hidden rounded-2xl border p-4" data-notice></div>
@@ -157,23 +159,17 @@ const reviewCounts = ['0-10', '11-50', '51-100', '101-250', '250+', 'weet-niet']
               <span class="text-ink-soft">Na het versturen kies je een moment. Je kaarten gaan hoe dan ook al onderweg.</span></span>
           </label>
 
-          <fieldset class="grid gap-3" data-field="ontwerp">
-            <legend class="mb-1 text-sm font-medium">Ontwerp van je kaarten en totem</legend>
-            <div class="grid gap-2 md:grid-cols-2">
-              <label class="flex cursor-pointer gap-3 rounded-xl border border-line-strong p-4 has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50">
-                <input type="radio" name="ontwerp" value="standaard" checked class="mt-0.5 size-5 shrink-0 accent-brand-600" />
-                <span><strong class="font-medium">Standaard Review Plus-ontwerp</strong><br /><span class="text-sm text-ink-soft">Direct leverbaar.</span></span>
-              </label>
-              <label class="flex cursor-pointer gap-3 rounded-xl border border-line-strong p-4 has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50">
-                <input type="radio" name="ontwerp" value="eigen" class="mt-0.5 size-5 shrink-0 accent-brand-600" />
-                <span><strong class="font-medium">Eigen ontwerp in mijn huisstijl</strong><br /><span class="text-sm text-ink-soft">We nemen contact op over je logo, kleuren en de mogelijkheden.</span></span>
-              </label>
+          <div class="grid gap-3" data-field="maatwerk">
+            <label class="check rounded-2xl border border-line-strong p-4 has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50">
+              <input type="checkbox" name="maatwerk" data-maatwerk-toggle />
+              <span><strong class="font-medium text-ink">Ik heb ook interesse in QR-reviewkaarten in mijn eigen huisstijl</strong> <span class="chip ml-1 !py-0.5 !text-xs">betaald</span><br />
+                <span class="text-sm text-ink-soft">QR-kaarten met jouw logo en kleuren. We sturen je een vrijblijvend voorstel; je gratis NFC-kaarten en totem blijven het standaardontwerp.</span></span>
+            </label>
+            <div hidden data-maatwerk-wensen>
+              <Field id="maatwerk_wensen" label="Wat heb je in gedachten?" type="textarea" maxlength={500}
+                hint="Bijvoorbeeld aantallen, kleuren, tekst of platform (Google, Tripadvisor). Je logo kun je later per mail sturen." />
             </div>
-            <div hidden data-ontwerp-wensen>
-              <Field id="ontwerp_wensen" label="Wensen voor het ontwerp" type="textarea" maxlength={500}
-                hint="Bijvoorbeeld kleuren, tekst of platform (Google, Tripadvisor). Je logo kun je later per mail sturen." />
-            </div>
-          </fieldset>
+          </div>
 
           <div class="grid gap-5 md:grid-cols-2">
             <Field id="reviewtool" label="Welke reviewtool gebruik je nu?" type="select" options={reviewTools} />

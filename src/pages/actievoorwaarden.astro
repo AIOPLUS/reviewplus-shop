@@ -1,9 +1,10 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { brand } from '@/config/brand';
-import { TOTEM_RESERVATION_DAYS } from '@/config/site';
+import { ACTIE, TOTEM_RESERVATION_DAYS } from '@/config/site';
 import { breadcrumbSchema } from '@/lib/schema';
 import { url } from '@/lib/url';
+const eind = new Date(ACTIE.eindDatum + 'T12:00:00').toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
 // TODO: laat actievoorwaarden en privacytekst controleren door een jurist.
 ---
 <BaseLayout
@@ -36,7 +37,7 @@ import { url } from '@/lib/url';
         <li><strong>NFC-totem:</strong> maximaal 1 gratis totem per bedrijf, alleen als je een demo van Review Plus inplant.
           De totem wordt verzonden nadat de demo is ingepland.</li>
         <li>Verzending is gratis, in Nederland en België.</li>
-        <li>De actie geldt zolang de voorraad strekt.</li>
+        <li>De actie is beperkt tot maximaal {ACTIE.maxSets.toLocaleString('nl-NL')} gratis kaartensets en loopt tot en met {eind}, of zolang de voorraad strekt. De teller op de site toont hoeveel gratis sets er nog beschikbaar zijn; die daalt bij elke verwerkte aanvraag.</li>
       </ul>
 
       <h2>3. De demo en de totem</h2>
@@ -51,10 +52,11 @@ import { url } from '@/lib/url';
         Je betaalt alleen voor de extra's, via iDEAL, Bancontact of creditcard (afgehandeld door Mollie). Rond je de betaling niet af,
         dan blijven je gratis producten gewoon aangevraagd.</p>
 
-      <h3>Eigen ontwerp (maatwerk)</h3>
-      <p>De kaarten en de totem kunnen ook in je eigen huisstijl worden gemaakt. Kies je bij je aanvraag voor een eigen ontwerp,
-        dan nemen we contact met je op over het ontwerp. Maatwerk wordt pas geproduceerd nadat je het ontwerp hebt goedgekeurd.
-        TODO: Jordan bepaalt of maatwerk binnen de gratis actie valt, wat het eventueel kost en wat de levertijd is.</p>
+      <h3>Ontwerp en maatwerk</h3>
+      <p>De NFC-kaarten en de totem zijn alleen verkrijgbaar in het standaard Review Plus-ontwerp; ze zijn niet op maatwerk
+        te bestellen. Los van de actie bieden we <strong>betaalde</strong> QR-reviewkaarten in je eigen huisstijl aan. Die vallen
+        <strong>niet</strong> onder de gratis actie. Geef je bij je aanvraag aan dat je interesse hebt, dan ontvang je een vrijblijvend voorstel.
+        QR-kaarten op maat worden pas geproduceerd nadat je het voorstel en het ontwerp hebt goedgekeurd. TODO: Jordan vult prijzen en levertijd in.</p>
 
       <h2>5. Geen verplichtingen</h2>
       <p>Aan de actie is geen verplichting tot het afnemen van een abonnement verbonden. De kaarten en de totem blijven van jou.</p>

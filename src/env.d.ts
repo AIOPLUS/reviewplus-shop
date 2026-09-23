@@ -7,6 +7,7 @@ interface ImportMetaEnv {
   readonly PUBLIC_LEAD_WEBHOOK_URL?: string;
   readonly PUBLIC_WEB3FORMS_ACCESS_KEY?: string;
   readonly PUBLIC_TURNSTILE_SITE_KEY?: string;
+  readonly PUBLIC_STOCK_URL?: string;
   readonly PUBLIC_ANALYTICS_PROVIDER?: string;
   readonly PUBLIC_ANALYTICS_DOMAIN?: string;
   readonly PUBLIC_ANALYTICS_SCRIPT_URL?: string;

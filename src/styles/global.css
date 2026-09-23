@@ -50,6 +50,16 @@
       linear-gradient(to bottom, rgba(0,64,193,.05) 1px, transparent 1px);
     background-size: 56px 56px;
   }
+  /* Podium voor uitgeknipte productfoto's: zacht merkblauw met lichtval van boven + grondschaduw */
+  .rp-stage {
+    position: relative;
+    background:
+      radial-gradient(60% 12% at 50% 92%, rgba(15, 29, 68, 0.10), transparent 70%),
+      radial-gradient(120% 90% at 50% 20%, #ffffff 0%, var(--color-brand-100) 60%, var(--color-brand-200) 100%);
+  }
+  .rp-stage--bare { background: transparent; }
+  .rp-cutout { filter: drop-shadow(0 18px 24px rgba(15, 29, 68, 0.18)) drop-shadow(0 3px 6px rgba(15, 29, 68, 0.10)); }
+
   .prose-rp { color: var(--color-ink-soft); line-height: 1.7; }
   .prose-rp h2 { font-size: 1.4rem; margin: 2rem 0 .75rem; }
   .prose-rp h3 { font-size: 1.1rem; margin: 1.5rem 0 .5rem; color: var(--color-ink); }

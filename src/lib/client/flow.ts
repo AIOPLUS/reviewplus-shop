@@ -76,10 +76,9 @@ export function initFlow(): void {
   const field = (name: string) => form.elements.namedItem(name) as HTMLInputElement | HTMLSelectElement | null;
   const val = (name: string) => (field(name)?.value ?? '').trim();
   const country = (): CountryCode => ((form.querySelector<HTMLInputElement>('input[name=land]:checked')?.value as CountryCode) || 'NL');
-  const ontwerp = (): 'standaard' | 'eigen' =>
-    form.querySelector<HTMLInputElement>('input[name=ontwerp]:checked')?.value === 'eigen' ? 'eigen' : 'standaard';
-  const syncOntwerp = () => {
-    $('[data-ontwerp-wensen]')!.hidden = ontwerp() !== 'eigen';
+  const maatwerk = (): boolean => Boolean((field('maatwerk') as HTMLInputElement | null)?.checked);
+  const syncMaatwerk = () => {
+    $('[data-maatwerk-wensen]')!.hidden = !maatwerk();
   };
 
   let step = 1;
@@ -285,7 +284,7 @@ export function initFlow(): void {
       const n = cart.extras[p.slug] ?? 0;
       if (n) items.push(`<li>${n}× extra ${esc(p.extraEenheid)} (${esc(p.naam)}): ${formatPrice(n * p.prijsExtra)}</li>`);
     }
-    items.push(`<li>Ontwerp: <strong>${ontwerp() === 'eigen' ? 'eigen ontwerp in je huisstijl (we nemen contact op)' : 'standaard Review Plus-ontwerp'}</strong></li>`);
+    if (maatwerk()) items.push('<li>QR-reviewkaarten in je eigen huisstijl: <strong>we sturen je een voorstel</strong> (betaald, los van deze aanvraag)</li>');
     items.push('<li>Verzending: <strong>gratis</strong></li>');
     $('[data-review]')!.innerHTML = `
       <dl class="grid gap-3 md:grid-cols-2">
@@ -412,9 +411,9 @@ export function initFlow(): void {
       },
       producten,
       totem_demo: cart.totemDemo,
-      ontwerp: {
-        type: ontwerp(),
-        wensen: ontwerp() === 'eigen' ? val('ontwerp_wensen') || null : null,
+      maatwerk: {
+        interesse: maatwerk(),
+        wensen: maatwerk() ? val('maatwerk_wensen') || null : null,
       },
       heeft_betaalde_extras: producten.some((l) => l.extra > 0),
       bedrag_extras_indicatief: Math.round(extrasAmount(cart) * 100) / 100,
@@ -585,8 +584,8 @@ export function initFlow(): void {
     const t = e.target as HTMLInputElement;
     if (t.name === 'land') applyCountry();
     if (t.name === 'reviewtool') $('[data-reviewtool-other]')!.hidden = t.value !== 'anders';
-    if (t.name === 'ontwerp') {
-      syncOntwerp();
+    if (t.name === 'maatwerk') {
+      syncMaatwerk();
       if (step === 3) renderReview();
     }
     saveDraft();
@@ -653,11 +652,11 @@ export function initFlow(): void {
   const sectorEl = field('sector') as HTMLSelectElement;
   if (presetSector && !sectorEl.value && Array.from(sectorEl.options).some((o) => o.value === presetSector)) sectorEl.value = presetSector;
   $('[data-reviewtool-other]')!.hidden = val('reviewtool') !== 'anders';
-  if (new URLSearchParams(window.location.search).get('ontwerp') === 'eigen') {
-    const eigen = form.querySelector<HTMLInputElement>('input[name=ontwerp][value=eigen]');
-    if (eigen) eigen.checked = true;
+  if (new URLSearchParams(window.location.search).get('maatwerk') === '1') {
+    const mw = field('maatwerk') as HTMLInputElement | null;
+    if (mw) mw.checked = true;
   }
-  syncOntwerp();
+  syncMaatwerk();
   applyCountry();
   updateMapsLink();
   writeJSON('session', DRAFT_KEY, draft);

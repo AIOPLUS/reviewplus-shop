@@ -1,23 +1,29 @@
 ---
 /**
- * Review Plus-logo-icoon, nagebouwd uit het officiële bestand (src/assets/brand/logo-icoon-blauw.webp):
- * links twee kwart-ellipsen, rechts twee vierkanten. Verhoudingen gemeten op het origineel.
+ * Review Plus-logo: icoon nagebouwd uit het officiële bestand (src/assets/brand/logo-icoon-blauw.webp),
+ * links twee kwart-ellipsen, rechts twee vierkanten. Het woordmerk schaalt mee met het icoon.
  */
 interface Props {
+  /** Hoogte van het icoon in px; het woordmerk krijgt dezelfde lettergrootte. */
   size?: number;
   color?: string;
   class?: string;
   /** Toon het woordmerk "Review Plus" naast het icoon. */
   wordmark?: boolean;
 }
-const { size = 24, color = 'var(--color-logo)', class: cls = '', wordmark = false } = Astro.props;
+const { size = 26, color = 'var(--color-logo)', class: cls = '', wordmark = false } = Astro.props;
+const width = Math.round((size * 906) / 958);
 ---
-<span class={`inline-flex items-center gap-2 ${cls}`}>
-  <svg width={size} height={Math.round(size * 958 / 906)} viewBox="0 0 906 958" fill={color} aria-hidden="true" class="shrink-0">
+<span class={`inline-flex items-center ${cls}`} style={`gap:${Math.round(size * 0.38)}px`}>
+  <svg width={width} height={size} viewBox="0 0 906 958" fill={color} aria-hidden="true" class="shrink-0">
     <path d="M0 0H386V410A386 410 0 0 1 0 0Z" />
     <rect x="520" width="386" height="410" />
     <path d="M386 548V958H0A386 410 0 0 1 386 548Z" />
     <rect x="520" y="548" width="386" height="410" />
   </svg>
-  {wordmark && <span class="text-[1.05rem] leading-none text-ink"><span class="font-semibold">Review</span> Plus</span>}
+  {wordmark && (
+    <span class="whitespace-nowrap leading-none tracking-[-0.01em] text-ink" style={`font-size:${Math.round(size * 0.92)}px`}>
+      <span class="font-semibold">Review</span> Plus
+    </span>
+  )}
 </span>

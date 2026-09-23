@@ -48,8 +48,8 @@ Bron van waarheid in code: `src/lib/client/lead.ts` (`LeadPayload`). Wijzig code
 | `producten[].prijs_extra` / `normale_prijs` | number | Informatief. **Niet gebruiken voor het bedrag.** |
 | `producten[].gratis_voorwaarde` | `"altijd"` \| `"bij-demo"` \| null | |
 | `totem_demo` | boolean | Klant wil de totem en plant een demo in |
-| `ontwerp.type` | `"standaard"` \| `"eigen"` | Standaard Review Plus-ontwerp of maatwerk in de huisstijl van de klant (geldt voor kaarten én totem) |
-| `ontwerp.wensen` | string \| null | Vrije tekst (max. 500 tekens), alleen bij `"eigen"` |
+| `maatwerk.interesse` | boolean | Upsell: klant wil een voorstel voor **betaalde QR-reviewkaarten** in eigen huisstijl. NFC-kaarten en totems zijn (voorlopig) niet op maatwerk verkrijgbaar; de gratis producten zijn altijd standaard. |
+| `maatwerk.wensen` | string \| null | Vrije tekst (max. 500 tekens), alleen bij `interesse = true` |
 | `heeft_betaalde_extras` | boolean | Zo ja → Mollie-betaling aanmaken |
 | `bedrag_extras_indicatief` | number | Alleen ter controle. **Make herberekent uit `/products.json`.** |
 | `vragen.huidige_reviewtool` | string \| null | `geen`, `anders` (uitbreidbaar) |
@@ -116,7 +116,7 @@ Vastgelegd bij het eerste bezoek in de sessie (`sessionStorage`), overschreven a
     { "slug": "nfc-totem", "naam": "NFC-totem (tafelstandaard)", "gratis": 1, "extra": 0, "prijs_extra": 24.95, "normale_prijs": 24.95, "gratis_voorwaarde": "bij-demo" }
   ],
   "totem_demo": true,
-  "ontwerp": { "type": "eigen", "wensen": "Onze huiskleur groen, logo volgt per mail" },
+  "maatwerk": { "interesse": true, "wensen": "50 QR-kaarten in onze huiskleur groen, logo volgt per mail" },
   "heeft_betaalde_extras": true,
   "bedrag_extras_indicatief": 19.9,
   "vragen": { "huidige_reviewtool": "anders", "huidige_reviewtool_anders": "Trustoo", "aantal_google_reviews": "11-50" },

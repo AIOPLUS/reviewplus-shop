@@ -1,4 +1,8 @@
 /** Algemene shop-teksten die op meerdere pagina's terugkomen. */
+import { ACTIE } from './site';
+
+const actieEinde = new Date(`${ACTIE.eindDatum}T12:00:00`).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+const actieMax = ACTIE.maxSets.toLocaleString('nl-NL');
 
 /**
  * Social proof. Alleen echte, geverifieerde gegevens.
@@ -21,6 +25,11 @@ export const shopFaq = [
       'Niets. Bedrijven in Nederland en België met een KvK- of KBO-nummer ontvangen één set van drie NFC-reviewkaarten gratis. Ook de verzending is gratis.',
   },
   {
+    vraag: 'Hoe lang loopt de actie?',
+    antwoord:
+      `We geven maximaal ${actieMax} gratis kaartensets weg. De actie loopt tot en met ${actieEinde}, of tot alle sets vergeven zijn. De teller op de site laat zien hoeveel sets er nog beschikbaar zijn.`,
+  },
+  {
     vraag: 'Hoe krijg ik de NFC-totem gratis?',
     antwoord:
       'Kies bij je aanvraag voor de totem en plan daarna een korte, vrijblijvende demo van Review Plus in. Zodra je demo is ingepland, versturen we de totem gratis.',
@@ -41,10 +50,10 @@ export const shopFaq = [
       "Ja. Extra kaarten en totems voeg je toe in dezelfde aanvraag. Je betaalt alleen voor de extra's, met iDEAL, Bancontact of creditcard.",
   },
   {
-    vraag: 'Kunnen de kaarten en totems in onze eigen huisstijl?',
+    vraag: 'Kunnen de kaarten in onze eigen huisstijl?',
     antwoord:
-      'Ja. Kies bij je aanvraag voor "eigen ontwerp", dan maken we de NFC-kaarten en de totem met jouw logo, kleuren en tekst. We nemen contact met je op over het ontwerp en de mogelijkheden.',
-    // TODO: Jordan bepaalt of maatwerk binnen de gratis actie valt of extra kost, en vult dat hier aan.
+      'De NFC-kaarten en de totem zijn alleen verkrijgbaar in het standaard Review Plus-ontwerp. Wel maken we als betaald maatwerk QR-reviewkaarten met jouw logo, kleuren en tekst. Die vallen meer op en geven je resultaten een extra boost. Geef bij je aanvraag aan dat je interesse hebt, dan sturen we je een voorstel.',
+    // TODO: Jordan vult prijzen/pakketten voor maatwerk in zodra die vastliggen.
   },
   {
     vraag: 'Hoe snel worden de kaarten verstuurd?',

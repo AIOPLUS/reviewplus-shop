@@ -6,6 +6,7 @@
  *
  * - Logt elke payload (en schrijft de laatste naar scripts/.last-payload.json)
  * - Antwoordt { ok: true } of, bij betaalde extra's, { ok: true, checkoutUrl } naar een nep-Mollie-pagina
+ * - GET /stock → { remaining } (voorraadteller; daalt per aanvraag)
  * - Herberekent het bedrag uit dist/products.json of src (zoals Make dat moet doen)
  */
 import http from 'node:http';
@@ -14,6 +15,7 @@ import { writeFileSync } from 'node:fs';
 const PORT = Number(process.env.PORT || 8787);
 const PRICES = { 'nfc-kaartenset': 9.95, 'nfc-totem': 24.95 };
 const payments = new Map();
+let remaining = 1000; // voorraadteller (zoals scenario F in Make)
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -46,6 +48,10 @@ http
         &nbsp;<a href="${pay.cancel}">Annuleren</a></p></body>`);
     }
 
+    if (req.method === 'GET' && url.pathname === '/stock') {
+      res.writeHead(200, { ...cors, 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ remaining }));
+    }
     if (req.method !== 'POST' || url.pathname !== '/hook') return res.writeHead(404, cors).end();
     let body = '';
     req.on('data', (c) => (body += c));
@@ -69,6 +75,7 @@ http
         res.writeHead(422, { ...cors, 'Content-Type': 'application/json' });
         return res.end(JSON.stringify({ ok: false, message: errors.join(', ') }));
       }
+      if (p.request_type === 'aanvraag' && remaining > 0) remaining--;
       const amount = (p.producten ?? []).reduce((s, l) => s + (l.extra || 0) * (PRICES[l.slug] ?? 0), 0);
       const out = { ok: true };
       if (amount > 0) {

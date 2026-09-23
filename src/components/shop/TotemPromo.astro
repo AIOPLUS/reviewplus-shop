@@ -25,8 +25,8 @@ const q = sector ? `?sector=${sector}` : '';
         <a href={url(`/${totem.slug}`)} class="btn btn-lg border-white/40 !text-white hover:bg-white/10">Over de totem</a>
       </div>
     </div>
-    <div class="mx-auto aspect-[4/3] w-full max-w-[360px] overflow-hidden rounded-3xl bg-white">
-      <ProductVisual product={totem} sizes="360px" />
+    <div class="mx-auto aspect-[4/5] w-full max-w-[320px]">
+      <ProductVisual product={totem} alt={totem.afbeeldingAlts[0]} stage={false} padding="sm" sizes="320px" />
     </div>
   </div>
 </section>

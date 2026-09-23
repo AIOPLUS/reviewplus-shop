@@ -47,9 +47,9 @@ export interface LeadPayload {
   };
   producten: LeadLine[];
   totem_demo: boolean;
-  /** Standaard Review Plus-ontwerp of maatwerk in de huisstijl van de klant. */
-  ontwerp: {
-    type: 'standaard' | 'eigen';
+  /** Upsell: interesse in betaalde QR-reviewkaarten in eigen huisstijl (geen NFC/totem-maatwerk). Gratis producten zijn altijd standaard. */
+  maatwerk: {
+    interesse: boolean;
     wensen: string | null;
   };
   heeft_betaalde_extras: boolean;

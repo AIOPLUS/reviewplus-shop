@@ -10,6 +10,21 @@ export function productImage(name: string | undefined): ImageMetadata | undefine
   return Object.entries(files).find(([p]) => p.endsWith(`/${name}`))?.[1]?.default;
 }
 
+const alphaCache = new Map<string, boolean>();
+
+/** Is de foto uitgeknipt (heeft transparantie)? Dan tonen we hem op een podium met schaduw. */
+export async function isCutout(name: string): Promise<boolean> {
+  if (alphaCache.has(name)) return alphaCache.get(name)!;
+  let has = false;
+  try {
+    has = Boolean((await sharp(join(process.cwd(), 'src/assets/products', name)).metadata()).hasAlpha);
+  } catch {
+    /* geen alpha */
+  }
+  alphaCache.set(name, has);
+  return has;
+}
+
 const edgeCache = new Map<string, string>();
 
 /**
