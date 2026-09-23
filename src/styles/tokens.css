@@ -1,0 +1,49 @@
+/*
+ * Design tokens, afgeleid van www.reviewplus.io (Framer) op 23-09-2026.
+ * Font: Poppins · primair marine blauw rgb(0,64,193) · tekst rgb(23,23,23)
+ * Pill-knoppen (radius 1000px), grote afgeronde kaarten, blauwe gloed-schaduw.
+ * Breakpoints Framer: 810px (tablet) en 1200px (desktop).
+ * TODO: Jordan controleert hex-codes tegen de officiële huisstijl.
+ */
+@theme {
+  --font-sans: 'Poppins', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --color-brand-50: #f9fcff;
+  --color-brand-100: #eff4ff;
+  --color-brand-200: #d1e0ff;
+  --color-brand-300: #bfd7ff;
+  --color-brand-400: #2970ff;
+  --color-brand-500: #173edd;
+  --color-brand-600: #0040c1; /* primair */
+  --color-brand-700: #0035a0;
+  --color-brand-800: #002a80;
+  --color-brand-900: #001a52;
+  --color-sky: #0099ff;
+
+  --color-ink: #171717;
+  --color-ink-soft: #4b5563;
+  --color-muted: #6b7280;
+  --color-line: #e5e7eb;
+  --color-line-strong: #d1d5db;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f9fafc;
+
+  --color-success: #067647;
+  --color-success-bg: #ecfdf3;
+  --color-warning: #b54708;
+  --color-warning-bg: #fffaeb;
+  --color-danger: #b42318;
+  --color-danger-bg: #fef3f2;
+
+  --radius-pill: 1000px;
+  --radius-card: 24px;
+  --radius-panel: 32px;
+  --radius-field: 12px;
+
+  --shadow-glow: 0px 15px 44px 0px rgba(0, 64, 193, 0.25);
+  --shadow-glow-soft: 0px 0px 44px 0px rgba(0, 64, 193, 0.18);
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.05), 0 8px 24px -8px rgba(0, 64, 193, 0.12);
+
+  --breakpoint-md: 810px;
+  --breakpoint-lg: 1200px;
+}

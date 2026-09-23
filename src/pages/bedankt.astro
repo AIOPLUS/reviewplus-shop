@@ -1,0 +1,83 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { DEMO_BOOKING_URL, TOTEM_RESERVATION_DAYS } from '@/config/site';
+import { url } from '@/lib/url';
+---
+<BaseLayout
+  title="Bedankt voor je aanvraag | Review Plus Shop"
+  description="Je aanvraag voor de gratis Review Plus NFC-kaarten is ontvangen."
+  path="/bedankt"
+  page="bedankt"
+  noindex
+>
+  <section class="grid-bg">
+    <div class="container-rp grid justify-items-center gap-6 py-16 text-center md:py-24">
+      <span class="flex size-16 items-center justify-center rounded-full bg-success-bg text-3xl text-success" aria-hidden="true">✓</span>
+      <h1 class="max-w-2xl text-4xl md:text-5xl" data-thanks-title>Bedankt, je aanvraag is binnen!</h1>
+      <p class="max-w-xl text-lg text-ink-soft">
+        Je ontvangt zo een bevestiging per e-mail. We versturen je gratis NFC-kaartenset zo snel mogelijk, ook de verzending is gratis.
+      </p>
+      <p class="text-sm text-muted" data-ref hidden>Referentie: <span class="font-mono"></span></p>
+    </div>
+  </section>
+
+  <section class="container-rp -mt-6" data-days={TOTEM_RESERVATION_DAYS}>
+    <!-- Standaard: demo-upsell. Wordt aangepast op basis van de keuze in de aanvraag. -->
+    <div class="mx-auto grid max-w-3xl gap-5 rounded-[var(--radius-panel)] bg-gradient-to-br from-brand-500 to-brand-600 p-8 text-white shadow-[var(--shadow-glow)] md:p-12" data-upsell>
+      <p class="chip w-fit !bg-white/15 !text-white" data-upsell-chip>Tip</p>
+      <h2 class="text-3xl !text-white" data-upsell-title>Boek een gratis demo en haal meer uit je kaarten</h2>
+      <p class="text-white/85" data-upsell-text>
+        In een korte demo laten we zien hoe je met Review Plus automatisch meer reviews verzamelt, erop reageert met AI en
+        alles in één dashboard volgt. Plan je de demo in, dan krijg je er de NFC-totem gratis bij.
+      </p>
+      <div class="flex flex-wrap gap-2">
+        <a href={DEMO_BOOKING_URL} target="_blank" rel="noopener" data-track="demo_klik" data-track-plek="bedankt" class="btn btn-lg bg-white !text-brand-600 hover:bg-brand-100">
+          Plan je demo <span aria-hidden="true">↗</span><span class="sr-only">(opent in een nieuw tabblad)</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="mx-auto mt-10 grid max-w-3xl gap-4 md:grid-cols-3">
+      <div class="card p-5"><p class="font-medium">1. Bevestiging</p><p class="mt-1 text-sm text-ink-soft">Je krijgt een e-mail met je aanvraag.</p></div>
+      <div class="card p-5"><p class="font-medium">2. Verzending</p><p class="mt-1 text-sm text-ink-soft">We sturen je kaarten gratis op, in NL en BE.</p></div>
+      <div class="card p-5"><p class="font-medium">3. Tikken</p><p class="mt-1 text-sm text-ink-soft">Leg de kaarten neer en ontvang reviews.</p></div>
+    </div>
+    <p class="mt-10 text-center"><a href={url('/')} class="text-brand-600 underline">Terug naar de shop</a></p>
+  </section>
+
+  <script>
+    import { readJSON, remove } from '@/lib/client/storage';
+    import { fireLeadConversion } from '@/lib/client/consent';
+
+    interface LastRequest { ref: string; totem: boolean; email: string; voornaam: string; extras: boolean; paid?: boolean }
+    const last = readJSON<LastRequest | null>('session', 'rp_last', null);
+    const params = new URLSearchParams(location.search);
+    const demo = params.get('demo');
+    const days = document.querySelector<HTMLElement>('[data-days]')?.dataset.days ?? '14';
+    const set = (sel: string, text: string) => {
+      const el = document.querySelector<HTMLElement>(sel);
+      if (el) el.textContent = text;
+    };
+
+    if (last) {
+      fireLeadConversion(last.ref);
+      if (last.voornaam) set('[data-thanks-title]', `Bedankt ${last.voornaam}, je aanvraag is binnen!`);
+      const refEl = document.querySelector<HTMLElement>('[data-ref]');
+      if (refEl) {
+        refEl.hidden = false;
+        refEl.querySelector('span')!.textContent = last.ref;
+      }
+    }
+    remove('session', 'rp_draft_v1');
+
+    if (demo === 'ingepland') {
+      set('[data-upsell-chip]', 'Demo ingepland');
+      set('[data-upsell-title]', 'Top, tot bij de demo!');
+      set('[data-upsell-text]', 'Zodra je demo in onze agenda staat, versturen we je NFC-totem gratis. Je ontvangt een bevestiging van de afspraak per e-mail. Nog niet gelukt? Via de knop hieronder kies je alsnog een moment.');
+    } else if (demo === 'later' || last?.totem) {
+      set('[data-upsell-chip]', 'Je totem ligt klaar');
+      set('[data-upsell-title]', 'Plan je demo in en de totem is van jou');
+      set('[data-upsell-text]', `We houden de NFC-totem ${days} dagen voor je gereserveerd. Plan een korte, vrijblijvende demo in met hetzelfde e-mailadres als je aanvraag, dan versturen we de totem gratis.`);
+    }
+  </script>
+</BaseLayout>

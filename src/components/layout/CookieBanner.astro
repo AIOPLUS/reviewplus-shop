@@ -1,0 +1,16 @@
+---
+import { brand } from '@/config/brand';
+---
+<div id="cookie-banner" role="dialog" aria-modal="false" aria-labelledby="cb-title" aria-describedby="cb-text" hidden
+  class="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-[560px] rounded-3xl border border-brand-200 bg-white p-5 shadow-[var(--shadow-glow)] sm:inset-x-auto sm:right-6 sm:bottom-6">
+  <h2 id="cb-title" class="text-base font-semibold !text-ink">Cookies voor advertenties</h2>
+  <p id="cb-text" class="mt-2 text-sm leading-relaxed text-ink-soft">
+    We meten het gebruik van de shop zonder cookies. Met jouw toestemming plaatsen we ook cookies van Meta en Google,
+    zodat we onze advertenties kunnen meten. Je kunt je keuze altijd wijzigen via "Cookie-instellingen" onderaan de pagina.
+    <a class="text-brand-600 underline" href={`${brand.mainSiteUrl}/privacy-policy`}>Privacyverklaring</a>
+  </p>
+  <div class="mt-4 grid grid-cols-2 gap-2">
+    <button type="button" class="btn btn-secondary" data-consent="deny">Weigeren</button>
+    <button type="button" class="btn btn-secondary" data-consent="accept">Accepteren</button>
+  </div>
+</div>

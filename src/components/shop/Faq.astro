@@ -1,0 +1,24 @@
+---
+interface Props {
+  items: { vraag: string; antwoord: string }[];
+  title?: string;
+}
+const { items, title = 'Veelgestelde vragen' } = Astro.props;
+---
+{items.length > 0 && (
+  <section class="container-rp py-16" aria-labelledby="faq-title">
+    <p class="eyebrow">FAQ</p>
+    <h2 id="faq-title" class="mt-2 text-3xl md:text-4xl">{title}</h2>
+    <div class="mt-8 grid max-w-3xl gap-3">
+      {items.map((f) => (
+        <details class="group card !shadow-none px-6 py-1 open:bg-brand-50">
+          <summary class="flex cursor-pointer list-none items-center justify-between gap-4 py-4 font-medium [&::-webkit-details-marker]:hidden">
+            {f.vraag}
+            <span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-600 transition group-open:rotate-45" aria-hidden="true">+</span>
+          </summary>
+          <p class="pb-5 text-ink-soft">{f.antwoord}</p>
+        </details>
+      ))}
+    </div>
+  </section>
+)}

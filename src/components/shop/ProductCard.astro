@@ -1,0 +1,37 @@
+---
+import ProductVisual from './ProductVisual.astro';
+import PriceTag from './PriceTag.astro';
+import { url } from '@/lib/url';
+import type { Product } from '@/lib/catalog';
+
+interface Props {
+  product: Product;
+  sector?: string;
+}
+const { product: p, sector } = Astro.props;
+const isTotem = p.gratisVoorwaarde === 'bij-demo';
+const q = sector ? `?sector=${sector}` : '';
+const statusLabel = { beschikbaar: '', binnenkort: 'Binnenkort', uitverkocht: 'Tijdelijk uitverkocht' }[p.status];
+---
+<article class="card flex flex-col overflow-hidden">
+  <a href={url(`/${p.slug}`)} class="relative block aspect-[4/3] overflow-hidden" tabindex="-1" aria-hidden="true">
+    <ProductVisual product={p} sizes="(min-width: 810px) 45vw, 100vw" />
+    <span class="chip absolute left-4 top-4 !bg-white shadow-sm">{isTotem ? 'Gratis bij je demo' : 'Altijd gratis'}</span>
+  </a>
+  <div class="flex flex-1 flex-col gap-4 p-6">
+    <div class="grid gap-2">
+      <h3 class="text-xl"><a href={url(`/${p.slug}`)} class="hover:underline">{p.naam}</a></h3>
+      <p class="text-ink-soft">{p.korteOmschrijving}</p>
+    </div>
+    <PriceTag product={p} />
+    {statusLabel && <p class="chip w-fit !bg-warning-bg !text-warning">{statusLabel}</p>}
+    <div class="mt-auto flex flex-wrap gap-2 pt-2">
+      {isTotem ? (
+        <a href={url(`/aanvragen${q}`)} class="btn btn-primary" data-totem-cta>Plan een demo, ontvang de totem</a>
+      ) : (
+        <a href={url(`/aanvragen${q}`)} class="btn btn-primary">Vraag gratis aan</a>
+      )}
+      <a href={url(`/${p.slug}`)} class="btn btn-ghost">Meer info<span class="sr-only"> over {p.naam}</span></a>
+    </div>
+  </div>
+</article>

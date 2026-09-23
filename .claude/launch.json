@@ -1,0 +1,24 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "shop-dev",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "astro",
+        "dev",
+        "--port",
+        "4321"
+      ],
+      "port": 4321
+    },
+    {
+      "name": "mock-webhook",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/mock-webhook.mjs"
+      ],
+      "port": 8787
+    }
+  ]
+}

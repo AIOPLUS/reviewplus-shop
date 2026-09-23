@@ -1,0 +1,88 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ProductCard from '@/components/shop/ProductCard.astro';
+import ProductVisual from '@/components/shop/ProductVisual.astro';
+import HowItWorks from '@/components/shop/HowItWorks.astro';
+import TotemPromo from '@/components/shop/TotemPromo.astro';
+import SocialProof from '@/components/shop/SocialProof.astro';
+import Faq from '@/components/shop/Faq.astro';
+import CtaBand from '@/components/shop/CtaBand.astro';
+import { getProducts, getSectors, type Product, type Sector } from '@/lib/catalog';
+import { breadcrumbSchema, faqSchema } from '@/lib/schema';
+import { url } from '@/lib/url';
+
+export async function getStaticPaths() {
+  const [sectors, products] = await Promise.all([getSectors(), getProducts()]);
+  return sectors.map((s) => ({ params: { sector: s.slug }, props: { sector: s, products } }));
+}
+
+interface Props {
+  sector: Sector;
+  products: Product[];
+}
+const { sector: s, products } = Astro.props;
+const set = products.find((p) => p.type === 'kaartenset')!;
+const totem = products.find((p) => p.type === 'totem')!;
+const byType = { kaartenset: set, totem };
+const q = `?sector=${s.slug}`;
+---
+<BaseLayout
+  title={s.metaTitle}
+  description={s.metaDescription}
+  path={`/voor/${s.slug}`}
+  ogImage={`/og/voor-${s.slug}.png`}
+  page="sector"
+  sector={s.slug}
+  schemas={[
+    breadcrumbSchema([{ name: 'Shop', path: '/' }, { name: s.naam, path: `/voor/${s.slug}` }]),
+    faqSchema(s.faq),
+  ]}
+>
+  <section class="grid-bg">
+    <div class="container-rp grid items-center gap-10 py-14 md:py-20 lg:grid-cols-[1.1fr_1fr]">
+      <div class="grid gap-6">
+        <p class="chip w-fit">Voor {s.naam.toLowerCase()} · gratis · NL &amp; BE</p>
+        <h1 class="text-4xl md:text-[3.2rem]">{s.heroTitel}</h1>
+        <p class="max-w-xl text-lg leading-relaxed text-ink-soft">{s.samenvatting}</p>
+        <div class="flex flex-wrap gap-3">
+          <a href={url(`/aanvragen${q}`)} class="btn btn-primary btn-lg">Vraag gratis aan</a>
+          <a href="#voorbeelden" class="btn btn-secondary btn-lg">Zo gebruik je ze</a>
+        </div>
+        <p class="text-sm text-ink-soft">{s.heroTekst}</p>
+      </div>
+      <div class="card aspect-[4/3] overflow-hidden !rounded-[var(--radius-panel)] shadow-[var(--shadow-glow)]">
+        <ProductVisual product={set} eager />
+      </div>
+    </div>
+  </section>
+
+  <section id="voorbeelden" class="container-rp scroll-mt-24 py-16" aria-labelledby="vb-title">
+    <p class="eyebrow">Voorbeelden</p>
+    <h2 id="vb-title" class="mt-2 text-3xl md:text-4xl">Zo zet je de kaarten en totem in</h2>
+    <ul class="mt-8 grid gap-4 md:grid-cols-3">
+      {s.voorbeelden.map((v) => (
+        <li class="card overflow-hidden">
+          <div class="aspect-[4/3]"><ProductVisual product={byType[v.product]} sizes="(min-width: 810px) 33vw, 100vw" /></div>
+          <div class="grid gap-2 p-5">
+            <h3 class="text-lg !text-ink">{v.titel}</h3>
+            <p class="text-ink-soft">{v.tekst}</p>
+          </div>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <HowItWorks />
+
+  <section class="container-rp py-12" aria-labelledby="prod-title">
+    <h2 id="prod-title" class="text-3xl md:text-4xl">Het aanbod</h2>
+    <div class="mt-8 grid gap-6 md:grid-cols-2">
+      {products.map((p) => <ProductCard product={p} sector={s.slug} />)}
+    </div>
+  </section>
+
+  <TotemPromo totem={totem} sector={s.slug} />
+  <SocialProof />
+  <Faq items={s.faq} />
+  <CtaBand sector={s.slug} />
+</BaseLayout>

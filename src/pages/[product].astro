@@ -1,0 +1,151 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ProductVisual from '@/components/shop/ProductVisual.astro';
+import PriceTag from '@/components/shop/PriceTag.astro';
+import Faq from '@/components/shop/Faq.astro';
+import CtaBand from '@/components/shop/CtaBand.astro';
+import TotemPromo from '@/components/shop/TotemPromo.astro';
+import { getProducts, visibleSpecs, type Product } from '@/lib/catalog';
+import { breadcrumbSchema, faqSchema, productSchema } from '@/lib/schema';
+import { formatPrice } from '@/lib/format';
+import { absoluteUrl, url } from '@/lib/url';
+import { FEATURES, PRICE_NOTE } from '@/config/site';
+import { render, getEntry } from 'astro:content';
+
+export async function getStaticPaths() {
+  const products = await getProducts();
+  return products.map((p) => ({ params: { product: p.slug }, props: { product: p, all: products } }));
+}
+
+interface Props {
+  product: Product;
+  all: Product[];
+}
+const { product: p, all } = Astro.props;
+const entry = await getEntry('products', p.slug);
+const { Content } = entry ? await render(entry) : { Content: null };
+const isTotem = p.gratisVoorwaarde === 'bij-demo';
+const totem = all.find((x) => x.type === 'totem');
+const specs = visibleSpecs(p);
+const ogImage = `/og/${p.slug}.png`;
+const title = `${p.naam}: ${isTotem ? 'gratis bij je demo' : 'gratis aanvragen'} | Review Plus`;
+---
+<BaseLayout
+  title={title}
+  description={p.samenvatting.slice(0, 155).replace(/\s+\S*$/, '') + '…'}
+  path={`/${p.slug}`}
+  ogImage={ogImage}
+  page="product"
+  schemas={[
+    productSchema(p, absoluteUrl(ogImage)),
+    breadcrumbSchema([{ name: 'Shop', path: '/' }, { name: p.naam, path: `/${p.slug}` }]),
+    faqSchema(p.faq),
+  ]}
+>
+  <nav aria-label="Kruimelpad" class="container-rp pt-6 text-sm text-muted">
+    <ol class="flex gap-2">
+      <li><a href={url('/')} class="hover:text-brand-600">Shop</a></li>
+      <li aria-hidden="true">/</li>
+      <li aria-current="page" class="text-ink">{p.naam}</li>
+    </ol>
+  </nav>
+
+  <section class="container-rp grid gap-10 py-8 lg:grid-cols-2 lg:py-12" data-product-view={p.slug}>
+    <div class="card aspect-[4/3] overflow-hidden !rounded-[var(--radius-panel)]">
+      <ProductVisual product={p} eager />
+    </div>
+
+    <div class="grid content-start gap-6">
+      <p class="chip w-fit">{isTotem ? 'Gratis bij het inplannen van een demo' : 'Altijd gratis, 1 set per bedrijf'}</p>
+      <h1 class="text-4xl md:text-5xl">{p.naam}</h1>
+      <p class="text-lg leading-relaxed text-ink-soft">{p.samenvatting}</p>
+      <PriceTag product={p} size="lg" />
+
+      <div class="flex flex-wrap gap-3">
+        <a href={url('/aanvragen')} class="btn btn-primary btn-lg">{isTotem ? 'Vraag aan en plan je demo' : 'Vraag gratis aan'}</a>
+      </div>
+
+      {FEATURES.paidExtras && p.prijsExtra > 0 && (
+        <form class="card grid gap-3 p-5 !shadow-none" data-extras-form data-slug={p.slug} data-max={p.maxExtra} data-next={url('/aanvragen')}>
+          <label for={`extra-${p.slug}`} class="font-medium">
+            Meer nodig? Extra {p.extraEenheid === 'kaart' ? 'kaarten' : 'totems'} à {formatPrice(p.prijsExtra)} per stuk
+            <span class="block text-sm font-normal text-muted">Bovenop je gratis {isTotem ? 'totem' : 'set'} · {PRICE_NOTE} · betalen met iDEAL, Bancontact of creditcard</span>
+          </label>
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center rounded-full border border-line-strong">
+              <button type="button" class="size-11 rounded-full text-xl text-brand-600 hover:bg-brand-100" data-step="-1" aria-label="Eén minder">−</button>
+              <input id={`extra-${p.slug}`} name="qty" type="number" inputmode="numeric" min="0" max={p.maxExtra} value="0" class="w-14 border-0 bg-transparent text-center text-lg [appearance:textfield] focus:outline-none" />
+              <button type="button" class="size-11 rounded-full text-xl text-brand-600 hover:bg-brand-100" data-step="1" aria-label="Eén meer">+</button>
+            </div>
+            <button type="submit" class="btn btn-secondary">Toevoegen aan aanvraag</button>
+          </div>
+          <p class="hint" data-extras-status aria-live="polite"></p>
+        </form>
+      )}
+
+      <ul class="grid gap-2">
+        {p.voordelen.map((v) => (
+          <li class="flex gap-3 text-ink-soft"><span class="mt-0.5 text-brand-600" aria-hidden="true">✓</span>{v}</li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="container-rp grid gap-8 py-12 lg:grid-cols-2" aria-labelledby="zo-werkt-het">
+    <div>
+      <h2 id="zo-werkt-het" class="text-3xl">Zo werkt het</h2>
+      <ol class="mt-6 grid gap-4">
+        <li class="flex gap-4"><span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-100 font-semibold text-brand-600">1</span><p class="text-ink-soft"><strong class="text-ink">Je klant tikt</strong> met de telefoon op de {isTotem ? 'totem' : 'kaart'}, of scant de QR-code.</p></li>
+        <li class="flex gap-4"><span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-100 font-semibold text-brand-600">2</span><p class="text-ink-soft"><strong class="text-ink">De reviewpagina opent direct</strong>, zonder app of zoeken.</p></li>
+        <li class="flex gap-4"><span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-100 font-semibold text-brand-600">3</span><p class="text-ink-soft"><strong class="text-ink">De review staat online</strong> en jij ziet in Review Plus hoe vaak er getikt wordt.</p></li>
+      </ol>
+      {Content && <div class="prose-rp mt-6"><Content /></div>}
+    </div>
+    {specs.length > 0 && (
+      <div class="card p-6">
+        <h2 class="text-xl">Specificaties</h2>
+        <dl class="mt-4 divide-y divide-line">
+          {specs.map((s) => (
+            <div class="grid grid-cols-[140px_1fr] gap-4 py-3 text-sm">
+              <dt class="text-muted">{s.label}</dt>
+              <dd class="text-ink">{s.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    )}
+  </section>
+
+  {!isTotem && totem && <TotemPromo totem={totem} />}
+  <Faq items={p.faq} />
+  <CtaBand />
+
+  <script>
+    import { track } from '@/lib/client/analytics';
+    import { getCart, setExtra } from '@/lib/client/cart';
+
+    const view = document.querySelector<HTMLElement>('[data-product-view]');
+    if (view) track('product_view', { product: view.dataset.productView ?? '' });
+
+    document.querySelectorAll<HTMLFormElement>('form[data-extras-form]').forEach((form) => {
+      const slug = form.dataset.slug!;
+      const max = Number(form.dataset.max) || 50;
+      const input = form.querySelector<HTMLInputElement>('input[name=qty]')!;
+      const status = form.querySelector<HTMLElement>('[data-extras-status]')!;
+      input.value = String(getCart().extras[slug] ?? 0);
+      form.querySelectorAll<HTMLButtonElement>('[data-step]').forEach((b) =>
+        b.addEventListener('click', () => {
+          input.value = String(Math.max(0, Math.min(max, (Number(input.value) || 0) + Number(b.dataset.step))));
+        }),
+      );
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const cart = setExtra(slug, Number(input.value), max);
+        const n = cart.extras[slug] ?? 0;
+        status.innerHTML = n
+          ? `${n} extra toegevoegd aan je aanvraag. <a class="text-brand-600 underline" href="${form.dataset.next}">Ga naar aanvragen</a>`
+          : 'Geen extra\'s in je aanvraag.';
+      });
+    });
+  </script>
+</BaseLayout>

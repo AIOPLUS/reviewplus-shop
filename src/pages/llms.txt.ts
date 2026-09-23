@@ -1,0 +1,41 @@
+import type { APIRoute } from 'astro';
+import { getProducts, getSectors } from '@/lib/catalog';
+import { absoluteUrl } from '@/lib/url';
+import { brand } from '@/config/brand';
+import { formatPrice } from '@/lib/format';
+import { PRICE_NOTE } from '@/config/site';
+
+export const GET: APIRoute = async () => {
+  const [products, sectors] = await Promise.all([getProducts(), getSectors()]);
+  const productLines = products.map((p) => {
+    const cond = p.gratisVoorwaarde === 'bij-demo' ? 'gratis bij het inplannen van een demo' : 'altijd gratis';
+    return `- [${p.naam}](${absoluteUrl(`/${p.slug}`)}): ${cond}, max. ${p.maxPerBedrijf} per bedrijf, normale waarde ${formatPrice(p.normalePrijs)}. Extra ${p.extraEenheid}: ${formatPrice(p.prijsExtra)} per stuk (${PRICE_NOTE}).`;
+  });
+  const body = `# ${brand.name} Shop
+
+> ${brand.name} is reputatiemanagement-software uit Nederland. Via deze shop vragen bedrijven in Nederland en België gratis een NFC 3-kaartenset aan waarmee klanten met één tik een review achterlaten. Wie een demo van Review Plus inplant, krijgt er gratis een NFC-totem (tafelstandaard) bij.
+
+## Aanbod
+${productLines.join('\n')}
+
+## Voorwaarden (kort)
+- Alleen voor bedrijven met een KvK-nummer (NL) of KBO-nummer (BE).
+- Eén gratis kaartenset en één gratis totem per bedrijf; de totem is gratis bij het inplannen van een demo.
+- Verzending is altijd gratis, levering in Nederland en België.
+- Geen verplichting tot een abonnement.
+- Volledige voorwaarden: ${absoluteUrl('/actievoorwaarden')}
+
+## Belangrijke pagina's
+- [Shop](${absoluteUrl('/')})
+- [Gratis aanvragen](${absoluteUrl('/aanvragen')})
+- [Actievoorwaarden](${absoluteUrl('/actievoorwaarden')})
+- [Productcatalogus (JSON)](${absoluteUrl('/products.json')})
+${sectors.map((s) => `- [${s.naam}](${absoluteUrl(`/voor/${s.slug}`)})`).join('\n')}
+
+## Over ${brand.name}
+- Website: ${brand.mainSiteUrl}
+- Demo boeken: ${brand.demoBookingUrl}
+- Contact: ${brand.email}
+`;
+  return new Response(body, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+};

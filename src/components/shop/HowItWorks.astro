@@ -1,0 +1,24 @@
+---
+interface Props {
+  title?: string;
+}
+const { title = 'Zo werkt het' } = Astro.props;
+const steps = [
+  { t: 'Vraag gratis aan', d: 'Vul in twee minuten je bedrijfsgegevens in. Je hebt alleen je KvK- of KBO-nummer nodig.' },
+  { t: 'Plan je demo (optioneel)', d: 'Plan een korte demo van Review Plus in en je ontvangt de NFC-totem er gratis bij.' },
+  { t: 'Tikken, reviews ontvangen', d: 'We sturen je kaarten gratis op. Je klant tikt met de telefoon en staat direct op je reviewpagina.' },
+];
+---
+<section class="container-rp py-16" aria-labelledby="hiw-title">
+  <p class="eyebrow">In 3 stappen</p>
+  <h2 id="hiw-title" class="mt-2 text-3xl md:text-4xl">{title}</h2>
+  <ol class="mt-10 grid gap-4 md:grid-cols-3">
+    {steps.map((s, i) => (
+      <li class="card grid content-start gap-3 p-6">
+        <span class="flex size-10 items-center justify-center rounded-full bg-brand-600 font-semibold text-white" aria-hidden="true">{i + 1}</span>
+        <h3 class="text-lg !text-ink">{s.t}</h3>
+        <p class="text-ink-soft">{s.d}</p>
+      </li>
+    ))}
+  </ol>
+</section>

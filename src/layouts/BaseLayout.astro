@@ -1,0 +1,127 @@
+---
+import '@fontsource/poppins/latin-400.css';
+import '@fontsource/poppins/latin-500.css';
+import '@fontsource/poppins/latin-600.css';
+import '@/styles/global.css';
+import poppins400 from '@fontsource/poppins/files/poppins-latin-400-normal.woff2?url';
+import poppins500 from '@fontsource/poppins/files/poppins-latin-500-normal.woff2?url';
+import Header from '@/components/layout/Header.astro';
+import Footer from '@/components/layout/Footer.astro';
+import CookieBanner from '@/components/layout/CookieBanner.astro';
+import Seo from '@/components/seo/Seo.astro';
+import { ANALYTICS, PIXELS } from '@/config/site';
+import { organizationSchema } from '@/lib/schema';
+import { asset } from '@/lib/url';
+
+interface Props {
+  title: string;
+  description: string;
+  path: string;
+  ogImage?: string;
+  noindex?: boolean;
+  schemas?: (Record<string, unknown> | null)[];
+  /** Slug van de sectorpagina, voor attributie (sector_page). */
+  sector?: string;
+  /** Pagina-type voor analytics (data-page). */
+  page?: string;
+}
+
+const { title, description, path, ogImage = '/og/shop.png', noindex, schemas = [], sector, page = 'overig' } = Astro.props;
+const hasPixels = Boolean(PIXELS.metaPixelId || PIXELS.gadsId);
+const plausibleSrc = ANALYTICS.scriptUrl || 'https://plausible.io/js/script.js';
+---
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0040C1" />
+    <link rel="icon" href={asset('/favicon.svg')} type="image/svg+xml" />
+    <link rel="preload" href={poppins400} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={poppins500} as="font" type="font/woff2" crossorigin />
+    <Seo title={title} description={description} path={path} ogImage={ogImage} noindex={noindex} schemas={[organizationSchema(), ...schemas]} />
+    {ANALYTICS.provider === 'plausible' && (
+      <>
+        <script is:inline>window.plausible = window.plausible || function (...a) { (window.plausible.q = window.plausible.q || []).push(a); };</script>
+        <script is:inline defer data-domain={ANALYTICS.domain} src={plausibleSrc}></script>
+      </>
+    )}
+    {ANALYTICS.provider === 'umami' && ANALYTICS.scriptUrl && ANALYTICS.umamiWebsiteId && (
+      <script is:inline defer src={ANALYTICS.scriptUrl} data-website-id={ANALYTICS.umamiWebsiteId}></script>
+    )}
+  </head>
+  <body data-page={page} data-sector={sector ?? ''}>
+    <a href="#main" class="sr-only-focusable fixed left-3 top-3 z-[60] rounded-full bg-brand-600 px-4 py-2 text-white">Naar de inhoud</a>
+    <Header />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer />
+    {hasPixels && <CookieBanner />}
+
+    <script>
+      import { captureAttribution } from '@/lib/client/attribution';
+      import { bindTrackedClicks } from '@/lib/client/analytics';
+      import { configurePixels, getConsent, hasPixels, loadPixels, setConsent } from '@/lib/client/consent';
+      import { LEAD, PIXELS } from '@/config/site';
+      import { validateEmail } from '@/lib/validation';
+
+      captureAttribution(document.body.dataset.sector || null);
+      bindTrackedClicks();
+
+      // Toestemming & pixels
+      configurePixels(PIXELS);
+      const banner = document.getElementById('cookie-banner');
+      if (hasPixels() && banner) {
+        const consent = getConsent();
+        if (!consent) banner.hidden = false;
+        else loadPixels();
+        banner.querySelectorAll<HTMLButtonElement>('[data-consent]').forEach((btn) =>
+          btn.addEventListener('click', () => {
+            setConsent(btn.dataset.consent === 'accept');
+            banner.hidden = true;
+          }),
+        );
+        document.querySelectorAll('[data-open-consent]').forEach((el) =>
+          el.addEventListener('click', () => {
+            banner.hidden = false;
+            banner.querySelector<HTMLButtonElement>('[data-consent]')?.focus();
+          }),
+        );
+      }
+
+      // Nieuwsbrief (footer) → zelfde webhook, request_type "nieuwsbrief"
+      document.querySelectorAll<HTMLFormElement>('form[data-newsletter]').forEach((form) => {
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const input = form.querySelector<HTMLInputElement>('input[type=email]')!;
+          const status = form.querySelector<HTMLElement>('#nb-status')!;
+          const check = validateEmail(input.value);
+          if (!check.ok) {
+            input.setAttribute('aria-invalid', 'true');
+            status.textContent = check.error ?? '';
+            return;
+          }
+          input.removeAttribute('aria-invalid');
+          if (!LEAD.webhookUrl) {
+            status.textContent = 'Aanmelden is nog niet beschikbaar.';
+            return;
+          }
+          status.textContent = 'Even geduld…';
+          try {
+            const res = await fetch(LEAD.webhookUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ request_type: 'nieuwsbrief', lead_source: 'shop', email: check.value, submitted_at: new Date().toISOString(), pagina: location.href }),
+            });
+            if (!res.ok) throw new Error(String(res.status));
+            status.textContent = 'Bedankt! Je bent aangemeld.';
+            form.reset();
+          } catch {
+            status.textContent = 'Aanmelden lukte niet. Probeer het later opnieuw.';
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

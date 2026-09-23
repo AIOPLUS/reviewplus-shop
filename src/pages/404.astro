@@ -1,0 +1,19 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { brand } from '@/config/brand';
+import { url } from '@/lib/url';
+---
+<BaseLayout title="Pagina niet gevonden | Review Plus Shop" description="Deze pagina bestaat niet (meer)." path="/404" page="404" noindex>
+  <section class="grid-bg">
+    <div class="container-rp grid justify-items-center gap-6 py-24 text-center">
+      <p class="eyebrow">404</p>
+      <h1 class="text-4xl md:text-5xl">Deze pagina bestaat niet (meer)</h1>
+      <p class="max-w-lg text-ink-soft">Misschien is de link verouderd. Je gratis NFC-kaarten vraag je gewoon aan via de shop.</p>
+      <div class="flex flex-wrap justify-center gap-3">
+        <a href={url('/')} class="btn btn-primary btn-lg">Naar de shop</a>
+        <a href={url('/aanvragen')} class="btn btn-secondary btn-lg">Gratis aanvragen</a>
+        <a href={`${brand.mainSiteUrl}/`} class="btn btn-ghost btn-lg">Naar reviewplus.io</a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

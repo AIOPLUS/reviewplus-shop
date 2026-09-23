@@ -1,0 +1,80 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { brand } from '@/config/brand';
+import { TOTEM_RESERVATION_DAYS } from '@/config/site';
+import { breadcrumbSchema } from '@/lib/schema';
+import { url } from '@/lib/url';
+// TODO: laat actievoorwaarden en privacytekst controleren door een jurist.
+---
+<BaseLayout
+  title="Actievoorwaarden gratis NFC-kaarten en totem | Review Plus"
+  description="De voorwaarden van de gratis Review Plus NFC-kaartenset en de gratis NFC-totem bij een demo, voor bedrijven in Nederland en België."
+  path="/actievoorwaarden"
+  page="actievoorwaarden"
+  schemas={[breadcrumbSchema([{ name: 'Shop', path: '/' }, { name: 'Actievoorwaarden', path: '/actievoorwaarden' }])]}
+>
+  <article class="container-rp max-w-3xl py-12 md:py-16">
+    <h1 class="text-4xl">Actievoorwaarden</h1>
+    <p class="mt-4 text-lg text-ink-soft">
+      Review Plus geeft bedrijven in Nederland en België gratis een NFC 3-kaartenset, en een gratis NFC-totem als ze een demo
+      inplannen. Hieronder lees je wie mee kan doen, wat je ontvangt en wat we met je gegevens doen. Deelname kost niets
+      en je zit nergens aan vast.
+    </p>
+    <p class="mt-4 rounded-2xl bg-warning-bg p-4 text-sm text-warning">Conceptversie, laatst bijgewerkt: TODO datum. <!-- TODO: jurist --></p>
+
+    <div class="prose-rp mt-8">
+      <h2>1. Wie kan meedoen</h2>
+      <ul>
+        <li>De actie is alleen voor bedrijven met een geldig KvK-nummer (Nederland) of KBO-/ondernemingsnummer (België).</li>
+        <li>Particulieren zijn uitgesloten.</li>
+        <li>Het levergebied is Nederland en België.</li>
+      </ul>
+
+      <h2>2. Wat je ontvangt</h2>
+      <ul>
+        <li><strong>NFC 3-kaartenset:</strong> maximaal 1 gratis set per bedrijf.</li>
+        <li><strong>NFC-totem:</strong> maximaal 1 gratis totem per bedrijf, alleen als je een demo van Review Plus inplant.
+          De totem wordt verzonden nadat de demo is ingepland.</li>
+        <li>Verzending is gratis, in Nederland en België.</li>
+        <li>De actie geldt zolang de voorraad strekt.</li>
+      </ul>
+
+      <h2>3. De demo en de totem</h2>
+      <ul>
+        <li>Kies je bij je aanvraag voor de totem, dan reserveren we deze {TOTEM_RESERVATION_DAYS} dagen voor je. <!-- TODO: Jordan bevestigt termijn --> Plan je binnen die termijn geen demo in, dan vervalt de reservering.</li>
+        <li>Gebruik bij het inplannen hetzelfde e-mailadres als bij je aanvraag, zodat we de demo aan je aanvraag kunnen koppelen.</li>
+        <li>Bij het niet verschijnen op de demo: TODO: Jordan bepaalt wat er gebeurt bij een no-show.</li>
+      </ul>
+
+      <h2>4. Extra kaarten en totems</h2>
+      <p>Extra kaarten en totems boven het gratis aantal kun je in dezelfde aanvraag bestellen tegen de prijs die in de shop staat.
+        Je betaalt alleen voor de extra's, via iDEAL, Bancontact of creditcard (afgehandeld door Mollie). Rond je de betaling niet af,
+        dan blijven je gratis producten gewoon aangevraagd.</p>
+
+      <h2>5. Geen verplichtingen</h2>
+      <p>Aan de actie is geen verplichting tot het afnemen van een abonnement verbonden. De kaarten en de totem blijven van jou.</p>
+
+      <h2>6. Weigeren van aanvragen</h2>
+      <p>Review Plus mag aanvragen zonder opgave van redenen weigeren, bijvoorbeeld bij onjuiste gegevens, dubbele aanvragen of vermoeden van misbruik.</p>
+
+      <h2>7. Je gegevens</h2>
+      <p>We gebruiken je gegevens om je aanvraag te verwerken en de producten te verzenden, en (met je toestemming) om contact met je
+        op te nemen over je aanvraag en over Review Plus Online. Hiervoor werken we met deze verwerkers:</p>
+      <ul>
+        <li>Make.com (verwerken van de aanvraag)</li>
+        <li>Teamleader (klantbeheer en demo-afspraken)</li>
+        <li>Cloudflare Turnstile (beveiliging tegen spam)</li>
+        <li>Mollie (alleen bij betaalde extra's)</li>
+        <li>Google Workspace (verzendlijst). TODO: Jordan bevestigt</li>
+        <li>Analytics: TODO: Plausible of Umami, cookieloos</li>
+      </ul>
+      <p>Bewaartermijn: TODO: Jordan bepaalt de bewaartermijn (bijvoorbeeld 24 maanden na het laatste contact als er geen klantrelatie ontstaat).</p>
+      <p>Lees ook onze <a href={`${brand.mainSiteUrl}/privacy-policy`}>privacyverklaring</a>. TODO: de privacyverklaring op de hoofdsite aanvullen met de shop-verwerkingen hierboven.</p>
+
+      <h2>8. Contact</h2>
+      <p>Vragen over de actie? Mail naar <a href={`mailto:${brand.email}`}>{brand.email}</a>.</p>
+    </div>
+
+    <p class="mt-10"><a href={url('/aanvragen')} class="btn btn-primary">Vraag gratis aan</a></p>
+  </article>
+</BaseLayout>

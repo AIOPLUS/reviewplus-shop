@@ -1,0 +1,32 @@
+---
+import { formatPrice } from '@/lib/format';
+import { PRICE_NOTE } from '@/config/site';
+import type { Product } from '@/lib/catalog';
+
+interface Props {
+  product: Pick<Product, 'prijs' | 'normalePrijs' | 'gratisVoorwaarde' | 'prijsExtra' | 'extraEenheid'>;
+  size?: 'sm' | 'lg';
+  showExtra?: boolean;
+}
+const { product: p, size = 'sm', showExtra = false } = Astro.props;
+const free = p.prijs === 0;
+const label = p.gratisVoorwaarde === 'bij-demo' ? 'nu gratis bij je demo' : 'nu gratis';
+---
+<div class="grid gap-1">
+  <p class={`flex flex-wrap items-baseline gap-x-2 ${size === 'lg' ? 'text-2xl' : 'text-lg'}`}>
+    {free ? (
+      <>
+        <span class="font-semibold text-brand-600">Gratis</span>
+        <span class="text-[.8em] text-muted">
+          t.w.v. <s aria-label={`normale prijs ${formatPrice(p.normalePrijs)}`}>{formatPrice(p.normalePrijs)}</s>, {label}
+        </span>
+      </>
+    ) : (
+      <span class="font-semibold">{formatPrice(p.prijs)}</span>
+    )}
+  </p>
+  <p class="text-sm text-muted">Gratis verzonden in Nederland en België</p>
+  {showExtra && (
+    <p class="text-sm text-muted">Extra {p.extraEenheid}: {formatPrice(p.prijsExtra)} per stuk ({PRICE_NOTE})</p>
+  )}
+</div>

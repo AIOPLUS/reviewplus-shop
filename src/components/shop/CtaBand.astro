@@ -1,0 +1,21 @@
+---
+import { url } from '@/lib/url';
+interface Props {
+  title?: string;
+  text?: string;
+  sector?: string;
+}
+const {
+  title = 'Vraag vandaag nog je gratis NFC-kaarten aan',
+  text = 'Gratis voor bedrijven in Nederland en België, ook gratis verzonden. Je zit nergens aan vast.',
+  sector,
+} = Astro.props;
+const q = sector ? `?sector=${sector}` : '';
+---
+<section class="container-rp py-16">
+  <div class="grid-bg grid justify-items-center gap-5 rounded-[var(--radius-panel)] border border-brand-200 bg-brand-50 px-6 py-14 text-center">
+    <h2 class="max-w-2xl text-3xl md:text-4xl">{title}</h2>
+    <p class="max-w-xl text-ink-soft">{text}</p>
+    <a href={url(`/aanvragen${q}`)} class="btn btn-primary btn-lg">Vraag gratis aan</a>
+  </div>
+</section>

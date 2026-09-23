@@ -1,0 +1,32 @@
+---
+import ProductVisual from './ProductVisual.astro';
+import { formatPrice } from '@/lib/format';
+import { url } from '@/lib/url';
+import type { Product } from '@/lib/catalog';
+
+interface Props {
+  totem: Product;
+  sector?: string;
+}
+const { totem, sector } = Astro.props;
+const q = sector ? `?sector=${sector}` : '';
+---
+<section class="container-rp py-8" aria-labelledby="totem-promo">
+  <div class="relative grid items-center gap-8 overflow-hidden rounded-[var(--radius-panel)] bg-gradient-to-br from-brand-500 to-brand-600 p-8 text-white shadow-[var(--shadow-glow)] md:grid-cols-[1.3fr_1fr] md:p-12">
+    <div class="grid gap-4">
+      <p class="chip w-fit !bg-white/15 !text-white">Cadeau bij je demo</p>
+      <h2 id="totem-promo" class="text-3xl !text-white md:text-4xl">Plan een demo in en ontvang de NFC-totem gratis</h2>
+      <p class="text-white/85">
+        Normaal <s>{formatPrice(totem.normalePrijs)}</s>. Plan een korte, vrijblijvende demo van Review Plus in en we sturen
+        de totem gratis mee. Je kaartenset gaat sowieso al onderweg.
+      </p>
+      <div class="flex flex-wrap gap-2">
+        <a href={url(`/aanvragen${q}`)} class="btn btn-lg bg-white !text-brand-600 hover:bg-brand-100">Vraag aan met totem</a>
+        <a href={url(`/${totem.slug}`)} class="btn btn-lg border-white/40 !text-white hover:bg-white/10">Over de totem</a>
+      </div>
+    </div>
+    <div class="mx-auto aspect-[4/3] w-full max-w-[360px] overflow-hidden rounded-3xl bg-white">
+      <ProductVisual product={totem} sizes="360px" />
+    </div>
+  </div>
+</section>

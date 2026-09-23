@@ -1,0 +1,76 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ProductCard from '@/components/shop/ProductCard.astro';
+import ProductVisual from '@/components/shop/ProductVisual.astro';
+import HowItWorks from '@/components/shop/HowItWorks.astro';
+import TotemPromo from '@/components/shop/TotemPromo.astro';
+import SocialProof from '@/components/shop/SocialProof.astro';
+import Faq from '@/components/shop/Faq.astro';
+import CtaBand from '@/components/shop/CtaBand.astro';
+import { getProducts, getSectors } from '@/lib/catalog';
+import { shopFaq } from '@/config/shop-content';
+import { breadcrumbSchema, faqSchema } from '@/lib/schema';
+import { formatPrice } from '@/lib/format';
+import { url } from '@/lib/url';
+
+const products = await getProducts();
+const sectors = await getSectors();
+const set = products.find((p) => p.type === 'kaartenset')!;
+const totem = products.find((p) => p.type === 'totem')!;
+---
+<BaseLayout
+  title="Gratis NFC-reviewkaarten voor jouw bedrijf | Review Plus Shop"
+  description="Vraag gratis drie NFC-reviewkaarten aan voor je bedrijf in Nederland of België, ook gratis verzonden. Plan een demo in en ontvang er een NFC-totem gratis bij."
+  path="/"
+  page="home"
+  schemas={[breadcrumbSchema([{ name: 'Shop', path: '/' }]), faqSchema(shopFaq)]}
+>
+  <section class="grid-bg relative overflow-hidden">
+    <div class="container-rp grid items-center gap-10 py-14 md:py-20 lg:grid-cols-[1.1fr_1fr]">
+      <div class="grid gap-6">
+        <p class="chip w-fit">Gratis · ook gratis verzonden · NL &amp; BE</p>
+        <h1 class="text-4xl md:text-[3.4rem]">Gratis NFC-reviewkaarten voor jouw bedrijf</h1>
+        <p class="max-w-xl text-lg leading-relaxed text-ink-soft">
+          Review Plus stuurt bedrijven in Nederland en België gratis drie NFC-reviewkaarten. Je klant tikt met de telefoon op
+          de kaart en laat direct een Google-review achter. Plan je een korte demo in, dan krijg je er een NFC-totem
+          (t.w.v. {formatPrice(totem.normalePrijs)}) gratis bij.
+        </p>
+        <div class="flex flex-wrap gap-3">
+          <a href={url('/aanvragen')} class="btn btn-primary btn-lg">Vraag gratis aan</a>
+          <a href="#producten" class="btn btn-secondary btn-lg">Bekijk de producten</a>
+        </div>
+        <ul class="flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink-soft">
+          <li class="flex items-center gap-2"><span class="text-brand-600" aria-hidden="true">✓</span> 1 set per bedrijf</li>
+          <li class="flex items-center gap-2"><span class="text-brand-600" aria-hidden="true">✓</span> Geen abonnement nodig</li>
+          <li class="flex items-center gap-2"><span class="text-brand-600" aria-hidden="true">✓</span> Werkt zonder app</li>
+        </ul>
+      </div>
+      <div class="card aspect-[4/3] overflow-hidden !rounded-[var(--radius-panel)] shadow-[var(--shadow-glow)]">
+        <ProductVisual product={set} eager sizes="(min-width: 1200px) 560px, 100vw" />
+      </div>
+    </div>
+  </section>
+
+  <HowItWorks />
+
+  <section id="producten" class="container-rp scroll-mt-24 py-12" aria-labelledby="producten-title">
+    <p class="eyebrow">Het aanbod</p>
+    <h2 id="producten-title" class="mt-2 text-3xl md:text-4xl">Kies wat bij jouw bedrijf past</h2>
+    <div class="mt-8 grid gap-6 md:grid-cols-2">
+      {products.map((p) => <ProductCard product={p} />)}
+    </div>
+  </section>
+
+  <TotemPromo totem={totem} />
+  <SocialProof />
+
+  <section class="container-rp py-12" aria-labelledby="sectoren-title">
+    <h2 id="sectoren-title" class="text-2xl">Voorbeelden per branche</h2>
+    <ul class="mt-5 flex flex-wrap gap-2">
+      {sectors.map((s) => <li><a class="btn btn-secondary" href={url(`/voor/${s.slug}`)}>{s.naam}</a></li>)}
+    </ul>
+  </section>
+
+  <Faq items={shopFaq} />
+  <CtaBand />
+</BaseLayout>

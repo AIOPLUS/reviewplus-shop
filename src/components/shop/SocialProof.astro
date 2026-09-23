@@ -1,0 +1,24 @@
+---
+import { socialProof } from '@/config/shop-content';
+---
+<section class="container-rp py-12" aria-label="Wie gebruikt Review Plus">
+  <div class="card grid gap-6 p-8 md:grid-cols-[1fr_auto] md:items-center">
+    <div>
+      <p class="text-2xl font-medium text-brand-600">{socialProof.customerCount}</p>
+      <p class="mt-1 text-ink-soft">vertrouwen al op de review-oplossing van Review Plus.</p>
+    </div>
+    <ul class="flex flex-wrap gap-2" aria-label="Werkt met">
+      {socialProof.platforms.map((p) => <li class="chip">{p}</li>)}
+    </ul>
+  </div>
+  {socialProof.testimonials.length > 0 && (
+    <ul class="mt-6 grid gap-4 md:grid-cols-3">
+      {socialProof.testimonials.map((t) => (
+        <li class="card p-6">
+          <blockquote class="text-ink">“{t.quote}”</blockquote>
+          <p class="mt-4 text-sm text-muted">{t.naam}, {t.bedrijf} ({t.plaats})</p>
+        </li>
+      ))}
+    </ul>
+  )}
+</section>

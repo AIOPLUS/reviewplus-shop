@@ -1,0 +1,37 @@
+---
+/** Toegankelijk formulierveld: label, hint en foutmelding gekoppeld via aria-describedby. */
+interface Props {
+  id: string;
+  label: string;
+  name?: string;
+  type?: 'text' | 'email' | 'tel' | 'url' | 'select' | 'textarea';
+  required?: boolean;
+  autocomplete?: string;
+  inputmode?: 'text' | 'numeric' | 'tel' | 'email' | 'url';
+  placeholder?: string;
+  hint?: string;
+  options?: { value: string; label: string }[];
+  class?: string;
+  maxlength?: number;
+}
+const {
+  id, label, name = id, type = 'text', required = false, autocomplete, inputmode, placeholder, hint, options = [], class: cls = '', maxlength = 200,
+} = Astro.props;
+const describedBy = [hint ? `${id}-hint` : '', `${id}-msg`].filter(Boolean).join(' ');
+---
+<div class={`field ${cls}`} data-field={name}>
+  <label for={id}>{label}{required ? <span class="req" aria-hidden="true"> *</span> : <span class="font-normal text-muted"> (optioneel)</span>}</label>
+  {type === 'select' ? (
+    <select id={id} name={name} class="input" required={required} aria-required={required ? 'true' : undefined} aria-describedby={describedBy} autocomplete={autocomplete}>
+      <option value="">Maak een keuze</option>
+      {options.map((o) => <option value={o.value}>{o.label}</option>)}
+    </select>
+  ) : type === 'textarea' ? (
+    <textarea id={id} name={name} class="input min-h-24" required={required} aria-describedby={describedBy} maxlength={maxlength} placeholder={placeholder}></textarea>
+  ) : (
+    <input id={id} name={name} type={type} class="input" required={required} aria-required={required ? 'true' : undefined} aria-describedby={describedBy}
+      autocomplete={autocomplete} inputmode={inputmode} placeholder={placeholder} maxlength={maxlength} />
+  )}
+  {hint && <p id={`${id}-hint`} class="hint">{hint}</p>}
+  <p id={`${id}-msg`} class="error" aria-live="polite" data-msg></p>
+</div>

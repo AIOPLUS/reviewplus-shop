@@ -1,0 +1,244 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Field from '@/components/flow/Field.astro';
+import { getProducts, getSectors, toPublic } from '@/lib/catalog';
+import { brand } from '@/config/brand';
+import { DEMO_BOOKING_URL, FEATURES, LEAD, PRICE_NOTE, TOTEM_RESERVATION_DAYS } from '@/config/site';
+import { url } from '@/lib/url';
+
+const products = await getProducts();
+const sectors = await getSectors();
+const catalog = products.filter((p) => p.status !== 'uitverkocht').map(toPublic);
+
+const sectorOptions = [
+  ...sectors.map((s) => ({ value: s.slug, label: s.naam })),
+  { value: 'zorg-overig', label: 'Zorg (overig)' },
+  { value: 'zakelijke-dienstverlening', label: 'Zakelijke dienstverlening' },
+  { value: 'bouw-installatie', label: 'Bouw en installatie' },
+  { value: 'automotive', label: 'Automotive' },
+  { value: 'anders', label: 'Anders' },
+];
+const locaties = ['1', '2-5', '6-10', '11+'].map((v) => ({ value: v, label: v === '1' ? '1 locatie' : `${v} locaties` }));
+// TODO: Jordan vult de gangbare reviewtools aan (concurrenten) als opties.
+const reviewTools = [
+  { value: 'geen', label: 'Geen' },
+  { value: 'anders', label: 'Anders, namelijk…' },
+];
+const reviewCounts = ['0-10', '11-50', '51-100', '101-250', '250+', 'weet-niet'].map((v) => ({ value: v, label: v === 'weet-niet' ? 'Weet ik niet' : `${v} reviews` }));
+---
+<BaseLayout
+  title="Gratis NFC-kaarten aanvragen | Review Plus Shop"
+  description="Vraag in drie stappen je gratis Review Plus NFC-kaartenset aan. Plan een demo in en ontvang de NFC-totem er gratis bij. Gratis verzonden in Nederland en België."
+  path="/aanvragen"
+  page="aanvragen"
+>
+  <script type="application/json" id="catalog" set:html={JSON.stringify(catalog)} />
+
+  <div class="container-rp grid gap-8 py-8 lg:grid-cols-[1fr_380px] lg:py-12"
+    data-flow
+    data-webhook={LEAD.webhookUrl}
+    data-provider={LEAD.provider}
+    data-web3forms={LEAD.web3formsKey}
+    data-turnstile={LEAD.turnstileSiteKey}
+    data-fallback-email={LEAD.fallbackEmail}
+    data-demo-url={DEMO_BOOKING_URL}
+    data-bedankt={url('/bedankt')}
+    data-self={url('/aanvragen')}
+    data-address-lookup={FEATURES.addressLookupNL ? '1' : ''}
+  >
+    <div class="min-w-0">
+      <header class="grid gap-3" data-flow-header>
+        <h1 class="text-3xl md:text-4xl">Vraag je gratis NFC-kaarten aan</h1>
+        <p class="text-ink-soft">
+          In drie korte stappen vraag je je gratis NFC 3-kaartenset aan, ook gratis verzonden in Nederland en België.
+          Kies je voor de totem, dan plan je daarna een korte demo in en is de totem ook gratis.
+        </p>
+      </header>
+
+      <div role="status" aria-live="polite" class="mt-6 hidden rounded-2xl border p-4" data-notice></div>
+
+      <div class="mt-6" data-progress-wrap>
+        <div class="flex items-center justify-between text-sm">
+          <p class="font-medium text-brand-600" data-progress-label>Stap 1 van 3: Bedrijf</p>
+          <p class="text-muted" data-progress-hint>± 2 minuten</p>
+        </div>
+        <div class="mt-2 h-2 overflow-hidden rounded-full bg-brand-100" role="progressbar" aria-label="Voortgang aanvraag" aria-valuemin="1" aria-valuemax="3" aria-valuenow="1" data-progress>
+          <div class="h-full w-1/3 rounded-full bg-brand-600 transition-[width]" data-progress-bar></div>
+        </div>
+      </div>
+
+      <form id="aanvraag" class="mt-6" novalidate autocomplete="on">
+        <!-- Honeypot: onzichtbaar voor mensen, bots vullen het in -->
+        <div class="absolute -left-[9999px] h-px w-px overflow-hidden" aria-hidden="true">
+          <label for="hp_bedrijfsurl">Laat dit veld leeg</label>
+          <input id="hp_bedrijfsurl" name="hp_bedrijfsurl" type="text" tabindex="-1" autocomplete="off" />
+        </div>
+
+        <!-- Stap 1: Bedrijf -->
+        <fieldset class="card grid gap-5 p-5 md:p-8" data-step="1">
+          <legend class="sr-only">Stap 1: Bedrijf</legend>
+          <h2 class="text-2xl" tabindex="-1" data-step-title>Over je bedrijf</h2>
+
+          <div class="field" data-field="land">
+            <span class="text-sm font-medium" id="land-label">Land<span class="req" aria-hidden="true"> *</span></span>
+            <div class="grid grid-cols-2 gap-2" role="radiogroup" aria-labelledby="land-label">
+              <label class="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-line-strong px-4 has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50">
+                <input type="radio" name="land" value="NL" checked class="size-5 accent-brand-600" /> Nederland
+              </label>
+              <label class="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-line-strong px-4 has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50">
+                <input type="radio" name="land" value="BE" class="size-5 accent-brand-600" /> België
+              </label>
+            </div>
+          </div>
+
+          <Field id="bedrijfsnaam" label="Bedrijfsnaam" required autocomplete="organization" />
+          <div class="grid gap-5 md:grid-cols-2">
+            <Field id="bedrijfsnummer" label="KvK-nummer" required inputmode="numeric" hint="8 cijfers, te vinden op je KvK-uittreksel." maxlength={20} />
+            <Field id="btw" label="Btw-nummer" hint="Bijvoorbeeld NL123456789B01" maxlength={20} />
+          </div>
+          <div class="grid gap-5 md:grid-cols-2">
+            <Field id="sector" label="Sector" type="select" required options={sectorOptions} />
+            <Field id="locaties" label="Aantal locaties" type="select" required options={locaties} />
+          </div>
+          <Field id="website" label="Website" type="url" inputmode="url" autocomplete="url" placeholder="www.jouwbedrijf.nl" />
+          <div class="grid gap-2">
+            <Field id="google" label="Link naar je Google Bedrijfsprofiel" type="url" inputmode="url"
+              hint="Hiermee koppelen we de kaarten aan de juiste reviewpagina. Weet je de link niet? Laat het leeg, dan zoeken wij het op." />
+            <a href="https://www.google.com/maps" target="_blank" rel="noopener" class="w-fit text-sm text-brand-600 underline" data-maps-search>Zoek je bedrijf op Google Maps</a>
+          </div>
+
+          <div class="flex justify-end pt-2">
+            <button type="button" class="btn btn-primary btn-lg w-full md:w-auto" data-next="2">Volgende: contact &amp; bezorging</button>
+          </div>
+        </fieldset>
+
+        <!-- Stap 2: Contact & bezorging -->
+        <fieldset class="card grid gap-5 p-5 md:p-8" data-step="2" hidden>
+          <legend class="sr-only">Stap 2: Contact en bezorging</legend>
+          <h2 class="text-2xl" tabindex="-1" data-step-title>Contact &amp; bezorging</h2>
+          <div class="grid gap-5 md:grid-cols-2">
+            <Field id="voornaam" label="Voornaam" required autocomplete="given-name" />
+            <Field id="achternaam" label="Achternaam" required autocomplete="family-name" />
+          </div>
+          <Field id="functie" label="Functie" autocomplete="organization-title" />
+          <div class="grid gap-5 md:grid-cols-2">
+            <Field id="email" label="Zakelijk e-mailadres" type="email" required autocomplete="email" inputmode="email" />
+            <Field id="telefoon" label="Telefoonnummer" type="tel" required autocomplete="tel" inputmode="tel" hint="+31 of +32" />
+          </div>
+
+          <h3 class="pt-2 text-lg !text-ink">Bezorgadres</h3>
+          <div class="grid grid-cols-[1fr_1fr] gap-5 md:grid-cols-[1.2fr_1fr_1fr]">
+            <Field id="postcode" label="Postcode" required autocomplete="postal-code" placeholder="1234 AB" maxlength={8} />
+            <Field id="huisnummer" label="Huisnummer" required autocomplete="address-line2" inputmode="numeric" maxlength={8} />
+            <Field id="toevoeging" label="Toevoeging" maxlength={8} class="col-span-2 md:col-span-1" />
+          </div>
+          <p class="hint -mt-2" data-address-status aria-live="polite"></p>
+          <div class="grid gap-5 md:grid-cols-2">
+            <Field id="straat" label="Straat" required autocomplete="address-line1" />
+            <Field id="plaats" label="Plaats" required autocomplete="address-level2" />
+          </div>
+
+          <div class="flex flex-col-reverse justify-between gap-3 pt-2 md:flex-row">
+            <button type="button" class="btn btn-ghost" data-prev="1">← Terug</button>
+            <button type="button" class="btn btn-primary btn-lg" data-next="3">Volgende: bevestigen</button>
+          </div>
+        </fieldset>
+
+        <!-- Stap 3: Bevestigen -->
+        <fieldset class="card grid gap-6 p-5 md:p-8" data-step="3" hidden>
+          <legend class="sr-only">Stap 3: Bevestigen</legend>
+          <h2 class="text-2xl" tabindex="-1" data-step-title>Controleer en bevestig</h2>
+
+          <div class="rounded-2xl bg-brand-50 p-4 text-sm" data-review></div>
+
+          <label class="check rounded-2xl border-2 border-brand-600 bg-brand-50 p-4">
+            <input type="checkbox" name="totem_demo" checked data-totem-toggle />
+            <span><strong class="text-ink">Ja, ik wil ook de gratis NFC-totem en plan een korte demo in.</strong><br />
+              <span class="text-ink-soft">Na het versturen kies je een moment. Je kaarten gaan hoe dan ook al onderweg.</span></span>
+          </label>
+
+          <div class="grid gap-5 md:grid-cols-2">
+            <Field id="reviewtool" label="Welke reviewtool gebruik je nu?" type="select" options={reviewTools} />
+            <Field id="reviews" label="Hoeveel Google-reviews heb je ongeveer?" type="select" options={reviewCounts} />
+          </div>
+          <div hidden data-reviewtool-other>
+            <Field id="reviewtool_anders" label="Welke reviewtool?" maxlength={80} />
+          </div>
+
+          <div class="grid gap-3">
+            <div class="field" data-field="akkoord_voorwaarden">
+              <label class="check !font-normal">
+                <input type="checkbox" id="akkoord_voorwaarden" name="akkoord_voorwaarden" required aria-describedby="akkoord_voorwaarden-msg" />
+                <span>Ik ga akkoord met de <a class="text-brand-600 underline" href={url('/actievoorwaarden')} target="_blank">actievoorwaarden</a> en de <a class="text-brand-600 underline" href={`${brand.mainSiteUrl}/privacy-policy`} target="_blank" rel="noopener">privacyverklaring</a>. <span class="req" aria-hidden="true">*</span></span>
+              </label>
+              <p id="akkoord_voorwaarden-msg" class="error" data-msg></p>
+            </div>
+            <div class="field" data-field="akkoord_contact">
+              <label class="check !font-normal">
+                <input type="checkbox" id="akkoord_contact" name="akkoord_contact" required aria-describedby="akkoord_contact-msg" />
+                <span>Ik ga akkoord dat Review Plus contact met mij opneemt over mijn aanvraag en Review Plus Online. <span class="req" aria-hidden="true">*</span></span>
+              </label>
+              <p id="akkoord_contact-msg" class="error" data-msg></p>
+            </div>
+            <label class="check !font-normal">
+              <input type="checkbox" name="nieuwsbrief" />
+              <span>Stuur me af en toe de nieuwsbrief met tips over reviews (optioneel).</span>
+            </label>
+          </div>
+
+          <div data-turnstile-slot class="min-h-[65px]"></div>
+
+          <div role="alert" class="hidden rounded-2xl border border-danger/30 bg-danger-bg p-4 text-sm text-danger" data-submit-error></div>
+
+          <div class="flex flex-col-reverse justify-between gap-3 md:flex-row">
+            <button type="button" class="btn btn-ghost" data-prev="2">← Terug</button>
+            <button type="submit" class="btn btn-primary btn-lg" data-submit>Verstuur aanvraag</button>
+          </div>
+          <p class="text-center text-xs text-muted md:text-right">Gratis verzending · geen abonnement nodig</p>
+        </fieldset>
+      </form>
+
+      <!-- Stap 4: Demo inplannen -->
+      <section class="card mt-6 grid gap-5 p-6 md:p-10" data-step="demo" hidden aria-labelledby="demo-title">
+        <p class="chip w-fit !bg-success-bg !text-success">✓ Aanvraag ontvangen, je kaarten gaan onderweg</p>
+        <h2 id="demo-title" class="text-3xl" tabindex="-1">Nog één stap: kies een moment voor je demo en de totem is van jou</h2>
+        <p class="text-ink-soft">
+          Plan een korte, vrijblijvende demo van Review Plus in. Gebruik bij het inplannen <strong class="text-ink">hetzelfde e-mailadres</strong>
+          (<span data-demo-email></span>), dan koppelen we je demo automatisch aan je aanvraag en versturen we de totem.
+        </p>
+        <a href={DEMO_BOOKING_URL} target="_blank" rel="noopener" class="btn btn-primary btn-lg w-full md:w-fit" data-demo-open>
+          Kies een moment voor je demo <span aria-hidden="true">↗</span><span class="sr-only">(opent in een nieuw tabblad)</span>
+        </a>
+        <div class="flex flex-col gap-2 border-t border-line pt-5 md:flex-row md:items-center md:justify-between">
+          <p class="text-sm text-muted">Geen tijd? We houden de totem {TOTEM_RESERVATION_DAYS} dagen voor je gereserveerd en sturen je een herinnering.</p>
+          <div class="flex flex-wrap gap-2">
+            <a href={url('/bedankt?demo=later')} class="btn btn-ghost" data-demo-later>Later inplannen</a>
+            <a href={url('/bedankt?demo=ingepland')} class="btn btn-secondary" data-demo-done>Ik heb mijn demo ingepland</a>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Overzicht / winkelwagen -->
+    <aside class="lg:sticky lg:top-24 lg:self-start" aria-labelledby="summary-title" data-summary>
+      <details class="card group p-5 lg:!block" open data-summary-details>
+        <summary class="flex cursor-pointer list-none items-center justify-between lg:cursor-default [&::-webkit-details-marker]:hidden">
+          <h2 id="summary-title" class="text-lg !text-ink">Je aanvraag</h2>
+          <span class="text-sm text-brand-600 lg:hidden" aria-hidden="true"><span class="group-open:hidden">Tonen</span><span class="hidden group-open:inline">Verbergen</span></span>
+        </summary>
+        <ul class="mt-4 grid gap-4" data-lines></ul>
+        <dl class="mt-4 grid gap-2 border-t border-line pt-4 text-sm">
+          <div class="flex justify-between"><dt class="text-muted">Verzending</dt><dd class="font-medium text-success">Gratis</dd></div>
+          <div class="flex justify-between" data-extras-total-row hidden><dt class="text-muted">Te betalen voor extra's</dt><dd class="font-semibold" data-extras-total></dd></div>
+          <div class="flex justify-between" data-free-total-row><dt class="text-muted">Te betalen</dt><dd class="font-semibold">€ 0,00</dd></div>
+        </dl>
+        <p class="mt-3 text-xs text-muted">Prijzen {PRICE_NOTE}. Extra's betaal je na het versturen via iDEAL, Bancontact of creditcard.</p>
+      </details>
+    </aside>
+  </div>
+
+  <script>
+    import { initFlow } from '@/lib/client/flow';
+    initFlow();
+  </script>
+</BaseLayout>

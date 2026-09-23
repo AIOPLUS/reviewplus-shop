@@ -1,0 +1,134 @@
+# Review Plus Shop
+
+Statische lead-generatie-shop voor Review Plus: bedrijven in Nederland en België vragen gratis een **NFC 3-kaartenset** aan en krijgen een **NFC-totem** gratis als ze een demo inplannen. Aanvragen gaan als JSON naar Make.com → Teamleader. Betaalde extra's lopen via Mollie (vanuit Make).
+
+- Stack: Astro 7 (static) · TypeScript · Tailwind CSS 4 · vanilla-TS islands (geen framework-runtime)
+- Hosting: GitHub Pages op `https://shop.reviewplus.io` (fase 1), later `https://www.reviewplus.io/shop` (fase 2)
+- Lighthouse mobiel (lokaal gemeten): 99–100 op alle vier de categorieën, LCP ≤ 1,8 s, CLS ≈ 0
+
+## Snel starten
+
+```bash
+npm install
+cp .env.example .env            # waarden invullen (alles mag leeg voor lokaal)
+npm run dev                     # http://localhost:4321
+```
+
+Aanvraagflow lokaal testen zonder Make:
+
+```bash
+npm run mock-webhook            # http://localhost:8787/hook, simuleert ook Mollie
+```
+
+Zet in `.env.development.local`: `PUBLIC_LEAD_WEBHOOK_URL=http://localhost:8787/hook`.
+
+| Script | Wat |
+|---|---|
+| `npm run dev` / `build` / `preview` | Astro |
+| `npm run typecheck` | `astro check` |
+| `npm run lint` | ESLint (TS + Astro) |
+| `npm run linkcheck` | Interne links in `dist/` (`linkcheck:external` controleert ook externe) |
+| `npm run check` | typecheck + lint + build + linkcheck |
+| `npm run lhci` | Lighthouse CI (zoals in GitHub Actions) |
+| `npm run lighthouse:local` | Lighthouse lokaal op Windows (omzeilt een tmp-map-bug van lhci) |
+| `npm run mock-webhook` | Lokale test-webhook |
+
+## Configuratie
+
+**Build-variabelen** (`.env`, of GitHub → Settings → Secrets and variables → Actions → *Variables*):
+
+| Variabele | Voorbeeld | |
+|---|---|---|
+| `SITE_URL` | `https://shop.reviewplus.io` | Basis voor canonicals, sitemap, schema, OG |
+| `SHOP_BASE_PATH` | `/` (fase 2: `/shop`) | Alle links worden hieruit opgebouwd |
+| `PUBLIC_LEAD_PROVIDER` | `make` | `make` \| `web3forms` \| `formspree` (fallback) |
+| `PUBLIC_LEAD_WEBHOOK_URL` | `https://hook.eu2.make.com/…` | Make-webhook (of Formspree-endpoint) |
+| `PUBLIC_WEB3FORMS_ACCESS_KEY` | | Alleen bij `web3forms` |
+| `PUBLIC_TURNSTILE_SITE_KEY` | | Cloudflare Turnstile; leeg = uit |
+| `PUBLIC_ANALYTICS_PROVIDER` | `plausible` | `plausible` \| `umami` \| leeg |
+| `PUBLIC_ANALYTICS_DOMAIN` / `_SCRIPT_URL` / `PUBLIC_UMAMI_WEBSITE_ID` | | Analytics |
+| `PUBLIC_META_PIXEL_ID`, `PUBLIC_GADS_ID`, `PUBLIC_GADS_CONVERSION_LABEL` | | Leeg = niet laden. Gevuld = cookiebanner verschijnt; pixels laden pas na "Accepteren". |
+
+`PUBLIC_*`-waarden komen in de publieke site terecht; dat is de bedoeling (webhook-URL, site-keys, pixel-ID's). **Echte geheimen** (Turnstile secret, Mollie API-key, Teamleader) staan alleen in Make.
+
+Overige instellingen in code:
+- `src/config/site.ts`: landen, feature flags, `PRICE_NOTE` (incl./excl. btw), `TOTEM_RESERVATION_DAYS`
+- `src/config/brand.ts`: merkgegevens, navigatie, footer, social links, demo- en login-link
+- `src/config/shop-content.ts`: shop-FAQ en social proof (reviews/klantlogo's)
+- `src/styles/tokens.css`: design tokens (afgeleid van www.reviewplus.io: Poppins, `#0040C1`, pill-knoppen)
+
+## Content beheren
+
+- **Producten**: `src/content/products/*.md` (schema in `src/content.config.ts`). Prijzen, gratis voorwaarde, max. aantallen, specs, FAQ. `/products.json` wordt hieruit gegenereerd en door Make gebruikt om bedragen te berekenen, dus prijzen hoef je maar op één plek aan te passen.
+  - Specs met de waarde `TODO` worden niet getoond op de site.
+- **Sectorpagina's** (`/voor/[sector]`): `src/content/sectors/*.md`. Nieuwe sector = nieuw bestand; pagina, sitemap, OG-afbeelding en `llms.txt` volgen automatisch.
+- **Productfoto's/mockups**: zet ze in **`src/assets/products/`** (niet in `public/`, want alleen daar worden ze automatisch naar AVIF/WebP met `srcset` omgezet) en noem de bestandsnaam in `afbeeldingen:` van het product, bv. `afbeeldingen: [kaartenset-hero.png]`. Zonder foto toont de site een SVG-illustratie.
+- **Logo**: `public/assets/brand/logo-icon.svg` en `public/favicon.svg` zijn nu een nagetekende placeholder.
+
+## Structuur
+
+```
+src/
+  config/        brand.ts, site.ts, shop-content.ts   ← merk- en shopinstellingen
+  content/       products/, sectors/                   ← content collections
+  components/
+    layout/      Header, Footer, CookieBanner          ← gedeeld, herbruikbaar voor de hele site
+    seo/         Seo (meta, OG, JSON-LD)
+    shop/        ProductCard, PriceTag, ProductVisual, TotemPromo, Faq, …
+    flow/        Field (toegankelijk formulierveld)
+  layouts/       BaseLayout
+  lib/           url.ts (base path), schema.ts, catalog.ts, validation.ts, format.ts
+    client/      flow.ts (aanvraagflow), cart.ts, lead.ts, attribution.ts, analytics.ts, consent.ts, storage.ts
+  pages/         index, [product], aanvragen, bedankt, actievoorwaarden, voor/[sector], 404,
+                 products.json, llms.txt, robots.txt, og/[slug].png
+scripts/         linkcheck, mock-webhook, lighthouse-local
+docs/            DOMEIN, MAKE-SCENARIO, LEAD-PAYLOAD, OPVOLGING, templates/
+```
+
+Toekomst (AIO PLUS: hoofdsite, View Plus, Website Plus, Tab Plus in één repo): header/footer/SEO/brand zijn losse onderdelen; zie `docs/DOMEIN.md` → Fase 2 voor het verplaatsen van de shop naar `src/pages/shop/`.
+
+## Hoe de aanvraagflow werkt
+
+1. **Stap 1 Bedrijf**: land (NL/BE) bepaalt de validatie: KvK (8 cijfers) of KBO (`0123.456.789`, mod-97-controle), btw-formaat (waarschuwing), sector, locaties, website, Google-profiel.
+2. **Stap 2 Contact & bezorging**: telefoon wordt E.164 (`+31…`/`+32…`), vriendelijke waarschuwing bij gmail/hotmail e.d., postcode NL `1234 AB` / BE `2000`. NL-adressen worden aangevuld via de gratis PDOK Locatieserver.
+3. **Stap 3 Bevestigen**: overzicht (normale prijs doorgestreept, "Verzending: gratis"), totem + demo standaard aangevinkt, twee korte vragen, verplichte akkoorden (niet vooraf aangevinkt), optioneel nieuwsbrief, Turnstile.
+4. **Versturen** → Make antwoordt `{ok, checkoutUrl?}`:
+   - `checkoutUrl` → door naar Mollie (alleen voor extra's) → terug via Make naar demo-stap of `/bedankt`; bij annuleren: "Extra's alsnog afrekenen" of "Verder zonder extra's"
+   - totem gekozen → **demo-stap** (Teamleader Bookings kan niet ingebed worden (`X-Frame-Options: SAMEORIGIN`), dus een grote knop die in een nieuw tabblad opent) met "Later inplannen"
+   - anders → `/bedankt` (met demo-upsell)
+5. Bij een fout blijft alles ingevuld (sessionStorage), met "Probeer opnieuw" en een mailto-fallback. Honeypot-veld tegen simpele bots.
+
+Winkelwagen (extra kaarten/totems, totemkeuze) staat in `localStorage`; formulierdata alleen in `sessionStorage` (persoonsgegevens) en wordt na afronden gewist. Alle opslag is in try/catch verpakt: de flow werkt ook zonder.
+
+**Analytics-events**: `product_view`, `start_aanvraag`, `stap_2`, `stap_3`, `aanvraag_verzonden`, `totem_gekozen`, `demo_klik`, `demo_later`, `betaling_gestart`. **Advertentieconversie** (Meta `Lead`, Google Ads `conversion`) vuurt één keer per aanvraag op de demo-stap of `/bedankt`, alleen na toestemming, met `lead_ref` als deduplicatie-ID.
+
+## Afwijkingen van het plan (bewuste keuzes)
+
+- **Tailwind 4** gebruikt design tokens via `@theme` in `src/styles/tokens.css` in plaats van `tailwind.config`.
+- **Productfoto's** in `src/assets/products/` in plaats van `public/assets/products/`: alleen zo werkt de automatische AVIF/WebP-conversie.
+- **Demo-boeking niet ingebed**: Teamleader staat iframes niet toe; het is een knop naar een nieuw tabblad.
+- **Lokale Lighthouse** via `scripts/lighthouse-local.mjs`: `lhci autorun` crasht op Windows bij het opruimen van de tijdelijke Chrome-map. In CI (Linux) draait gewoon `lhci autorun`.
+- **Social proof**: alleen "Meer dan 900 bedrijven" (overgenomen van www.reviewplus.io) en platformnamen. Reviews/klantlogo's verschijnen pas als ze in `shop-content.ts` staan.
+
+## Openstaande TODO's in de code
+
+```bash
+grep -rn "TODO" src docs
+```
+
+Belangrijkste: specs (afmeting, materiaal, chip) per product · incl./excl. btw · reserveringstermijn totem · no-show-beleid · levertijd · juridische naam · social links · pipeline-naam in Teamleader · reviewtool-opties · bewaartermijn en verwerkers in de privacytekst · logo en mockups · jurist.
+
+## Handmatige taken voor Jordan
+
+- [ ] GitHub-repo aanmaken, code pushen, Pages activeren (Source: GitHub Actions)
+- [ ] DNS: `CNAME shop → <github-gebruiker>.github.io`; in GitHub Pages custom domain + **Enforce HTTPS**
+- [ ] Framer: redirect `/shop` → `https://shop.reviewplus.io` (301) en menu-item **Shop**
+- [ ] Make-scenario's bouwen volgens `docs/MAKE-SCENARIO.md`; webhook-URL in GitHub Variables (`PUBLIC_LEAD_WEBHOOK_URL`); CORS testen
+- [ ] Teamleader: pipeline + custom fields aanmaken
+- [ ] Cloudflare Turnstile: site-key (GitHub Variable) + secret (Make)
+- [ ] Beslissen: prijzen incl./excl. btw (`PRICE_NOTE`), reserveringstermijn totem (`TOTEM_RESERVATION_DAYS`), beleid bij no-show
+- [ ] Mollie-account (iDEAL + Bancontact + creditcard) koppelen in Make
+- [ ] Teamleader Bookings: demo-type herkenbaar maken voor scenario D
+- [ ] Analytics kiezen (Plausible/Umami) en variabelen zetten; pixel-ID's zetten als je advertenties draait
+- [ ] Logo's (SVG), productmockups (`src/assets/products/`) en echte reviews/klantlogo's (met toestemming) aanleveren
+- [ ] Actievoorwaarden en privacytekst laten controleren door een jurist; privacyverklaring op de hoofdsite aanvullen

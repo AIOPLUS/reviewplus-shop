@@ -1,0 +1,42 @@
+{
+  "name": "reviewplus-shop",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "typecheck": "astro check",
+    "lint": "eslint .",
+    "linkcheck": "node scripts/linkcheck.mjs",
+    "lhci": "lhci autorun",
+    "check": "npm run typecheck && npm run lint && npm run build && npm run linkcheck",
+    "lighthouse:local": "node scripts/lighthouse-local.mjs",
+    "mock-webhook": "node scripts/mock-webhook.mjs",
+    "linkcheck:external": "node scripts/linkcheck.mjs --external"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@astrojs/sitemap": "^3.7.4",
+    "@fontsource/poppins": "^5.3.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "astro": "^7.3.4",
+    "sharp": "^0.35.4",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^6.0.3"
+  },
+  "devDependencies": {
+    "@lhci/cli": "^0.15.1",
+    "@typescript-eslint/parser": "^8.70.1",
+    "chrome-launcher": "^1.2.1",
+    "eslint": "^10.11.0",
+    "eslint-plugin-astro": "^3.2.1",
+    "globals": "^17.12.0",
+    "lighthouse": "^13.5.0",
+    "typescript-eslint": "^8.70.1"
+  }
+}

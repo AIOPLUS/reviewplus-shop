@@ -1,0 +1,59 @@
+---
+/**
+ * Toont de productfoto's uit src/assets/products (AVIF/WebP met srcset via astro:assets).
+ * Zolang Jordan nog geen mockups heeft aangeleverd, tonen we een SVG-illustratie.
+ */
+import { Picture } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import type { Product } from '@/lib/catalog';
+
+interface Props {
+  product: Pick<Product, 'type' | 'naam' | 'afbeeldingen'>;
+  index?: number;
+  sizes?: string;
+  eager?: boolean;
+  class?: string;
+}
+
+const { product, index = 0, sizes = '(min-width: 1200px) 560px, (min-width: 810px) 45vw, 100vw', eager = false, class: cls = '' } = Astro.props;
+
+const files = import.meta.glob<{ default: ImageMetadata }>('/src/assets/products/*.{png,jpg,jpeg,webp,avif}', { eager: true });
+const name = product.afbeeldingen[index];
+const match = name ? Object.entries(files).find(([p]) => p.endsWith(`/${name}`))?.[1]?.default : undefined;
+const isTotem = product.type === 'totem';
+---
+{match ? (
+  <Picture src={match} alt={product.naam} formats={['avif', 'webp']} widths={[400, 700, 1000, 1400]} sizes={sizes}
+    loading={eager ? 'eager' : 'lazy'} fetchpriority={eager ? 'high' : 'auto'} class={`h-full w-full object-cover ${cls}`} />
+) : isTotem ? (
+  <svg viewBox="0 0 400 300" role="img" aria-label={`Illustratie: ${product.naam}`} class={`h-full w-full ${cls}`}>
+    <defs>
+      <linearGradient id="tg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#173EDD" /><stop offset="1" stop-color="#0040C1" /></linearGradient>
+    </defs>
+    <rect width="400" height="300" fill="#EFF4FF" />
+    <ellipse cx="200" cy="262" rx="92" ry="10" fill="#0040C1" opacity=".12" />
+    <path d="M140 258 170 58h60l30 200z" fill="url(#tg)" />
+    <path d="M170 58h60l4 26h-68z" fill="#fff" opacity=".12" />
+    <g fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".95">
+      <path d="M186 118a22 22 0 0 1 0 32" /><path d="M198 108a36 36 0 0 1 0 52" /><path d="M210 98a50 50 0 0 1 0 72" />
+    </g>
+    <text x="200" y="202" text-anchor="middle" fill="#fff" font-family="Poppins, sans-serif" font-size="15" font-weight="500">Tik hier</text>
+    <g fill="#FFD84D"><text x="200" y="228" text-anchor="middle" font-size="16" letter-spacing="3">★★★★★</text></g>
+  </svg>
+) : (
+  <svg viewBox="0 0 400 300" role="img" aria-label={`Illustratie: ${product.naam}`} class={`h-full w-full ${cls}`}>
+    <rect width="400" height="300" fill="#EFF4FF" />
+    <g transform="rotate(-12 200 150)"><rect x="92" y="92" width="200" height="126" rx="14" fill="#D1E0FF" /></g>
+    <g transform="rotate(-5 200 150)"><rect x="100" y="88" width="200" height="126" rx="14" fill="#2970FF" /></g>
+    <g transform="rotate(4 200 150)">
+      <rect x="108" y="84" width="200" height="126" rx="14" fill="#0040C1" />
+      <g fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round">
+        <path d="M134 128a14 14 0 0 1 0 20" /><path d="M142 120a26 26 0 0 1 0 36" /><path d="M150 112a38 38 0 0 1 0 52" />
+      </g>
+      <text x="170" y="136" fill="#fff" font-family="Poppins, sans-serif" font-size="14" font-weight="500">Review Plus</text>
+      <text x="170" y="156" fill="#FFD84D" font-size="13" letter-spacing="2">★★★★★</text>
+      <rect x="262" y="160" width="32" height="32" rx="4" fill="#fff" />
+      <path d="M266 164h8v8h-8zM282 164h8v8h-8zM266 180h8v8h-8zM278 176h4v4h-4zM284 182h6v6h-6z" fill="#0040C1" />
+    </g>
+  </svg>
+)}
