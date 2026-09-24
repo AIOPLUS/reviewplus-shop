@@ -76,9 +76,30 @@ De status staat in het veld `status` van het deal-record:
 
 Zo komt de totem er alleen als de deal eerst op Demo Ingepland stond en daarna is doorgezet. Bij **Geweigerd** gaat er geen automatische totem uit; die kun je altijd handmatig sturen. Een no-show die alsnog een demo plant: zet de deal weer op Demo Ingepland, dan geldt de totem weer na die demo. De taak en mail komen één keer per deal.
 
-Let op: een demo die de klant via Teamleader Bookings boekt, is een agenda-afspraak ("<Naam>: Demonstratie met Review Plus", met het e-mailadres in de omschrijving). Daarvoor heeft Teamleader geen webhook. De deal gaat naar Demo Ingepland via de knop "Ik heb mijn demo ingepland" (route 6) of doordat jij hem verplaatst. Automatisch herkennen van boekingen kan in het dagelijkse scenario E.
+Let op: een demo die de klant via Teamleader Bookings boekt, is een agenda-afspraak ("<Naam>: Demonstratie met Review Plus", met het e-mailadres in de omschrijving). Daarvoor heeft Teamleader geen webhook. De deal gaat naar Demo Ingepland via de knop "Ik heb mijn demo ingepland" (route 6) of doordat jij hem verplaatst. Het dagelijkse scenario herkent boekingen ook zelf (zie hieronder).
 
 Webhook bekijken of weghalen: Teamleader API `webhooks.list` / `webhooks.unregister` (url `https://hook.eu1.make.com/q9s2ihd25ksumrh9q550vsmrhq104rvn`, type `deal.moved`), bijvoorbeeld via een Teamleader-module *Make an API Call* in Make.
+
+### Scenario "Review Plus - Dagelijks (demo's en herinneringen)" (actief, id 7583249)
+
+Draait elke dag om 09:00 (Europe/Amsterdam). Dit is het tweede en laatste actieve scenario op het gratis plan.
+
+**1. Geboekte demo's herkennen.** Teamleader `events.list` met zoekterm "Demonstratie met Review Plus" en een eindtijd in de toekomst. Uit de omschrijving van elke afspraak haalt Make het e-mailadres (Bookings zet daar "E-mail: …"). Is er een shop-deal met dat e-mailadres die nog geen demo had (status leeg, `no_show` of `verlopen`), dan:
+- `status = demo_ingepland`;
+- de deal naar **Demo Ingepland**;
+- mail "Demo geboekt: <bedrijf> (<datum>)" aan jou.
+
+Gebruikt de klant bij het boeken een ander e-mailadres, dan vindt Make de deal niet. Zet hem dan zelf op Demo Ingepland.
+
+**2. Herinneringen totem.** Alle shop-deals met `totem_demo = true` en nog geen status:
+- **dag 2 en dag 5** na de aanvraag: herinneringsmail aan de klant ("Je gratis NFC-totem ligt klaar: plan je demo in" / "Nog 9 dagen: je gratis NFC-totem"), met de voornaam uit Teamleader en de demo-link;
+- **ouder dan 14 dagen** (`TOTEM_RESERVATION_DAYS` in `src/config/site.ts`): `status = verlopen` en de mail "Totem-reservering vervallen" aan jou. Boekt de klant daarna toch nog, dan pakt stap 1 dat alsnog op.
+
+Omdat stap 1 eerst draait, krijgt iemand die al geboekt heeft geen herinnering meer.
+
+### Make-operaties (gratis plan: 1.000 per maand)
+
+Globaal: een nieuwe aanvraag kost ±23 operaties (mails, teller, Gist en Teamleader), een aanvraag met extra's ±6 meer, een fasewissel in Teamleader ±4 (±7 als er een totem-taak komt) en het dagelijkse scenario ±5–10 per dag. Het gratis plan is dus genoeg voor ongeveer 25–30 aanvragen per maand. Kijk in Make bij *Organization → Usage* hoe het verbruik loopt. Is het op, dan stopt Make tot de volgende maand. Neem dan tijdig een betaald Make-abonnement.
 
 ### Datastore `shop_data` (id 196583)
 
@@ -89,7 +110,7 @@ Eén datastore voor alles, onderscheiden op de key:
 | `teller:gratis_sets` | `uitgegeven` (aantal verwerkte gratis sets, start 0) |
 | `betaling:<lead_ref>` | `payment_id`, `bedrag`, `status`, `bedrijf`, `email`, `testmode`, `aangemaakt` |
 | `lead:<kvk/kbo-nummer>` | `bedrijf`, `bedrijfsnummer`, `email`, `totem_demo`, `aangemaakt` (dubbelcheck) |
-| `deal:<lead_ref>` | `deal_id`, `company_id`, `contact_id`, `email`, `bedrijf`, `totem_demo`, `aangemaakt`, `status` (leeg / `demo_ingepland` / `no_show` / `totem_verzenden`) |
+| `deal:<lead_ref>` | `deal_id`, `company_id`, `contact_id`, `email`, `bedrijf`, `totem_demo`, `aangemaakt`, `status` (leeg / `demo_ingepland` / `no_show` / `verlopen` / `totem_verzenden`) |
 
 ### CORS
 
@@ -100,7 +121,7 @@ Make stuurt zelf al `Access-Control-Allow-Origin: *` mee. Voeg in een Webhook re
 1. ~~Gist-sleutel~~ **Klaar (24-09-2026):** de Gist-module gebruikt *HTTP → Make a Basic Auth request* met sleutel "GitHub Basic Auth - voorraadteller" (gebruikersnaam AIOPLUS, token als wachtwoord). De oude API-key-sleutel "GitHub - voorraadteller (Gist)" wordt niet meer gebruikt en mag weg. Token verloopt: vernieuw het op tijd op GitHub en werk de sleutel in Make bij.
 2. ~~Teamleader~~ **Klaar (24-09-2026):** bedrijf, contact, deal (fase Nieuw) en taak; "Ik heb mijn demo ingepland" → fase Demo Ingepland. Zie hierboven.
 3. ~~Totem na demo~~ **Klaar (24-09-2026):** route 7 op de Teamleader-webhook `deal.moved`, zie "Totem na de demo".
-4. **Herinneringen totem** (scenario E): het tweede (en laatste) actieve scenario op het gratis plan, dagelijks ingepland. Kan ook nieuwe Bookings-afspraken ("Demonstratie met Review Plus") via `events.list` koppelen aan shop-deals op e-mailadres en die deals naar Demo Ingepland zetten.
+4. ~~Herinneringen totem~~ **Klaar (24-09-2026):** scenario "Review Plus - Dagelijks (demo's en herinneringen)", zie hierboven. Herkent ook Bookings-afspraken.
 
 Uitgeschakelde, ongebruikte scenario's die weg mogen: "Review Plus - Mollie (status + terugkeer)", "Review Plus - Mollie terugkeer", "Integration Mollie".
 
@@ -221,6 +242,8 @@ De site toont dan de demo-stap (als de totem gekozen is) of `/bedankt`, of bij a
 7. Mail naar klant: "Je demo staat gepland, de totem is onderweg" (template `email-demo-ingepland.md`).
 
 ## Scenario E: herinneringen totem (dagelijks om 09:00)
+
+> **Gebouwd** als "Review Plus - Dagelijks (demo's en herinneringen)", met het veld `status` in plaats van losse vlaggen (zie "Huidige inrichting" bovenaan).
 
 1. Data store → Search records: `totem_demo = true`, `demo_ingepland = false`.
 2. Iterator → per record: `dagen = dateDifference(now; aangemaakt; days)`.
