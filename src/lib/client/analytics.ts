@@ -24,10 +24,22 @@ declare global {
   }
 }
 
+// Umami heeft geen wachtrij zoals Plausible: events van vóór het laden van het script bewaren we even.
+const pending: [EventName, Props][] = [];
+
+function flushUmami(tries = 0): void {
+  if (window.umami) {
+    for (const [event, props] of pending.splice(0)) window.umami.track(event, props);
+  } else if (tries < 40) {
+    setTimeout(() => flushUmami(tries + 1), 250);
+  }
+}
+
 export function track(event: EventName, props: Props = {}): void {
   try {
     if (typeof window.plausible === 'function') window.plausible(event, { props });
     else if (window.umami) window.umami.track(event, props);
+    else if (document.querySelector('script[data-website-id]') && pending.push([event, props]) === 1) flushUmami();
     if (import.meta.env.DEV) console.debug('[track]', event, props);
   } catch {
     /* analytics mag de site nooit breken */

@@ -46,7 +46,8 @@ Zet in `.env.development.local`: `PUBLIC_LEAD_WEBHOOK_URL=http://localhost:8787/
 | `PUBLIC_WEB3FORMS_ACCESS_KEY` | | Alleen bij `web3forms` |
 | `PUBLIC_TURNSTILE_SITE_KEY` | | Cloudflare Turnstile; leeg = uit |
 | `PUBLIC_ANALYTICS_PROVIDER` | `plausible` | `plausible` \| `umami` \| leeg |
-| `PUBLIC_ANALYTICS_DOMAIN` / `_SCRIPT_URL` / `PUBLIC_UMAMI_WEBSITE_ID` | | Analytics |
+| `PUBLIC_UMAMI_WEBSITE_ID` | | Umami: Website ID uit cloud.umami.is (met provider `umami` is dit het enige wat nodig is) |
+| `PUBLIC_ANALYTICS_DOMAIN` / `PUBLIC_ANALYTICS_SCRIPT_URL` | | Optioneel: ander domein of eigen script-URL (standaard `cloud.umami.is/script.js` of `plausible.io/js/script.js`). Alleen dit domein wordt gemeten. |
 | `PUBLIC_META_PIXEL_ID`, `PUBLIC_GADS_ID`, `PUBLIC_GADS_CONVERSION_LABEL` | | Leeg = niet laden. Gevuld = cookiebanner verschijnt; pixels laden pas na "Accepteren". |
 
 `PUBLIC_*`-waarden komen in de publieke site terecht; dat is de bedoeling (webhook-URL, site-keys, pixel-ID's). **Echte geheimen** (Turnstile secret, Mollie API-key, Teamleader) staan alleen in Make.

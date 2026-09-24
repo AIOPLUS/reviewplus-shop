@@ -29,6 +29,7 @@ interface Props {
 const { title, description, path, ogImage = '/og/shop.png', noindex, schemas = [], sector, page = 'overig' } = Astro.props;
 const hasPixels = Boolean(PIXELS.metaPixelId || PIXELS.gadsId);
 const plausibleSrc = ANALYTICS.scriptUrl || 'https://plausible.io/js/script.js';
+const umamiSrc = ANALYTICS.scriptUrl || 'https://cloud.umami.is/script.js';
 ---
 <!doctype html>
 <html lang="nl">
@@ -47,8 +48,8 @@ const plausibleSrc = ANALYTICS.scriptUrl || 'https://plausible.io/js/script.js';
         <script is:inline defer data-domain={ANALYTICS.domain} src={plausibleSrc}></script>
       </>
     )}
-    {ANALYTICS.provider === 'umami' && ANALYTICS.scriptUrl && ANALYTICS.umamiWebsiteId && (
-      <script is:inline defer src={ANALYTICS.scriptUrl} data-website-id={ANALYTICS.umamiWebsiteId}></script>
+    {ANALYTICS.provider === 'umami' && ANALYTICS.umamiWebsiteId && (
+      <script is:inline defer src={umamiSrc} data-website-id={ANALYTICS.umamiWebsiteId} data-domains={ANALYTICS.domain}></script>
     )}
   </head>
   <body data-page={page} data-sector={sector ?? ''}>
