@@ -154,7 +154,7 @@ Gebruik in Make de module **Webhooks → Webhook response**:
 | Turnstile ongeldig / spam | `200` | `{ "ok": true }` (niets verwerken, bot geen signaal geven) |
 | Ongeldige data | `422` | `{ "ok": false, "message": "…" }` |
 
-Headers in de response: `Content-Type: application/json` en `Access-Control-Allow-Origin: https://shop.reviewplus.io` (fase 2: `https://www.reviewplus.io`).
+Header in de response: `Content-Type: application/json`. Voeg **geen** `Access-Control-Allow-Origin` toe: Make stuurt `*` al mee, en dubbel wordt door de browser geweigerd.
 
 Geen Webhook response-module? Dan antwoordt Make met de platte tekst `Accepted`; de site behandelt dat als `{ ok: true }` (maar dan werkt de Mollie-doorstuur niet).
 

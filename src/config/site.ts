@@ -49,8 +49,8 @@ export const FEATURES = {
   cookieBanner: true,
 };
 
-/** Hoe prijzen getoond worden. TODO: Jordan bevestigt incl. of excl. btw. */
-export const PRICE_NOTE = 'excl. btw'; // TODO: bevestigen ('incl. btw' of 'excl. btw')
+/** Hoe prijzen getoond worden. */
+export const PRICE_NOTE = 'excl. btw'; // bevestigd door Jordan (sept 2026); Make rekent extra's af incl. 21% btw
 
 /**
  * Actie-limiet en voorraadteller. De teller toont het ECHTE aantal resterende gratis sets:

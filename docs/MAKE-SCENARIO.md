@@ -15,6 +15,57 @@ Payload-contract: zie [LEAD-PAYLOAD.md](LEAD-PAYLOAD.md). Secrets (Turnstile sec
 
 **Belangrijke volgorde:** de site wacht op het antwoord van scenario A (max. 20 s). Zet daarom de **Webhook response** zo vroeg mogelijk: direct na Turnstile, de dubbelcheck en (indien nodig) het aanmaken van de Mollie-betaling. Teamleader, mails en de verzendlijst komen ná de response.
 
+## Huidige inrichting in Make (stand 24 september 2026)
+
+Zo staat het nu werkelijk in Make (team "My Team", zone eu1). De scenario's A–F hieronder zijn het volledige ontwerp; wat nog niet gebouwd is, staat onder "Nog te bouwen".
+
+**Gratis Make-plan: maximaal 2 actieve scenario's en 1 MB datastore-opslag.** Daarom loopt alles wat direct moet reageren via **één** scenario en **één** webhook, en staat alle data in **één** datastore.
+
+### Scenario "Review Plus - Shop aanvragen" (actief, id 7570648)
+
+Webhook `shop-aanvraag`: `https://hook.eu1.make.com/q9s2ihd25ksumrh9q550vsmrhq104rvn` (staat als `PUBLIC_LEAD_WEBHOOK_URL` in GitHub).
+
+Router met vier routes:
+
+| Route | Filter | Wat er gebeurt |
+|---|---|---|
+| 1. Aanvraag met extra's | geen `type` én `heeft_betaalde_extras = true` | `products.json` ophalen → bedrag berekenen (extra's × `prijsExtra` × 1,21, max. 50 kaarten / 20 totems) → Mollie-betaling via **Make an API Call** (`POST /v2/payments`, `testmode` uit variabele) → record `betaling:<lead_ref>` in `shop_data` → antwoord `{"ok": true, "checkoutUrl": …}` → mail aan support@reviewplus.io |
+| 2. Aanvraag zonder extra's | geen `type` én `heeft_betaalde_extras ≠ true` | antwoord `{"ok": true}` → mail |
+| 3. Mollie-statusmelding | `type = status` | antwoord `200 ok` → record ophalen → betaling opvragen bij Mollie → bij `paid`: record bijwerken + mail "Betaling ontvangen" |
+| 4. Klant terug van Mollie | `type = return` | record ophalen → betaling opvragen → 302 naar `/aanvragen?status=betaald` (paid/authorized/pending) of `?status=geannuleerd` |
+
+Mollie krijgt bij het aanmaken van de betaling:
+- `redirectUrl` = `…/q9s2ihd25ksumrh9q550vsmrhq104rvn?type=return&ref=<lead_ref>`
+- `webhookUrl` = `…/q9s2ihd25ksumrh9q550vsmrhq104rvn?type=status&ref=<lead_ref>`
+- `cancelUrl` = `https://shop.reviewplus.io/aanvragen?status=geannuleerd&ref=<lead_ref>`
+
+**Testmodus → live:** open module 4 "Set variables" en zet `testmode` van `true` naar `false`. Daarna zijn betalingen echt. (De Mollie-koppeling is via OAuth gemaakt; daarom gaat testen via de `testmode`-parameter in plaats van een test-API-key.)
+
+Koppelingen: Mollie = **"Mollie - shop betalingen"** (met `payments.write`), Gmail = "Jordan's Gmail connection".
+
+### Datastore `shop_data` (id 196583)
+
+Eén datastore voor alles, onderscheiden op de key:
+
+| Key | Inhoud |
+|---|---|
+| `teller:gratis_sets` | `uitgegeven` (aantal verwerkte gratis sets, start 0) |
+| `betaling:<lead_ref>` | `payment_id`, `bedrag`, `status`, `bedrijf`, `email`, `testmode`, `aangemaakt` |
+| `lead:<lead_ref>` | (voor de dubbelcheck, nog te bouwen) |
+
+### CORS
+
+Make stuurt zelf al `Access-Control-Allow-Origin: *` mee. Voeg in een Webhook response **geen** eigen `Access-Control-Allow-Origin`-header toe: dan staat hij er dubbel in en weigert de browser het antwoord. Getest: preflight en POST vanaf shop.reviewplus.io werken.
+
+### Nog te bouwen
+
+1. **Dubbelcheck + teller** (in route 1 en 2): `lead:<lead_ref>` / zoeken op bedrijfsnummer, `teller:gratis_sets` +1 en het Gist bijwerken (scenario F hieronder).
+2. **Teamleader**: bedrijf, contact en deal (stap 9 van scenario A).
+3. **Totem na demo** (scenario D): kan als extra route in hetzelfde scenario als Teamleader een webhook naar de `shop-aanvraag`-URL stuurt met bijvoorbeeld `?type=teamleader`.
+4. **Herinneringen totem** (scenario E): het tweede (en laatste) actieve scenario op het gratis plan, dagelijks ingepland.
+
+Uitgeschakelde, ongebruikte scenario's die weg mogen: "Review Plus - Mollie (status + terugkeer)", "Review Plus - Mollie terugkeer", "Integration Mollie".
+
 ---
 
 ## Voorbereiding
@@ -69,7 +120,7 @@ Payload-contract: zie [LEAD-PAYLOAD.md](LEAD-PAYLOAD.md). Secrets (Turnstile sec
       Het bedrag moet een string met 2 decimalen zijn (`formatNumber(bedrag; 2; "."; "")`).
    4. Bewaar `id` (payment id) en `_links.checkout.href` in de data store.
 
-8. **Webhook response**: status `200`, headers `Content-Type: application/json` en `Access-Control-Allow-Origin: https://shop.reviewplus.io`, body:
+8. **Webhook response**: status `200`, header `Content-Type: application/json` (géén Access-Control-header: Make stuurt die zelf mee), body:
    - met extra's: `{"ok":true,"checkoutUrl":"{{_links.checkout.href}}"}`
    - zonder: `{"ok":true}` (of met `"duplicate":true`)
 
@@ -143,7 +194,7 @@ De site toont dan de demo-stap (als de totem gekozen is) of `/bedankt`, of bij a
 
 De site post JSON vanuit de browser naar `hook.*.make.com`. Omdat het `Content-Type: application/json` is, doet de browser eerst een *preflight* (`OPTIONS`). Test dit direct na het aanmaken van de webhook: verstuur een testaanvraag vanaf de live shop en kijk in de browser-console (tabblad Netwerk).
 - Werkt het: niets te doen.
-- CORS-fout: controleer dat de Webhook response-module de header `Access-Control-Allow-Origin` meestuurt. Blijft de preflight falen, meld het dan: dan passen we de site aan zodat hij `text/plain` stuurt (geen preflight) en zet je in Make een *Parse JSON*-module na de webhook.
+- CORS-fout: controleer dat je in de Webhook response **geen** eigen `Access-Control-Allow-Origin` hebt toegevoegd (Make stuurt `*` al mee). Blijft de preflight falen, meld het dan: dan passen we de site aan zodat hij `text/plain` stuurt (geen preflight) en zet je in Make een *Parse JSON*-module na de webhook.
 
 ## Scenario F: voorraadteller gratis sets (via GitHub Gist)
 
