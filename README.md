@@ -123,15 +123,15 @@ Belangrijkste: specs (afmeting, materiaal, chip) per product · incl./excl. btw 
 
 ## Handmatige taken voor Jordan
 
-- [ ] GitHub-repo aanmaken, code pushen, Pages activeren (Source: GitHub Actions)
-- [ ] DNS: `CNAME shop → <github-gebruiker>.github.io`; in GitHub Pages custom domain + **Enforce HTTPS**
-- [ ] Framer: redirect `/shop` → `https://shop.reviewplus.io` (301) en menu-item **Shop**
-- [ ] Make-scenario's bouwen volgens `docs/MAKE-SCENARIO.md`; webhook-URL in GitHub Variables (`PUBLIC_LEAD_WEBHOOK_URL`); CORS testen
-- [ ] Teamleader: pipeline + custom fields aanmaken
-- [ ] Cloudflare Turnstile: site-key (GitHub Variable `PUBLIC_TURNSTILE_SITE_KEY`) + secret (Make → Data stores → `shop_data` → `config:turnstile` → `waarde`). Eerst de site-key, dan de secret. Test daarna met een echte aanvraag: komt de bevestigingsmail, dan klopt het; krijg je "Aanvraag tegengehouden door spamfilter", dan hoort de secret niet bij de site-key.
-- [ ] Beslissen: prijzen incl./excl. btw (`PRICE_NOTE`), reserveringstermijn totem (`TOTEM_RESERVATION_DAYS`), beleid bij no-show
-- [ ] Mollie-account (iDEAL + Bancontact + creditcard) koppelen in Make
-- [ ] Teamleader Bookings: demo-type herkenbaar maken voor scenario D
-- [ ] Analytics kiezen (Plausible/Umami) en variabelen zetten; pixel-ID's zetten als je advertenties draait
+- [x] GitHub-repo aanmaken, code pushen, Pages activeren (Source: GitHub Actions)
+- [x] DNS: `CNAME shop → <github-gebruiker>.github.io`; in GitHub Pages custom domain + **Enforce HTTPS**
+- [ ] (Uitgesteld) Framer: redirect `/shop` → `https://shop.reviewplus.io` (301) en menu-item **Shop**
+- [x] Make-scenario's bouwen volgens `docs/MAKE-SCENARIO.md`; webhook-URL in GitHub Variables (`PUBLIC_LEAD_WEBHOOK_URL`); CORS testen (klaar 24-09-2026, zie "Huidige inrichting")
+- [x] Teamleader: pipeline + custom fields aanmaken (niet nodig: bestaande Sales Pipeline, fases Nieuw en Demo Ingepland)
+- [x] Cloudflare Turnstile: site-key (GitHub Variable `PUBLIC_TURNSTILE_SITE_KEY`) + secret (Make → Data stores → `shop_data` → `config:turnstile` → `waarde`). Eerst de site-key, dan de secret. Test daarna met een echte aanvraag: komt de bevestigingsmail, dan klopt het; krijg je "Aanvraag tegengehouden door spamfilter", dan hoort de secret niet bij de site-key. (live 24-09-2026)
+- [x] Beslissen: prijzen incl./excl. btw (`PRICE_NOTE`), reserveringstermijn totem (`TOTEM_RESERVATION_DAYS`), beleid bij no-show (excl. btw, 14 dagen, no-show = geen totem)
+- [x] Mollie-account (iDEAL + Bancontact + creditcard) koppelen in Make (live)
+- [x] Teamleader Bookings: demo-type herkenbaar maken voor scenario D (herkenning op titel "Demonstratie met Review Plus" + e-mailadres in het dagelijkse scenario)
+- [x] Analytics kiezen (Plausible/Umami) en variabelen zetten; pixel-ID's zetten als je advertenties draait (Umami Cloud live; pixels nog niet)
 - [ ] Logo's (SVG), productmockups (`src/assets/products/`) en echte reviews/klantlogo's (met toestemming) aanleveren
 - [ ] Actievoorwaarden en privacytekst laten controleren door een jurist; privacyverklaring op de hoofdsite aanvullen
