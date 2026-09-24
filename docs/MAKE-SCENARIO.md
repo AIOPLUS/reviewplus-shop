@@ -9,7 +9,7 @@ De site is statisch (GitHub Pages). Alle logica loopt via Make. Er zijn **zes sc
 | C | Mollie-betaling verwerkt | Custom webhook (Mollie `webhookUrl`) |
 | D | Demo ingepland → totem verzenden | Teamleader: nieuwe afspraak (Watch events / webhook) |
 | E | Herinneringen totem | Schema (dagelijks) |
-| F | Voorraadteller gratis sets | Custom webhook (GET vanaf de site) |
+| F | Voorraadteller gratis sets | Onderdeel van scenario A (werkt een GitHub Gist bij) |
 
 Payload-contract: zie [LEAD-PAYLOAD.md](LEAD-PAYLOAD.md). Secrets (Turnstile secret, Mollie API-key, Teamleader-koppeling) staan **alleen in Make**, nooit in de site of in GitHub.
 
@@ -47,7 +47,7 @@ Payload-contract: zie [LEAD-PAYLOAD.md](LEAD-PAYLOAD.md). Secrets (Turnstile sec
    - Zet `duplicate: true` in de response.
 
 6. **Data store** → Add record (`lead_ref`, `email`, `bedrijfsnummer`, `totem_demo`, `aangemaakt = now`, `payload`).
-   **Voorraadteller**: alleen bij een geldige, niet-dubbele aanvraag → Data store `shop_teller` → record `gratis_sets`: `uitgegeven = uitgegeven + 1` (zie scenario F). Staat de teller al op 1000, of is het na de einddatum? Verwerk de aanvraag dan niet als gratis set: stuur een vriendelijke mail en zet `"ok": true` met een notitie in Teamleader.
+   **Voorraadteller**: alleen bij een geldige, niet-dubbele aanvraag → Data store `shop_teller` → record `gratis_sets`: `uitgegeven = uitgegeven + 1`, en het Gist bijwerken (zie scenario F). Staat de teller al op 1000, of is het na de einddatum? Verwerk de aanvraag dan niet als gratis set: stuur een vriendelijke mail en zet `"ok": true` met een notitie in Teamleader.
 
 7. **Mollie-betaling** (alleen als `heeft_betaalde_extras = true`):
    1. HTTP → `GET https://shop.reviewplus.io/products.json` (fase 2: `https://www.reviewplus.io/shop/products.json`).
@@ -145,20 +145,49 @@ De site post JSON vanuit de browser naar `hook.*.make.com`. Omdat het `Content-T
 - Werkt het: niets te doen.
 - CORS-fout: controleer dat de Webhook response-module de header `Access-Control-Allow-Origin` meestuurt. Blijft de preflight falen, meld het dan: dan passen we de site aan zodat hij `text/plain` stuurt (geen preflight) en zet je in Make een *Parse JSON*-module na de webhook.
 
-## Scenario F: voorraadteller gratis sets
+## Scenario F: voorraadteller gratis sets (via GitHub Gist)
 
-De site toont "Nog X van de 1000 gratis sets beschikbaar". X is het **echte** aantal: 1000 min het aantal verwerkte, niet-dubbele aanvragen. De teller daalt dus niet door bezoeken, alleen door aanvragen.
+De site toont "Nog X van de 1.000 gratis sets beschikbaar". X is het **echte** aantal: 1000 min het aantal verwerkte, niet-dubbele aanvragen. De teller daalt dus niet door bezoeken, alleen door aanvragen.
 
-1. **Data store** `shop_teller` met één record, sleutel `gratis_sets`, veld `uitgegeven` (getal, start op 0). Scenario A verhoogt dit (stap 6).
-2. **Custom webhook** `shop-voorraad` (GET).
-3. Data store → Get record `gratis_sets`.
-4. **Webhook response**: status `200`, headers `Content-Type: application/json`, `Access-Control-Allow-Origin: https://shop.reviewplus.io`, `Cache-Control: max-age=60`, body:
-   ```json
-   { "remaining": {{max(0; 1000 - uitgegeven)}} }
+Om Make-kosten laag te houden leest de site het getal **niet** uit Make, maar uit een klein openbaar bestand in een GitHub Gist. Make werkt dat bestand alleen bij als er een aanvraag verwerkt is (±3 operaties per aanvraag, 0 per bezoek).
+
+- Gist: https://gist.github.com/AIOPLUS/200f4378b91228b2fdda400ec0f08d36 (secret: niet vindbaar, alleen via de link)
+- Bestand: `voorraad.json` → `{"remaining": 1000, "max": 1000, "updated": "…"}`
+- De site leest `https://gist.githubusercontent.com/AIOPLUS/200f4378b91228b2fdda400ec0f08d36/raw/voorraad.json` (staat al als `PUBLIC_STOCK_URL` in GitHub → Settings → Variables). GitHub ververst dit binnen ±5 minuten.
+
+### Eenmalig: GitHub-token voor Make
+
+1. github.com → je profielfoto → **Settings** → **Developer settings** → **Personal access tokens** → **Fine-grained tokens** → **Generate new token**.
+2. Naam: `Make – voorraadteller`. Expiration: bijvoorbeeld 1 jaar (zet een herinnering in je agenda). Resource owner: `AIOPLUS`.
+3. **Account permissions** → **Gists**: *Read and write*. Verder niets aanvinken.
+4. **Generate token** en kopieer het (je ziet het maar één keer). Bewaar het alleen in Make, nergens anders.
+
+### In scenario A (na de dubbelcheck, alleen bij een geldige, niet-dubbele aanvraag)
+
+1. **Data store → Get a record**: `shop_teller`, key `gratis_sets`.
+2. **Data store → Update a record**: `shop_teller`, key `gratis_sets`, `uitgegeven` = `{{uitgegeven + 1}}` (uit stap 1).
+3. **Tools → Set variable**: naam `voorraad_json`, waarde:
    ```
-5. Zet de webhook-URL in GitHub → Settings → Variables → `PUBLIC_STOCK_URL` en draai de deploy opnieuw.
+   {"remaining": {{max(0; 1000 - (uitgegeven + 1))}}, "max": 1000, "updated": "{{formatDate(now; "YYYY-MM-DDTHH:mm:ss")}}Z"}
+   ```
+4. **HTTP → Make a request**:
+   - URL: `https://api.github.com/gists/200f4378b91228b2fdda400ec0f08d36`
+   - Method: `PATCH`
+   - Headers:
+     - `Authorization` = `Bearer <jouw token>`
+     - `Accept` = `application/vnd.github+json`
+     - `X-GitHub-Api-Version` = `2022-11-28`
+   - Body type: *Raw* · Content type: *JSON (application/json)* · Request content:
+     ```
+     {"files": {"voorraad.json": {"content": "{{replace(voorraad_json; "\""; "\\""")}}"}}}
+     ```
+     (De `replace` zet de aanhalingstekens in de binnenste JSON om naar `\"`. Wil je dat niet zelf escapen: gebruik in plaats daarvan de module **JSON → Create JSON** met de structuur `files → voorraad.json → content` (tekst) en zet `voorraad_json` in `content`; die escapet automatisch.)
+   - Zet op deze module een **Resume**-errorhandler: als GitHub even niet reageert, gaat de aanvraag gewoon door.
+5. Stond `uitgegeven` al op 1000, of is het na de einddatum (30 november 2026)? Verwerk de aanvraag dan niet als gratis set (zie stap 6 van scenario A).
 
-Kosten: de site vraagt de stand maximaal één keer per 5 minuten per bezoeker op (sessionStorage-cache), dus reken op ongeveer één Make-operatie per bezoek. Maximum en einddatum staan in `src/config/site.ts` (`ACTIE.maxSets`, `ACTIE.eindDatum`); houd het getal 1000 in Make gelijk aan `maxSets`.
+**Handmatig bijstellen** kan altijd: open het Gist op github.com → **Edit** → pas `remaining` aan → **Update secret gist**. Zet `uitgegeven` in de datastore dan op dezelfde stand (1000 − remaining).
+
+Maximum en einddatum voor de site staan in `src/config/site.ts` (`ACTIE.maxSets`, `ACTIE.eindDatum`); houd het getal 1000 in Make daaraan gelijk.
 
 ## Checklist testen
 

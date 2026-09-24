@@ -54,8 +54,8 @@ export const PRICE_NOTE = 'excl. btw'; // TODO: bevestigen ('incl. btw' of 'excl
 
 /**
  * Actie-limiet en voorraadteller. De teller toont het ECHTE aantal resterende gratis sets:
- * Make telt verwerkte aanvragen (zie docs/MAKE-SCENARIO.md, scenario F) en geeft { remaining } terug.
- * Zonder PUBLIC_STOCK_URL toont de site het maximum (klopt bij de start van de actie).
+ * Make telt verwerkte aanvragen en schrijft { remaining } naar een GitHub Gist (docs/MAKE-SCENARIO.md, scenario F);
+ * de site leest dat Gist via PUBLIC_STOCK_URL (0 Make-operaties per bezoek). Zonder URL: het maximum.
  * Maximaal 1000 gratis sets; actie geldig t/m de einddatum (bevestigd door Jordan, sept 2026).
  */
 export const ACTIE = {
