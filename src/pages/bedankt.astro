@@ -73,11 +73,11 @@ import { url } from '@/lib/url';
     if (demo === 'ingepland') {
       set('[data-upsell-chip]', 'Demo ingepland');
       set('[data-upsell-title]', 'Top, tot bij de demo!');
-      set('[data-upsell-text]', 'Zodra je demo in onze agenda staat, versturen we je NFC-totem gratis. Je ontvangt een bevestiging van de afspraak per e-mail. Nog niet gelukt? Via de knop hieronder kies je alsnog een moment.');
+      set('[data-upsell-text]', 'Na je demo versturen we je NFC-totem gratis. Je ontvangt een bevestiging van de afspraak per e-mail. Nog niet gelukt? Via de knop hieronder kies je alsnog een moment.');
     } else if (demo === 'later' || last?.totem) {
       set('[data-upsell-chip]', 'Je totem ligt klaar');
       set('[data-upsell-title]', 'Plan je demo in en de totem is van jou');
-      set('[data-upsell-text]', `We houden de NFC-totem ${days} dagen voor je gereserveerd. Plan een korte, vrijblijvende demo in met hetzelfde e-mailadres als je aanvraag, dan versturen we de totem gratis.`);
+      set('[data-upsell-text]', `We houden de NFC-totem ${days} dagen voor je gereserveerd. Plan een korte, vrijblijvende demo in met hetzelfde e-mailadres als je aanvraag; na je demo versturen we de totem gratis.`);
     }
   </script>
 </BaseLayout>

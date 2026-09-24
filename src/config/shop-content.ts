@@ -32,7 +32,7 @@ export const shopFaq = [
   {
     vraag: 'Hoe krijg ik de NFC-totem gratis?',
     antwoord:
-      'Kies bij je aanvraag voor de totem en plan daarna een korte, vrijblijvende demo van Review Plus in. Zodra je demo is ingepland, versturen we de totem gratis.',
+      'Kies bij je aanvraag voor de totem en plan daarna een korte, vrijblijvende demo van Review Plus in. Na je demo versturen we de totem gratis.',
   },
   {
     vraag: 'Zit ik ergens aan vast?',

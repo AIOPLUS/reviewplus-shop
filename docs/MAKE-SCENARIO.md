@@ -33,13 +33,14 @@ Router met vier routes:
 | 2. Aanvraag zonder extra's | geen `type` én `heeft_betaalde_extras ≠ true` | antwoord `{"ok": true}` → mail |
 | 3. Mollie-statusmelding | `type = status` | antwoord `200 ok` → record ophalen → betaling opvragen bij Mollie → bij `paid`: record bijwerken + mail "Betaling ontvangen" |
 | 4. Klant terug van Mollie | `type = return` | record ophalen → betaling opvragen → 302 naar `/aanvragen?status=betaald` (paid/authorized/pending) of `?status=geannuleerd` |
+| 5. Dubbelcheck & teller | geen `type` én `request_type = aanvraag` (draait ná het antwoord aan de site) | `lead:<kvk/kbo>` bestaat al? → mail "DUBBELE aanvraag" aan jou + vriendelijke mail aan de klant. Nieuw → record `lead:<nummer>`, teller +1 (alleen < 1000 en vóór 1-12-2026), **bevestigingsmail aan de klant**, Gist bijwerken (fout wordt overgeslagen). Vol/verlopen → mail aan jou |
 
 Mollie krijgt bij het aanmaken van de betaling:
 - `redirectUrl` = `…/q9s2ihd25ksumrh9q550vsmrhq104rvn?type=return&ref=<lead_ref>`
 - `webhookUrl` = `…/q9s2ihd25ksumrh9q550vsmrhq104rvn?type=status&ref=<lead_ref>`
 - `cancelUrl` = `https://shop.reviewplus.io/aanvragen?status=geannuleerd&ref=<lead_ref>`
 
-**Testmodus → live:** open module 4 "Set variables" en zet `testmode` van `true` naar `false`. Daarna zijn betalingen echt. (De Mollie-koppeling is via OAuth gemaakt; daarom gaat testen via de `testmode`-parameter in plaats van een test-API-key.)
+**Live sinds 24 september 2026:** `testmode` staat in module 4 "Set variables" op `false`, dus betalingen zijn echt. Terug naar testen: zet hem op `true`. (De Mollie-koppeling is via OAuth gemaakt; daarom gaat testen via de `testmode`-parameter in plaats van een test-API-key.)
 
 Koppelingen: Mollie = **"Mollie - shop betalingen"** (met `payments.write`), Gmail = "Jordan's Gmail connection".
 
@@ -59,9 +60,9 @@ Make stuurt zelf al `Access-Control-Allow-Origin: *` mee. Voeg in een Webhook re
 
 ### Nog te bouwen
 
-1. **Dubbelcheck + teller** (in route 1 en 2): `lead:<lead_ref>` / zoeken op bedrijfsnummer, `teller:gratis_sets` +1 en het Gist bijwerken (scenario F hieronder).
+1. **Gist-sleutel**: de Gist-module gebruikt nog de API-key-sleutel, die GitHub niet accepteert ("Requires authentication"). Na het invullen van de Basic Auth-sleutel (gebruikersnaam AIOPLUS + token als wachtwoord) de module omzetten naar *HTTP → Make a Basic Auth request*.
 2. **Teamleader**: bedrijf, contact en deal (stap 9 van scenario A).
-3. **Totem na demo** (scenario D): kan als extra route in hetzelfde scenario als Teamleader een webhook naar de `shop-aanvraag`-URL stuurt met bijvoorbeeld `?type=teamleader`.
+3. **Totem na demo** (scenario D). Beleid: de totem wordt pas **na de demo** verzonden; bij een no-show vervalt de gratis totem. kan als extra route in hetzelfde scenario als Teamleader een webhook naar de `shop-aanvraag`-URL stuurt met bijvoorbeeld `?type=teamleader`.
 4. **Herinneringen totem** (scenario E): het tweede (en laatste) actieve scenario op het gratis plan, dagelijks ingepland.
 
 Uitgeschakelde, ongebruikte scenario's die weg mogen: "Review Plus - Mollie (status + terugkeer)", "Review Plus - Mollie terugkeer", "Integration Mollie".

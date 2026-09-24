@@ -32,7 +32,7 @@ status: beschikbaar
 volgorde: 2
 faq:
   - vraag: Hoe krijg ik de totem gratis?
-    antwoord: Vink bij je aanvraag de totem aan en plan daarna een korte demo van Review Plus in. Zodra je demo is ingepland, versturen we de totem, gratis en ook gratis verzonden.
+    antwoord: Vink bij je aanvraag de totem aan en plan daarna een korte demo van Review Plus in. Na je demo versturen we de totem, gratis en ook gratis verzonden.
   - vraag: Moet ik na de demo een abonnement nemen?
     antwoord: Nee. De demo is vrijblijvend en de totem is van jou, ook als je geen abonnement neemt.
   - vraag: Wat als ik de demo later wil inplannen?

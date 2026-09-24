@@ -21,7 +21,8 @@ const eind = new Date(ACTIE.eindDatum + 'T12:00:00').toLocaleDateString('nl-NL',
       inplannen. Hieronder lees je wie mee kan doen, wat je ontvangt en wat we met je gegevens doen. Deelname kost niets
       en je zit nergens aan vast.
     </p>
-    <p class="mt-4 rounded-2xl bg-warning-bg p-4 text-sm text-warning">Conceptversie, laatst bijgewerkt: TODO datum. <!-- TODO: jurist --></p>
+    <p class="mt-4 text-sm text-muted">Laatst bijgewerkt: 24 september 2026.</p>
+    <!-- TODO: actievoorwaarden en privacytekst laten controleren door een jurist. -->
 
     <div class="prose-rp mt-8">
       <h2>1. Wie kan meedoen</h2>
@@ -34,17 +35,17 @@ const eind = new Date(ACTIE.eindDatum + 'T12:00:00').toLocaleDateString('nl-NL',
       <h2>2. Wat je ontvangt</h2>
       <ul>
         <li><strong>NFC 3-kaartenset:</strong> maximaal 1 gratis set per bedrijf.</li>
-        <li><strong>NFC-totem:</strong> maximaal 1 gratis totem per bedrijf, alleen als je een demo van Review Plus inplant.
-          De totem wordt verzonden nadat de demo is ingepland.</li>
+        <li><strong>NFC-totem:</strong> maximaal 1 gratis totem per bedrijf, alleen als je een demo van Review Plus inplant en bijwoont.
+          De totem wordt verzonden na de demo.</li>
         <li>Verzending is gratis, in Nederland en België.</li>
         <li>De actie is beperkt tot maximaal {ACTIE.maxSets.toLocaleString('nl-NL')} gratis kaartensets en loopt tot en met {eind}, of zolang de voorraad strekt. De teller op de site toont hoeveel gratis sets er nog beschikbaar zijn; die daalt bij elke verwerkte aanvraag.</li>
       </ul>
 
       <h2>3. De demo en de totem</h2>
       <ul>
-        <li>Kies je bij je aanvraag voor de totem, dan reserveren we deze {TOTEM_RESERVATION_DAYS} dagen voor je. <!-- TODO: Jordan bevestigt termijn --> Plan je binnen die termijn geen demo in, dan vervalt de reservering.</li>
+        <li>Kies je bij je aanvraag voor de totem, dan reserveren we deze {TOTEM_RESERVATION_DAYS} dagen voor je. Plan je binnen die termijn geen demo in, dan vervalt de reservering.</li>
         <li>Gebruik bij het inplannen hetzelfde e-mailadres als bij je aanvraag, zodat we de demo aan je aanvraag kunnen koppelen.</li>
-        <li>Bij het niet verschijnen op de demo: TODO: Jordan bepaalt wat er gebeurt bij een no-show.</li>
+        <li>Verschijn je niet op de ingeplande demo, dan vervalt het recht op de gratis totem. Je gratis kaartenset blijft gewoon van jou.</li>
       </ul>
 
       <h2>4. Extra kaarten en totems</h2>
@@ -56,7 +57,7 @@ const eind = new Date(ACTIE.eindDatum + 'T12:00:00').toLocaleDateString('nl-NL',
       <p>De NFC-kaarten en de totem zijn alleen verkrijgbaar in het standaard Review Plus-ontwerp; ze zijn niet op maatwerk
         te bestellen. Los van de actie bieden we <strong>betaalde</strong> QR-reviewkaarten in je eigen huisstijl aan. Die vallen
         <strong>niet</strong> onder de gratis actie. Geef je bij je aanvraag aan dat je interesse hebt, dan ontvang je een vrijblijvend voorstel.
-        QR-kaarten op maat worden pas geproduceerd nadat je het voorstel en het ontwerp hebt goedgekeurd. TODO: Jordan vult prijzen en levertijd in.</p>
+        QR-kaarten op maat worden pas geproduceerd nadat je het voorstel en het ontwerp hebt goedgekeurd. Prijs en levertijd staan in het voorstel.</p>
 
       <h2>5. Geen verplichtingen</h2>
       <p>Aan de actie is geen verplichting tot het afnemen van een abonnement verbonden. De kaarten en de totem blijven van jou.</p>
@@ -70,13 +71,13 @@ const eind = new Date(ACTIE.eindDatum + 'T12:00:00').toLocaleDateString('nl-NL',
       <ul>
         <li>Make.com (verwerken van de aanvraag)</li>
         <li>Teamleader (klantbeheer en demo-afspraken)</li>
-        <li>Cloudflare Turnstile (beveiliging tegen spam)</li>
         <li>Mollie (alleen bij betaalde extra's)</li>
-        <li>Google Workspace (verzendlijst). TODO: Jordan bevestigt</li>
-        <li>Analytics: TODO: Plausible of Umami, cookieloos</li>
+        <li>Google Workspace (e-mail en verzendlijst)</li>
+        <li>GitHub (alleen het aantal nog beschikbare sets, geen persoonsgegevens)</li>
       </ul>
-      <p>Bewaartermijn: TODO: Jordan bepaalt de bewaartermijn (bijvoorbeeld 24 maanden na het laatste contact als er geen klantrelatie ontstaat).</p>
-      <p>Lees ook onze <a href={`${brand.mainSiteUrl}/privacy-policy`}>privacyverklaring</a>. TODO: de privacyverklaring op de hoofdsite aanvullen met de shop-verwerkingen hierboven.</p>
+      <p>Bewaartermijn: ontstaat er geen klantrelatie, dan bewaren we je gegevens maximaal 24 maanden na het laatste contact. Daarna verwijderen we ze.</p>
+      <p>Lees ook onze <a href={`${brand.mainSiteUrl}/privacy-policy`}>privacyverklaring</a>.</p>
+      <!-- TODO: de privacyverklaring op de hoofdsite aanvullen met de shop-verwerkingen hierboven. -->
 
       <h2>8. Contact</h2>
       <p>Vragen over de actie? Mail naar <a href={`mailto:${brand.email}`}>{brand.email}</a>.</p>
