@@ -11,7 +11,7 @@ Je NFC-kaarten zijn aangevraagd. De **NFC-totem** (t.w.v. € 24,95) ligt ook vo
 
 [Kies een moment voor je demo →]({{demo_link}})
 
-Gebruik bij het inplannen dit e-mailadres ({{email}}), dan versturen we de totem automatisch.
+Gebruik bij het inplannen dit e-mailadres ({{email}}), dan koppelen we je demo automatisch aan je aanvraag. Na je demo versturen we de totem gratis.
 
 We houden de totem nog {{dagen_over}} dagen voor je gereserveerd.
 
