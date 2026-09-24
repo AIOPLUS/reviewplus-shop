@@ -47,7 +47,7 @@ for (const file of files) {
         externals.add(u);
         continue;
       }
-      const { pathname } = new URL(u, 'http://x' + '/' + relative(DIST, file).replace(/\\/g, '/'));
+      const { pathname } = new URL(u, 'http://x' + BASE + '/' + relative(DIST, file).replace(/\\/g, '/'));
       if (!resolves(pathname)) broken.push(`${relative(DIST, file)} → ${u}`);
     }
   }
