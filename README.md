@@ -127,7 +127,7 @@ Belangrijkste: specs (afmeting, materiaal, chip) per product · incl./excl. btw 
 - [ ] Framer: redirect `/shop` → `https://shop.reviewplus.io` (301) en menu-item **Shop**
 - [ ] Make-scenario's bouwen volgens `docs/MAKE-SCENARIO.md`; webhook-URL in GitHub Variables (`PUBLIC_LEAD_WEBHOOK_URL`); CORS testen
 - [ ] Teamleader: pipeline + custom fields aanmaken
-- [ ] Cloudflare Turnstile: site-key (GitHub Variable) + secret (Make)
+- [ ] Cloudflare Turnstile: site-key (GitHub Variable `PUBLIC_TURNSTILE_SITE_KEY`) + secret (Make → Data stores → `shop_data` → `config:turnstile` → `waarde`). Eerst de site-key, dan de secret. Test daarna met een echte aanvraag: komt de bevestigingsmail, dan klopt het; krijg je "Aanvraag tegengehouden door spamfilter", dan hoort de secret niet bij de site-key.
 - [ ] Beslissen: prijzen incl./excl. btw (`PRICE_NOTE`), reserveringstermijn totem (`TOTEM_RESERVATION_DAYS`), beleid bij no-show
 - [ ] Mollie-account (iDEAL + Bancontact + creditcard) koppelen in Make
 - [ ] Teamleader Bookings: demo-type herkenbaar maken voor scenario D

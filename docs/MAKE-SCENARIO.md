@@ -25,7 +25,13 @@ Zo staat het nu werkelijk in Make (team "My Team", zone eu1). De scenario's A–
 
 Webhook `shop-aanvraag`: `https://hook.eu1.make.com/q9s2ihd25ksumrh9q550vsmrhq104rvn` (staat als `PUBLIC_LEAD_WEBHOOK_URL` in GitHub).
 
-Router met zeven routes:
+**Eerst Turnstile (spamfilter).** Elk verzoek van de site (geen `type`) gaat eerst langs de Cloudflare-controle: record `config:turnstile` ophalen, daarna `POST https://challenges.cloudflare.com/turnstile/v0/siteverify` met `secret` = veld `waarde` van dat record en `response` = `turnstile_token`. Routes 1, 2 en 5 draaien alleen als `success = true`. De nieuwsbrief uit de footer heeft geen widget en mag altijd door. Wordt een verzoek met token afgewezen, dan krijg je de mail "Aanvraag tegengehouden door spamfilter" en ziet de bezoeker gewoon "gelukt" (Make antwoordt `Accepted`). Verzoeken zonder token (bots die direct naar de webhook posten) worden stil genegeerd.
+
+- **Secret instellen of wijzigen:** Make → *Data stores* → `shop_data` → record `config:turnstile` → veld **waarde** = de *secret key* uit Cloudflare. Leeg = geen controle: alles gaat door.
+- **Terugvallen op doorlaten:** is Cloudflare onbereikbaar of klopt de secret niet (HTTP 400), dan gaat de aanvraag gewoon door. Een lead verliezen is erger dan een keer spam. Controleer na het invullen dus met een echte testaanvraag of de secret klopt (zie README).
+- **Volgorde bij het aanzetten:** eerst de *site key* in GitHub (`PUBLIC_TURNSTILE_SITE_KEY`) en de site opnieuw laten bouwen, pas daarna de secret in Make. Andersom worden echte aanvragen zonder token tegengehouden.
+
+Router met zeven routes (1, 2 en 5 zitten achter de Turnstile-controle):
 
 | Route | Filter | Wat er gebeurt |
 |---|---|---|
@@ -107,6 +113,7 @@ Eén datastore voor alles, onderscheiden op de key:
 
 | Key | Inhoud |
 |---|---|
+| `config:turnstile` | `waarde` = Turnstile secret key (leeg = controle uit) |
 | `teller:gratis_sets` | `uitgegeven` (aantal verwerkte gratis sets, start 0) |
 | `betaling:<lead_ref>` | `payment_id`, `bedrag`, `status`, `bedrijf`, `email`, `testmode`, `aangemaakt` |
 | `lead:<kvk/kbo-nummer>` | `bedrijf`, `bedrijfsnummer`, `email`, `totem_demo`, `aangemaakt` (dubbelcheck) |
