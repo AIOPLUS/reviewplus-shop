@@ -25,7 +25,7 @@ Zo staat het nu werkelijk in Make (team "My Team", zone eu1). De scenario's A–
 
 Webhook `shop-aanvraag`: `https://hook.eu1.make.com/q9s2ihd25ksumrh9q550vsmrhq104rvn` (staat als `PUBLIC_LEAD_WEBHOOK_URL` in GitHub).
 
-Router met zes routes:
+Router met zeven routes:
 
 | Route | Filter | Wat er gebeurt |
 |---|---|---|
@@ -35,6 +35,7 @@ Router met zes routes:
 | 4. Klant terug van Mollie | `type = return` | record ophalen → betaling opvragen → 302 naar `/aanvragen?status=betaald` (paid/authorized/pending) of `?status=geannuleerd` |
 | 5. Dubbelcheck & teller | geen `type` én `request_type = aanvraag` (draait ná het antwoord aan de site) | `lead:<kvk/kbo>` bestaat al? → mail "DUBBELE aanvraag" aan jou + vriendelijke mail aan de klant. Nieuw → record `lead:<nummer>`, teller +1 (alleen < 1000 en vóór 1-12-2026), **bevestigingsmail aan de klant**, Gist bijwerken (fout wordt overgeslagen). Vol/verlopen → mail aan jou. Daarna bij elk nieuw bedrijf (ook als de actie vol is): **Teamleader**, zie hieronder |
 | 6. Demo ingepland | `type = demo` (vanaf `/bedankt?demo=ingepland`) | antwoord `{"ok": true}` → record `deal:<lead_ref>` ophalen → klopt het e-mailadres, dan de deal naar fase **Demo Ingepland** (`deals.move`) → mail "Demo ingepland via de shop" aan jou |
+| 7. Teamleader: fasewissel | `type = deal.moved` (Teamleader-webhook) | antwoord `ok` → record met dit `deal_id` zoeken (geen shop-deal → stop) → deal opvragen → zie "Totem na de demo" |
 
 Mollie krijgt bij het aanmaken van de betaling:
 - `redirectUrl` = `…/q9s2ihd25ksumrh9q550vsmrhq104rvn?type=return&ref=<lead_ref>`
@@ -55,11 +56,29 @@ Geen aparte pijplijn: alles komt in de bestaande **Sales Pipeline**.
 4. Record `deal:<lead_ref>` in `shop_data` (voor route 6).
 5. **Taak** "Gratis NFC-kaartenset verzenden: <bedrijf>" op de deal, deadline morgen, met het bezorgadres.
 
-**Naar fase Demo Ingepland**: de demo wordt pas ná het versturen van de aanvraag gepland (in Teamleader Bookings). Klikt de klant daarna op "Ik heb mijn demo ingepland", dan stuurt de bedankpagina `?type=demo` met `lead_ref` en e-mail, en zet route 6 de deal in fase **Demo Ingepland**. Dat is wat de klant aangeeft; controleer de afspraak in Teamleader. Scenario D (nog te bouwen) kan dit later op de echte afspraak laten reageren.
+**Naar fase Demo Ingepland**: de demo wordt pas ná het versturen van de aanvraag gepland (in Teamleader Bookings). Klikt de klant daarna op "Ik heb mijn demo ingepland", dan stuurt de bedankpagina `?type=demo` met `lead_ref` en e-mail, en zet route 6 de deal in fase **Demo Ingepland**. Dat is wat de klant aangeeft; controleer de afspraak in Teamleader. Zet je de deal zelf op Demo Ingepland, dan werkt het net zo (route 7).
 
 Elke Teamleader-module heeft een *Ignore*-errorhandler, zodat een Teamleader-storing het scenario nooit uitschakelt en de klant er niets van merkt. Lukt de deal niet, dan krijg je de mail "Teamleader: deal niet aangemaakt" en maak je hem handmatig aan.
 
-Fase-ID's: Nieuw `8fa3ee33-24f5-09d4-9462-3d75dc1309ce`, Demo Ingepland `be101259-4210-03e3-bb62-e86bd31309d0`. Hernoem je fases gerust; verwijder je er een, pas dan de ID aan in module 44 (createDeal) of 52 (deals.move).
+Fase-ID's: Nieuw `8fa3ee33-24f5-09d4-9462-3d75dc1309ce`, Demo Ingepland `be101259-4210-03e3-bb62-e86bd31309d0`, No Show `75ae6391-e433-0711-9161-b2726213127f`. Hernoem je fases gerust; verwijder je er een, pas dan de ID aan in module 44 (createDeal), 52 (deals.move) of de filters van route 7.
+
+### Totem na de demo (route 7)
+
+In Teamleader is een webhook geregistreerd (sinds 24-09-2026): bij elke fasewissel van een deal (`deal.moved`) stuurt Teamleader een melding naar de shop-webhook. Alleen deals met een record `deal:<lead_ref>` doen iets; andere fasewissels kosten ±4 Make-operaties en stoppen daarna.
+
+De status staat in het veld `status` van het deal-record:
+
+| Deal gaat naar | Voorwaarde | Wat er gebeurt |
+|---|---|---|
+| **Demo Ingepland** | totem nog niet verzonden | `status = demo_ingepland` |
+| **No Show** | `status = demo_ingepland` | `status = no_show` + mail "No-show: geen totem" (no-show = geen totem) |
+| **Offerte Verzonden, On Hold, Offerte Getekend, Onboarding ingepland of Closed** | `status = demo_ingepland` | `status = totem_verzenden` + taak "Gratis NFC-totem verzenden" op de deal + mail aan jou |
+
+Zo komt de totem er alleen als de deal eerst op Demo Ingepland stond en daarna is doorgezet. Bij **Geweigerd** gaat er geen automatische totem uit; die kun je altijd handmatig sturen. Een no-show die alsnog een demo plant: zet de deal weer op Demo Ingepland, dan geldt de totem weer na die demo. De taak en mail komen één keer per deal.
+
+Let op: een demo die de klant via Teamleader Bookings boekt, is een agenda-afspraak ("<Naam>: Demonstratie met Review Plus", met het e-mailadres in de omschrijving). Daarvoor heeft Teamleader geen webhook. De deal gaat naar Demo Ingepland via de knop "Ik heb mijn demo ingepland" (route 6) of doordat jij hem verplaatst. Automatisch herkennen van boekingen kan in het dagelijkse scenario E.
+
+Webhook bekijken of weghalen: Teamleader API `webhooks.list` / `webhooks.unregister` (url `https://hook.eu1.make.com/q9s2ihd25ksumrh9q550vsmrhq104rvn`, type `deal.moved`), bijvoorbeeld via een Teamleader-module *Make an API Call* in Make.
 
 ### Datastore `shop_data` (id 196583)
 
@@ -70,7 +89,7 @@ Eén datastore voor alles, onderscheiden op de key:
 | `teller:gratis_sets` | `uitgegeven` (aantal verwerkte gratis sets, start 0) |
 | `betaling:<lead_ref>` | `payment_id`, `bedrag`, `status`, `bedrijf`, `email`, `testmode`, `aangemaakt` |
 | `lead:<kvk/kbo-nummer>` | `bedrijf`, `bedrijfsnummer`, `email`, `totem_demo`, `aangemaakt` (dubbelcheck) |
-| `deal:<lead_ref>` | `deal_id`, `company_id`, `contact_id`, `email`, `bedrijf`, `totem_demo`, `aangemaakt` (Teamleader) |
+| `deal:<lead_ref>` | `deal_id`, `company_id`, `contact_id`, `email`, `bedrijf`, `totem_demo`, `aangemaakt`, `status` (leeg / `demo_ingepland` / `no_show` / `totem_verzenden`) |
 
 ### CORS
 
@@ -80,8 +99,8 @@ Make stuurt zelf al `Access-Control-Allow-Origin: *` mee. Voeg in een Webhook re
 
 1. ~~Gist-sleutel~~ **Klaar (24-09-2026):** de Gist-module gebruikt *HTTP → Make a Basic Auth request* met sleutel "GitHub Basic Auth - voorraadteller" (gebruikersnaam AIOPLUS, token als wachtwoord). De oude API-key-sleutel "GitHub - voorraadteller (Gist)" wordt niet meer gebruikt en mag weg. Token verloopt: vernieuw het op tijd op GitHub en werk de sleutel in Make bij.
 2. ~~Teamleader~~ **Klaar (24-09-2026):** bedrijf, contact, deal (fase Nieuw) en taak; "Ik heb mijn demo ingepland" → fase Demo Ingepland. Zie hierboven.
-3. **Totem na demo** (scenario D). Beleid: de totem wordt pas **na de demo** verzonden; bij een no-show vervalt de gratis totem. Kan als extra route in hetzelfde scenario als Teamleader een webhook naar de `shop-aanvraag`-URL stuurt met bijvoorbeeld `?type=teamleader`.
-4. **Herinneringen totem** (scenario E): het tweede (en laatste) actieve scenario op het gratis plan, dagelijks ingepland.
+3. ~~Totem na demo~~ **Klaar (24-09-2026):** route 7 op de Teamleader-webhook `deal.moved`, zie "Totem na de demo".
+4. **Herinneringen totem** (scenario E): het tweede (en laatste) actieve scenario op het gratis plan, dagelijks ingepland. Kan ook nieuwe Bookings-afspraken ("Demonstratie met Review Plus") via `events.list` koppelen aan shop-deals op e-mailadres en die deals naar Demo Ingepland zetten.
 
 Uitgeschakelde, ongebruikte scenario's die weg mogen: "Review Plus - Mollie (status + terugkeer)", "Review Plus - Mollie terugkeer", "Integration Mollie".
 
@@ -189,6 +208,8 @@ De site toont dan de demo-stap (als de totem gekozen is) of `/bedankt`, of bij a
 7. Webhook response `200` (Mollie verwacht alleen een 200).
 
 ## Scenario D: demo ingepland → totem verzenden
+
+> **Gebouwd als route 7** van het shop-scenario, op basis van fasewissels in Teamleader (zie "Totem na de demo" bovenaan). Teamleader heeft geen webhook voor Bookings-afspraken, dus het ontwerp hieronder is niet letterlijk zo gebouwd.
 
 1. **Trigger**: Teamleader → *Watch events* / webhook op nieuwe afspraken (`meeting.created` of `calendarEvent.created`, afhankelijk van wat Bookings aanmaakt). Filter op het **demo-type** (`TODO: Jordan controleert in Teamleader Bookings hoe het type "demonstratie-met-review-plus-2" herkenbaar is: titel, activity type of booking-type-id`).
 2. Haal de e-mailadressen van de deelnemers op.
