@@ -1,7 +1,7 @@
 /**
  * Privacyvriendelijke events (Plausible of Umami). Zonder geconfigureerde provider is dit een no-op.
  * Eventnamen: product_view, start_aanvraag, stap_2, stap_3, aanvraag_verzonden, totem_gekozen,
- * demo_klik, demo_later, betaling_gestart
+ * demo_klik, demo_later, demo_ingepland, betaling_gestart
  */
 export type EventName =
   | 'product_view'
@@ -12,6 +12,7 @@ export type EventName =
   | 'totem_gekozen'
   | 'demo_klik'
   | 'demo_later'
+  | 'demo_ingepland'
   | 'betaling_gestart';
 
 type Props = Record<string, string | number | boolean>;

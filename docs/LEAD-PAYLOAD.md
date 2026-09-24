@@ -142,6 +142,16 @@ Vastgelegd bij het eerste bezoek in de sessie (`sessionStorage`), overschreven a
 { "request_type": "nieuwsbrief", "lead_source": "shop", "email": "jij@bedrijf.nl", "submitted_at": "2026-09-23T15:00:00.000Z", "pagina": "https://shop.reviewplus.io/" }
 ```
 
+## Demo ingepland (`?type=demo`)
+
+Klikt de klant na het versturen op "Ik heb mijn demo ingepland" (`/bedankt?demo=ingepland`), dan stuurt de bedankpagina één keer per aanvraag een POST naar dezelfde webhook-URL met `?type=demo`:
+
+```json
+{ "ref": "RP-20260924-DCDDF0BB4A", "email": "jij@bedrijf.nl" }
+```
+
+Make zoekt de deal bij `ref` op, controleert het e-mailadres en zet de deal in Teamleader in fase **Demo Ingepland**. Antwoord: `200 { "ok": true }`. Het is wat de klant zelf aangeeft; de afspraak zelf staat in Teamleader Bookings.
+
 ## Respons van Make
 
 Gebruik in Make de module **Webhooks → Webhook response**:

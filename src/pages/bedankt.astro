@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import { DEMO_BOOKING_URL, TOTEM_RESERVATION_DAYS } from '@/config/site';
+import { DEMO_BOOKING_URL, LEAD, TOTEM_RESERVATION_DAYS } from '@/config/site';
 import { url } from '@/lib/url';
 ---
 <BaseLayout
@@ -21,7 +21,7 @@ import { url } from '@/lib/url';
     </div>
   </section>
 
-  <section class="container-rp -mt-6" data-days={TOTEM_RESERVATION_DAYS}>
+  <section class="container-rp -mt-6" data-days={TOTEM_RESERVATION_DAYS} data-webhook={LEAD.provider === 'make' ? LEAD.webhookUrl : ''}>
     <!-- Standaard: demo-upsell. Wordt aangepast op basis van de keuze in de aanvraag. -->
     <div class="mx-auto grid max-w-3xl gap-5 rounded-[var(--radius-panel)] bg-gradient-to-br from-brand-500 to-brand-600 p-8 text-white shadow-[var(--shadow-glow)] md:p-12" data-upsell>
       <p class="chip w-fit !bg-white/15 !text-white" data-upsell-chip>Tip</p>
@@ -46,14 +46,16 @@ import { url } from '@/lib/url';
   </section>
 
   <script>
-    import { readJSON, remove } from '@/lib/client/storage';
+    import { readJSON, remove, writeJSON } from '@/lib/client/storage';
     import { fireLeadConversion } from '@/lib/client/consent';
+    import { track } from '@/lib/client/analytics';
 
     interface LastRequest { ref: string; totem: boolean; email: string; voornaam: string; extras: boolean; paid?: boolean }
     const last = readJSON<LastRequest | null>('session', 'rp_last', null);
     const params = new URLSearchParams(location.search);
     const demo = params.get('demo');
     const days = document.querySelector<HTMLElement>('[data-days]')?.dataset.days ?? '14';
+    const webhook = document.querySelector<HTMLElement>('[data-webhook]')?.dataset.webhook ?? '';
     const set = (sel: string, text: string) => {
       const el = document.querySelector<HTMLElement>(sel);
       if (el) el.textContent = text;
@@ -71,6 +73,18 @@ import { url } from '@/lib/url';
     remove('session', 'rp_draft_v1');
 
     if (demo === 'ingepland') {
+      // Laat Make de deal in Teamleader naar fase "Demo Ingepland" zetten (één keer per aanvraag).
+      const sentKey = `rp_demo_sent_${last?.ref}`;
+      if (last?.ref && webhook && !readJSON<boolean>('session', sentKey, false)) {
+        writeJSON('session', sentKey, true);
+        track('demo_ingepland');
+        fetch(`${webhook}?type=demo`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ref: last.ref, email: last.email }),
+          keepalive: true,
+        }).catch(() => undefined);
+      }
       set('[data-upsell-chip]', 'Demo ingepland');
       set('[data-upsell-title]', 'Top, tot bij de demo!');
       set('[data-upsell-text]', 'Na je demo versturen we je NFC-totem gratis. Je ontvangt een bevestiging van de afspraak per e-mail. Nog niet gelukt? Via de knop hieronder kies je alsnog een moment.');

@@ -25,7 +25,7 @@ Zo staat het nu werkelijk in Make (team "My Team", zone eu1). De scenario's A–
 
 Webhook `shop-aanvraag`: `https://hook.eu1.make.com/q9s2ihd25ksumrh9q550vsmrhq104rvn` (staat als `PUBLIC_LEAD_WEBHOOK_URL` in GitHub).
 
-Router met vier routes:
+Router met zes routes:
 
 | Route | Filter | Wat er gebeurt |
 |---|---|---|
@@ -33,7 +33,8 @@ Router met vier routes:
 | 2. Aanvraag zonder extra's | geen `type` én `heeft_betaalde_extras ≠ true` | antwoord `{"ok": true}` → mail |
 | 3. Mollie-statusmelding | `type = status` | antwoord `200 ok` → record ophalen → betaling opvragen bij Mollie → bij `paid`: record bijwerken + mail "Betaling ontvangen" |
 | 4. Klant terug van Mollie | `type = return` | record ophalen → betaling opvragen → 302 naar `/aanvragen?status=betaald` (paid/authorized/pending) of `?status=geannuleerd` |
-| 5. Dubbelcheck & teller | geen `type` én `request_type = aanvraag` (draait ná het antwoord aan de site) | `lead:<kvk/kbo>` bestaat al? → mail "DUBBELE aanvraag" aan jou + vriendelijke mail aan de klant. Nieuw → record `lead:<nummer>`, teller +1 (alleen < 1000 en vóór 1-12-2026), **bevestigingsmail aan de klant**, Gist bijwerken (fout wordt overgeslagen). Vol/verlopen → mail aan jou |
+| 5. Dubbelcheck & teller | geen `type` én `request_type = aanvraag` (draait ná het antwoord aan de site) | `lead:<kvk/kbo>` bestaat al? → mail "DUBBELE aanvraag" aan jou + vriendelijke mail aan de klant. Nieuw → record `lead:<nummer>`, teller +1 (alleen < 1000 en vóór 1-12-2026), **bevestigingsmail aan de klant**, Gist bijwerken (fout wordt overgeslagen). Vol/verlopen → mail aan jou. Daarna bij elk nieuw bedrijf (ook als de actie vol is): **Teamleader**, zie hieronder |
+| 6. Demo ingepland | `type = demo` (vanaf `/bedankt?demo=ingepland`) | antwoord `{"ok": true}` → record `deal:<lead_ref>` ophalen → klopt het e-mailadres, dan de deal naar fase **Demo Ingepland** (`deals.move`) → mail "Demo ingepland via de shop" aan jou |
 
 Mollie krijgt bij het aanmaken van de betaling:
 - `redirectUrl` = `…/q9s2ihd25ksumrh9q550vsmrhq104rvn?type=return&ref=<lead_ref>`
@@ -42,7 +43,23 @@ Mollie krijgt bij het aanmaken van de betaling:
 
 **Live sinds 24 september 2026:** `testmode` staat in module 4 "Set variables" op `false`, dus betalingen zijn echt. Terug naar testen: zet hem op `true`. (De Mollie-koppeling is via OAuth gemaakt; daarom gaat testen via de `testmode`-parameter in plaats van een test-API-key.)
 
-Koppelingen: Mollie = **"Mollie - shop betalingen"** (met `payments.write`), Gmail = "Jordan's Gmail connection".
+Koppelingen: Mollie = **"Mollie - shop betalingen"** (met `payments.write`), Gmail = "Jordan's Gmail connection", Teamleader = **"Teamleader - shop"**.
+
+### Teamleader (route 5, na teller en mails)
+
+Geen aparte pijplijn: alles komt in de bestaande **Sales Pipeline**.
+
+1. **Bedrijf zoeken**: eerst op btw-nummer (bij BE zonder btw: `BE` + KBO-nummer), daarna op exact dezelfde bedrijfsnaam. Niet gevonden → bedrijf aanmaken met KvK/KBO, btw, adres, website en tag `review-plus-shop`.
+2. **Contact zoeken** op e-mailadres. Niet gevonden → contact aanmaken (tag `review-plus-shop`) en koppelen aan het bedrijf.
+3. **Deal** "Shop: <bedrijf>" in fase **Nieuw**, met een samenvatting van de aanvraag (producten, totem + demo, extra's, maatwerk, vragen, adres, herkomst).
+4. Record `deal:<lead_ref>` in `shop_data` (voor route 6).
+5. **Taak** "Gratis NFC-kaartenset verzenden: <bedrijf>" op de deal, deadline morgen, met het bezorgadres.
+
+**Naar fase Demo Ingepland**: de demo wordt pas ná het versturen van de aanvraag gepland (in Teamleader Bookings). Klikt de klant daarna op "Ik heb mijn demo ingepland", dan stuurt de bedankpagina `?type=demo` met `lead_ref` en e-mail, en zet route 6 de deal in fase **Demo Ingepland**. Dat is wat de klant aangeeft; controleer de afspraak in Teamleader. Scenario D (nog te bouwen) kan dit later op de echte afspraak laten reageren.
+
+Elke Teamleader-module heeft een *Ignore*-errorhandler, zodat een Teamleader-storing het scenario nooit uitschakelt en de klant er niets van merkt. Lukt de deal niet, dan krijg je de mail "Teamleader: deal niet aangemaakt" en maak je hem handmatig aan.
+
+Fase-ID's: Nieuw `8fa3ee33-24f5-09d4-9462-3d75dc1309ce`, Demo Ingepland `be101259-4210-03e3-bb62-e86bd31309d0`. Hernoem je fases gerust; verwijder je er een, pas dan de ID aan in module 44 (createDeal) of 52 (deals.move).
 
 ### Datastore `shop_data` (id 196583)
 
@@ -52,7 +69,8 @@ Eén datastore voor alles, onderscheiden op de key:
 |---|---|
 | `teller:gratis_sets` | `uitgegeven` (aantal verwerkte gratis sets, start 0) |
 | `betaling:<lead_ref>` | `payment_id`, `bedrag`, `status`, `bedrijf`, `email`, `testmode`, `aangemaakt` |
-| `lead:<lead_ref>` | (voor de dubbelcheck, nog te bouwen) |
+| `lead:<kvk/kbo-nummer>` | `bedrijf`, `bedrijfsnummer`, `email`, `totem_demo`, `aangemaakt` (dubbelcheck) |
+| `deal:<lead_ref>` | `deal_id`, `company_id`, `contact_id`, `email`, `bedrijf`, `totem_demo`, `aangemaakt` (Teamleader) |
 
 ### CORS
 
@@ -60,9 +78,9 @@ Make stuurt zelf al `Access-Control-Allow-Origin: *` mee. Voeg in een Webhook re
 
 ### Nog te bouwen
 
-1. **Gist-sleutel**: de Gist-module gebruikt nog de API-key-sleutel, die GitHub niet accepteert ("Requires authentication"). Na het invullen van de Basic Auth-sleutel (gebruikersnaam AIOPLUS + token als wachtwoord) de module omzetten naar *HTTP → Make a Basic Auth request*.
-2. **Teamleader**: bedrijf, contact en deal (stap 9 van scenario A).
-3. **Totem na demo** (scenario D). Beleid: de totem wordt pas **na de demo** verzonden; bij een no-show vervalt de gratis totem. kan als extra route in hetzelfde scenario als Teamleader een webhook naar de `shop-aanvraag`-URL stuurt met bijvoorbeeld `?type=teamleader`.
+1. ~~Gist-sleutel~~ **Klaar (24-09-2026):** de Gist-module gebruikt *HTTP → Make a Basic Auth request* met sleutel "GitHub Basic Auth - voorraadteller" (gebruikersnaam AIOPLUS, token als wachtwoord). De oude API-key-sleutel "GitHub - voorraadteller (Gist)" wordt niet meer gebruikt en mag weg. Token verloopt: vernieuw het op tijd op GitHub en werk de sleutel in Make bij.
+2. ~~Teamleader~~ **Klaar (24-09-2026):** bedrijf, contact, deal (fase Nieuw) en taak; "Ik heb mijn demo ingepland" → fase Demo Ingepland. Zie hierboven.
+3. **Totem na demo** (scenario D). Beleid: de totem wordt pas **na de demo** verzonden; bij een no-show vervalt de gratis totem. Kan als extra route in hetzelfde scenario als Teamleader een webhook naar de `shop-aanvraag`-URL stuurt met bijvoorbeeld `?type=teamleader`.
 4. **Herinneringen totem** (scenario E): het tweede (en laatste) actieve scenario op het gratis plan, dagelijks ingepland.
 
 Uitgeschakelde, ongebruikte scenario's die weg mogen: "Review Plus - Mollie (status + terugkeer)", "Review Plus - Mollie terugkeer", "Integration Mollie".
@@ -73,7 +91,7 @@ Uitgeschakelde, ongebruikte scenario's die weg mogen: "Review Plus - Mollie (sta
 
 - **Data store** `shop_leads` (Make → Data stores), sleutel `lead_ref`, velden: `email`, `bedrijfsnummer`, `land`, `totem_demo` (bool), `demo_ingepland` (bool), `teamleader_deal_id`, `teamleader_company_id`, `mollie_payment_id`, `betaald` (bool), `aangemaakt` (datum), `herinnering_2` (bool), `herinnering_5` (bool), `payload` (tekst, volledige JSON).
 - **Google Sheet** "Te verzenden" met kolommen: `datum`, `lead_ref`, `bedrijf`, `contact`, `straat`, `huisnummer`, `toevoeging`, `postcode`, `plaats`, `land`, `product`, `aantal`, `soort` (gratis/extra/totem), `status` (te verzenden / verzonden), `track&trace`.
-- **Teamleader**: pipeline `TODO: naam, bv. "NFC-leads"` met fases *Aangevraagd*, *Demo ingepland*, *Demo gehad*, *Klant Review Plus Online*, *Verloren*. Custom fields op de deal: `Bron`, `Sector`, `UTM source/medium/campaign`, `gclid`, `fbclid`, `Lead ref`, `Totem gekozen`, `Reviewtool`, `Aantal Google-reviews`. Op het bedrijf: `KvK/KBO` (of gebruik het standaardveld ondernemingsnummer).
+- **Teamleader**: geen aparte pijplijn; shop-deals komen in de bestaande *Sales Pipeline* in fase *Nieuw*, en na "demo ingepland" in *Demo Ingepland* (zie "Huidige inrichting"). Optioneel later: Custom fields op de deal: `Bron`, `Sector`, `UTM source/medium/campaign`, `gclid`, `fbclid`, `Lead ref`, `Totem gekozen`, `Reviewtool`, `Aantal Google-reviews`. Op het bedrijf: `KvK/KBO` (of gebruik het standaardveld ondernemingsnummer).
 - Turnstile: secret key uit het Cloudflare-dashboard.
 - Mollie: API-key (live + test) als Make-connectie of als header in een HTTP-module.
 
