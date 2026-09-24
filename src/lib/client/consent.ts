@@ -40,7 +40,18 @@ export function getConsent(): Consent {
 export function setConsent(marketing: boolean): void {
   writeJSON('local', KEY, { marketing, date: new Date().toISOString() });
   if (marketing) loadPixels();
+  else if (loaded) revokePixels();
   document.dispatchEvent(new CustomEvent('rp:consent', { detail: { marketing } }));
+}
+
+/** Toestemming ingetrokken terwijl de pixels al geladen zijn: direct stoppen met meten. */
+function revokePixels(): void {
+  try {
+    window.fbq?.('consent', 'revoke');
+    window.gtag?.('consent', 'update', { ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' });
+  } catch {
+    /* pixel-fouten negeren */
+  }
 }
 
 export function configurePixels(c: PixelConfig): void {
@@ -86,6 +97,13 @@ export function loadPixels(): void {
       // eslint-disable-next-line prefer-rest-params
       dataLayer.push(arguments);
     };
+    // Google Consent Mode v2: pas geladen na "Accepteren", dus advertentiesignalen staan aan; geen Google Analytics.
+    window.gtag('consent', 'default', {
+      ad_storage: 'granted',
+      ad_user_data: 'granted',
+      ad_personalization: 'granted',
+      analytics_storage: 'denied',
+    });
     window.gtag('js', new Date());
     window.gtag('config', cfg.gadsId);
     addScript(`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(cfg.gadsId)}`);

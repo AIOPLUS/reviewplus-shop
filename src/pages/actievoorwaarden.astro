@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { brand } from '@/config/brand';
-import { ACTIE, TOTEM_RESERVATION_DAYS } from '@/config/site';
+import { ACTIE, ANALYTICS, PIXELS, TOTEM_RESERVATION_DAYS } from '@/config/site';
 import { breadcrumbSchema } from '@/lib/schema';
 import { url } from '@/lib/url';
 const eind = new Date(ACTIE.eindDatum + 'T12:00:00').toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -74,6 +74,11 @@ const eind = new Date(ACTIE.eindDatum + 'T12:00:00').toLocaleDateString('nl-NL',
         <li>Mollie (alleen bij betaalde extra's)</li>
         <li>Google Workspace (e-mail en verzendlijst)</li>
         <li>GitHub (alleen het aantal nog beschikbare sets, geen persoonsgegevens)</li>
+        <li>Cloudflare Turnstile (controle tegen spam bij het versturen van het formulier)</li>
+        {ANALYTICS.provider && <li>{ANALYTICS.provider === 'umami' ? 'Umami' : 'Plausible'} (anonieme bezoekersstatistieken, zonder cookies)</li>}
+        {(PIXELS.metaPixelId || PIXELS.gadsId) && (
+          <li>{[PIXELS.metaPixelId && 'Meta', PIXELS.gadsId && 'Google Ads'].filter(Boolean).join(' en ')} (meten van advertenties, alleen als je cookies voor advertenties accepteert)</li>
+        )}
       </ul>
       <p>Bewaartermijn: ontstaat er geen klantrelatie, dan bewaren we je gegevens maximaal 24 maanden na het laatste contact. Daarna verwijderen we ze.</p>
       <p>Lees ook onze <a href={`${brand.mainSiteUrl}/privacy-policy`}>privacyverklaring</a>.</p>
