@@ -3,7 +3,7 @@
 Statische lead-generatie-shop voor Review Plus: bedrijven in Nederland en België vragen gratis een **NFC 3-kaartenset** aan en krijgen een **NFC-totem** gratis als ze een demo inplannen. Aanvragen gaan als JSON naar Make.com → Teamleader. Betaalde extra's lopen via Mollie (vanuit Make).
 
 - Stack: Astro 7 (static) · TypeScript · Tailwind CSS 4 · vanilla-TS islands (geen framework-runtime)
-- Hosting: GitHub Pages op `https://shop.reviewplus.io` (fase 1), later `https://www.reviewplus.io/shop` (fase 2)
+- Hosting: GitHub Pages op `https://shop.reviewplus.io` (hoofdsite: repo `AIOPLUS/reviewplus-site`, zie `docs/DOMEIN.md`)
 - Lighthouse mobiel (lokaal gemeten): 99–100 op alle vier de categorieën, LCP ≤ 1,8 s, CLS ≈ 0
 
 ## Snel starten
@@ -40,7 +40,7 @@ Zet in `.env.development.local`: `PUBLIC_LEAD_WEBHOOK_URL=http://localhost:8787/
 | Variabele | Voorbeeld | |
 |---|---|---|
 | `SITE_URL` | `https://shop.reviewplus.io` | Basis voor canonicals, sitemap, schema, OG |
-| `SHOP_BASE_PATH` | `/` (fase 2: `/shop`) | Alle links worden hieruit opgebouwd |
+| `SHOP_BASE_PATH` | `/` | Alle links worden hieruit opgebouwd |
 | `PUBLIC_LEAD_PROVIDER` | `make` | `make` \| `web3forms` \| `formspree` (fallback) |
 | `PUBLIC_LEAD_WEBHOOK_URL` | `https://hook.eu2.make.com/…` | Make-webhook (of Formspree-endpoint) |
 | `PUBLIC_WEB3FORMS_ACCESS_KEY` | | Alleen bij `web3forms` |
@@ -89,7 +89,7 @@ scripts/         linkcheck, mock-webhook, lighthouse-local
 docs/            DOMEIN, MAKE-SCENARIO, LEAD-PAYLOAD, OPVOLGING, templates/
 ```
 
-Toekomst (AIO PLUS: hoofdsite, View Plus, Website Plus, Tab Plus in één repo): header/footer/SEO/brand zijn losse onderdelen; zie `docs/DOMEIN.md` → Fase 2 voor het verplaatsen van de shop naar `src/pages/shop/`.
+De hoofdsite staat in een aparte repo (`AIOPLUS/reviewplus-site`). De shop kan later onder `www.reviewplus.io/shop` komen; zie `docs/DOMEIN.md`.
 
 ## Hoe de aanvraagflow werkt
 
@@ -126,7 +126,7 @@ Belangrijkste: specs (afmeting, materiaal, chip) per product · incl./excl. btw 
 
 - [x] GitHub-repo aanmaken, code pushen, Pages activeren (Source: GitHub Actions)
 - [x] DNS: `CNAME shop → <github-gebruiker>.github.io`; in GitHub Pages custom domain + **Enforce HTTPS**
-- [ ] (Uitgesteld) Framer: redirect `/shop` → `https://shop.reviewplus.io` (301) en menu-item **Shop**
+- [x] ~~Framer-redirect `/shop`~~ niet meer nodig: Framer is vervangen door reviewplus-site (25-09-2026)
 - [x] Make-scenario's bouwen volgens `docs/MAKE-SCENARIO.md`; webhook-URL in GitHub Variables (`PUBLIC_LEAD_WEBHOOK_URL`); CORS testen (klaar 24-09-2026, zie "Huidige inrichting")
 - [x] Teamleader: pipeline + custom fields aanmaken (niet nodig: bestaande Sales Pipeline, fases Nieuw en Demo Ingepland)
 - [x] Cloudflare Turnstile: site-key (GitHub Variable `PUBLIC_TURNSTILE_SITE_KEY`) + secret (Make → Data stores → `shop_data` → `config:turnstile` → `waarde`). Eerst de site-key, dan de secret. Test daarna met een echte aanvraag: komt de bevestigingsmail, dan klopt het; krijg je "Aanvraag tegengehouden door spamfilter", dan hoort de secret niet bij de site-key. (live 24-09-2026)
