@@ -43,8 +43,7 @@ export const footerNav = [
     title: 'Product',
     links: [
       { label: 'Functies', href: `${brand.mainSiteUrl}/features` },
-      { label: 'Integraties', href: `${brand.mainSiteUrl}/integration` },
-      { label: 'Changelog', href: `${brand.mainSiteUrl}/changelog` },
+      { label: 'Prijzen', href: `${brand.mainSiteUrl}/plans` },
       { label: 'Shop', href: '/' , internal: true },
     ],
   },
