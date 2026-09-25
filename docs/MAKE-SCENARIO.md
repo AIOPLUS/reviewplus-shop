@@ -321,3 +321,20 @@ Maximum en einddatum voor de site staan in `src/config/site.ts` (`ACTIE.maxSets`
 - [ ] Zelfde, maar annuleren → `/aanvragen?status=geannuleerd`, "Extra's alsnog afrekenen" maakt nieuwe betaling
 - [ ] Nog een aanvraag met hetzelfde KvK-nummer → duplicaat-mail, geen nieuwe gratis producten
 - [ ] Turnstile-token ongeldig (plak een nep-token met de mock) → niets verwerkt
+
+## Teamleader-velden (bijgewerkt 25-09-2026)
+
+Nieuwe bedrijven en contacten krijgen in beide routes (shopaanvraag 39/41, plan afsluiten 127/129):
+
+| Teamleader | Bron |
+|---|---|
+| Bedrijf: naam, KvK/KBO (lokaal bedrijfsnummer), website, telefoon, taal `nl`, tag | formulier |
+| Bedrijf: btw-nummer | alleen als het formaat klopt (NL…B.. of BE0/1…); anders alleen in de opmerkingen, zodat Teamleader het bedrijf niet weigert |
+| Bedrijf: e-mail | primair = e-mail contactpersoon; **factuur-e-mail** = opgegeven factuuradres (plan afsluiten) |
+| Bedrijf: adressen | hoofdadres + **bezorgadres** (t.a.v. contactpersoon); bij plan afsluiten ook **factuuradres** (t.a.v. bedrijf). Toevoeging met spatie: "Teststraat 12 A" |
+| Bedrijf/contact: marketingmails | shop: keuze nieuwsbrief; plan afsluiten: nee (verplicht veld in Teamleader) |
+| Contact: telefoon | +316/+324 als **mobiel**, anders als vast nummer |
+| Contact: functie en beslisser | via "contact koppelen aan bedrijf" (plan afsluiten: beslisser = ja, want tekenbevoegd) |
+| Opmerkingen | ref, KvK/btw, sector/locaties of plan, factuur-e-mail, contactpersoon |
+
+Bestaande bedrijven of contacten (gevonden op btw-nummer, naam of e-mail) worden niet overschreven; de nieuwe deal komt dan aan het bestaande bedrijf te hangen.
