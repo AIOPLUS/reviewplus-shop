@@ -24,6 +24,8 @@ export const LEAD = {
   webhookUrl: env.PUBLIC_LEAD_WEBHOOK_URL || '',
   web3formsKey: env.PUBLIC_WEB3FORMS_ACCESS_KEY || '',
   turnstileSiteKey: env.PUBLIC_TURNSTILE_SITE_KEY || '',
+  /** KvK-zoekproxy (Cloudflare Worker, zie reviewplus-site/workers/kvk-zoeken). Leeg = geen KvK-autofill. */
+  kvkProxyUrl: env.PUBLIC_KVK_PROXY_URL || '',
   fallbackEmail: brand.email,
 };
 

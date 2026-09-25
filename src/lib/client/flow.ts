@@ -10,6 +10,7 @@ import { clearExtras, extrasCount, getCart, onCartChange, setExtra, setTotemDemo
 import { fireLeadConversion } from './consent';
 import { newLeadRef, PAYLOAD_VERSION, submitLead, type LeadLine, type LeadPayload } from './lead';
 import { readJSON, remove, writeJSON } from './storage';
+import { formatteerPostcode, kvkAutofill } from './kvk-autofill';
 
 const DRAFT_KEY = 'rp_draft_v1';
 const LAST_KEY = 'rp_last';
@@ -179,6 +180,8 @@ export function initFlow(): void {
     if (btwHint) btwHint.textContent = c === 'NL' ? 'Bijvoorbeeld NL123456789B01' : 'Bijvoorbeeld BE0123456789';
     pc.placeholder = c === 'NL' ? '1234 AB' : '2000';
     for (const name of ['bedrijfsnummer', 'btw', 'postcode', 'telefoon']) if (val(name)) checkField(name, false);
+    const kvkHint = document.getElementById('bedrijfsnaam-hint');
+    if (kvkHint && cfg.kvkProxy) kvkHint.hidden = c !== 'NL';
     const status = $('[data-address-status]');
     if (status) status.textContent = c === 'NL' && cfg.addressLookup ? 'Vul postcode en huisnummer in, dan vullen we straat en plaats automatisch aan.' : '';
   }
@@ -567,6 +570,36 @@ export function initFlow(): void {
     }
     return false;
   }
+
+  // ── KvK-autofill (NL): bedrijfsnaam of KvK-nummer typen, bedrijf kiezen, rest wordt ingevuld ──
+  kvkAutofill({
+    proxyUrl: cfg.kvkProxy ?? '',
+    velden: [field('bedrijfsnaam'), field('bedrijfsnummer')].filter((el): el is HTMLInputElement => el instanceof HTMLInputElement),
+    actief: () => country() === 'NL',
+    vul: (r) => {
+      // Adresvelden altijd overschrijven (ook leeg), zodat er niets van een eerdere keuze blijft staan
+      const zet = (name: string, waarde: string) => {
+        const el = field(name);
+        if (el) el.value = waarde;
+      };
+      zet('bedrijfsnaam', r.naam);
+      zet('bedrijfsnummer', r.kvkNummer);
+      zet('postcode', formatteerPostcode(r.postcode));
+      zet('huisnummer', r.huisnummer);
+      zet('toevoeging', r.huisletter);
+      zet('straat', r.straat);
+      zet('plaats', r.plaats);
+      for (const name of ['straat', 'plaats']) {
+        const el = field(name);
+        if (el && el.value) el.dataset.auto = '1';
+      }
+      for (const name of ['bedrijfsnaam', 'bedrijfsnummer', 'postcode', 'huisnummer', 'straat', 'plaats']) {
+        if (VALIDATORS[name] && val(name)) checkField(name);
+      }
+      updateMapsLink();
+      saveDraft();
+    },
+  });
 
   // ── Events ───────────────────────────────────────────────────────────────
   form.addEventListener('focusin', () => {

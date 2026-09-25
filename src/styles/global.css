@@ -80,6 +80,17 @@
   .input:focus { outline: none; border-color: var(--color-brand-600); box-shadow: 0 0 0 4px var(--color-brand-100); }
   .input[aria-invalid='true'] { border-color: var(--color-danger); }
   .hint { font-size: .82rem; color: var(--color-muted); }
+
+  /* KvK-autofill (src/lib/client/kvk-autofill.ts) */
+  .kvk-lijst {
+    position: absolute; left: 0; right: 0; top: 100%; z-index: 30; margin-top: 4px; max-height: 320px; overflow: auto;
+    background: #fff; border: 1px solid var(--color-line); border-radius: var(--radius-field); box-shadow: var(--shadow-card); padding: 4px;
+  }
+  .kvk-lijst [role='option'] { display: grid; gap: 2px; padding: 10px 12px; border-radius: 8px; cursor: pointer; }
+  .kvk-lijst [role='option'][aria-selected='true'], .kvk-lijst [role='option']:hover { background: var(--color-brand-100); }
+  .kvk-naam { font-weight: 500; color: var(--color-ink); }
+  .kvk-info { font-size: .85rem; color: var(--color-muted); }
+  .kvk-bron { padding: 6px 12px 4px; font-size: .75rem; color: var(--color-muted); }
   .error { font-size: .85rem; color: var(--color-danger); }
   .warn { font-size: .85rem; color: var(--color-warning); }
   select.input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath stroke='%230040C1' stroke-width='2' d='m1 1 5 5 5-5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; padding-right: 2.5rem; }

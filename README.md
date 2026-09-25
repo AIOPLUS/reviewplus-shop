@@ -45,6 +45,7 @@ Zet in `.env.development.local`: `PUBLIC_LEAD_WEBHOOK_URL=http://localhost:8787/
 | `PUBLIC_LEAD_WEBHOOK_URL` | `https://hook.eu2.make.com/…` | Make-webhook (of Formspree-endpoint) |
 | `PUBLIC_WEB3FORMS_ACCESS_KEY` | | Alleen bij `web3forms` |
 | `PUBLIC_TURNSTILE_SITE_KEY` | | Cloudflare Turnstile; leeg = uit |
+| `PUBLIC_KVK_PROXY_URL` | | KvK-autofill in het aanvraagformulier (Worker in `AIOPLUS/reviewplus-site/workers/kvk-zoeken`); leeg = uit |
 | `PUBLIC_ANALYTICS_PROVIDER` | `plausible` | `plausible` \| `umami` \| leeg |
 | `PUBLIC_UMAMI_WEBSITE_ID` | | Umami: Website ID uit cloud.umami.is (met provider `umami` is dit het enige wat nodig is) |
 | `PUBLIC_ANALYTICS_DOMAIN` / `PUBLIC_ANALYTICS_SCRIPT_URL` | | Optioneel: ander domein of eigen script-URL (standaard `cloud.umami.is/script.js` of `plausible.io/js/script.js`). Alleen dit domein wordt gemeten. |

@@ -46,6 +46,7 @@ const reviewCounts = ['0-10', '11-50', '51-100', '101-250', '250+', 'weet-niet']
     data-bedankt={url('/bedankt')}
     data-self={url('/aanvragen')}
     data-address-lookup={FEATURES.addressLookupNL ? '1' : ''}
+    data-kvk-proxy={LEAD.kvkProxyUrl}
   >
     <div class="min-w-0">
       <header class="grid gap-3" data-flow-header>
@@ -93,7 +94,7 @@ const reviewCounts = ['0-10', '11-50', '51-100', '101-250', '250+', 'weet-niet']
             </div>
           </div>
 
-          <Field id="bedrijfsnaam" label="Bedrijfsnaam" required autocomplete="organization" />
+          <Field id="bedrijfsnaam" label="Bedrijfsnaam" required autocomplete="organization" hint={LEAD.kvkProxyUrl ? 'Typ je bedrijfsnaam of KvK-nummer en kies je bedrijf: we vullen de rest aan uit het KvK Handelsregister.' : undefined} />
           <div class="grid gap-5 md:grid-cols-2">
             <Field id="bedrijfsnummer" label="KvK-nummer" required inputmode="numeric" hint="8 cijfers, te vinden op je KvK-uittreksel." maxlength={20} />
             <Field id="btw" label="Btw-nummer" hint="Bijvoorbeeld NL123456789B01" maxlength={20} />
