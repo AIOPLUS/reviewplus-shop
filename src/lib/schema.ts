@@ -86,7 +86,7 @@ export function productSchema(p: Product, imageUrl: string): Json {
 }
 
 /**
- * Product op offerte (live reviewteller). Zonder bekende prijs geen Offer: we geven geen prijs op die niet klopt.
+ * Live reviewteller (pre-order). Zonder bekende prijs geen Offer: we geven geen prijs op die niet klopt.
  */
 export function tellerSchema(t: Teller, path: string, imageUrl: string, naam = t.naam): Json {
   const pageUrl = absoluteUrl(path);
@@ -108,6 +108,7 @@ export function tellerSchema(t: Teller, path: string, imageUrl: string, naam = t
             name: v.label,
             price: v.prijs!.toFixed(2),
             priceCurrency: 'EUR',
+            ...(t.status === 'pre-order' ? { availability: 'https://schema.org/PreOrder' } : {}),
             eligibleRegion: ['NL', 'BE'],
             seller: { '@id': `${brand.mainSiteUrl}/#organization` },
           })),

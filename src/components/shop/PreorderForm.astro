@@ -1,0 +1,364 @@
+---
+/**
+ * Pre-order van de live reviewteller, direct betalen via Mollie. Verstuurt `request_type: preorder` naar de Make-webhook
+ * (route "Pre-order", zie docs/REVIEWTELLER.md). Make rekent het bedrag zelf opnieuw uit uit /products.json en antwoordt
+ * met `checkoutUrl`; de klant gaat daarna naar Mollie. Na betalen of annuleren komt hij terug op deze pagina
+ * (?status=betaald of ?status=geannuleerd, #preorder).
+ */
+import { LEAD } from '@/config/site';
+import { brand } from '@/config/brand';
+import { PLATFORMEN, type ReviewPlatform } from '@/lib/reviewplatformen';
+import { getTellers } from '@/lib/catalog';
+import { url } from '@/lib/url';
+import { PREORDER_VOORWAARDEN_VERSIE } from '@/config/preorder';
+
+interface Props {
+  platform?: ReviewPlatform;
+  /** Id van de teller waarvan de keuze overgenomen wordt. */
+  kiezer?: string;
+}
+const { platform = 'Google', kiezer = 'kiezer' } = Astro.props;
+const [teller] = await getTellers();
+const prijzen = Object.fromEntries((teller?.varianten ?? []).map((v) => [v.id, v.prijs]));
+const euro = (n: number) => `€ ${n.toLocaleString('nl-NL', { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 })}`;
+---
+<section id="preorder" class="scroll-mt-24" aria-labelledby="preorder-titel">
+  <div class="card mb-4 hidden p-5" data-preorder-status="betaald" tabindex="-1">
+    <h2 class="text-xl">Bedankt, je pre-order is betaald</h2>
+    <p class="mt-1 text-ink-soft">Je krijgt een bevestiging per e-mail. Zodra de eerste tellers binnen zijn, laten we je de verwachte leverdatum weten.</p>
+  </div>
+  <div class="card mb-4 hidden p-5" data-preorder-status="geannuleerd" tabindex="-1">
+    <h2 class="text-xl">De betaling is niet gelukt of geannuleerd</h2>
+    <p class="mt-1 text-ink-soft">Je pre-order is nog niet geplaatst. Probeer het hieronder opnieuw, of mail ons via {brand.email}.</p>
+  </div>
+
+  <form
+    class="card grid gap-6 p-5 md:p-8"
+    data-preorder
+    data-kiezer-id={kiezer}
+    data-webhook={LEAD.webhookUrl}
+    data-turnstile={LEAD.turnstileSiteKey}
+    data-fallback-email={LEAD.fallbackEmail}
+    data-prijzen={JSON.stringify(prijzen)}
+    data-versie={PREORDER_VOORWAARDEN_VERSIE}
+    novalidate
+  >
+    <div>
+      <p class="chip w-fit">Pre-order · levering: datum volgt</p>
+      <h2 id="preorder-titel" class="mt-3 text-2xl md:text-3xl">Pre-order je live reviewteller</h2>
+      <p class="mt-2 text-ink-soft">
+        Je betaalt nu via iDEAL, Bancontact of creditcard. Zodra de eerste tellers binnen zijn, laten we je de verwachte leverdatum weten.
+        Kunnen we onverwacht niet leveren, dan krijg je het volledige bedrag terug.
+      </p>
+    </div>
+
+    <fieldset class="grid gap-4 sm:grid-cols-3">
+      <legend class="mb-2 text-lg font-medium">Je teller</legend>
+      <div class="field">
+        <label for="po-platform">Platform</label>
+        <select id="po-platform" name="platform" class="input">
+          {PLATFORMEN.map((p) => <option value={p} selected={p === platform}>{p}</option>)}
+        </select>
+      </div>
+      <div class="field">
+        <label for="po-cijfers">Cijfers</label>
+        <select id="po-cijfers" name="cijfers" class="input">
+          <option value="5">5 cijfers{prijzen['5-cijfers'] != null ? ` · ${euro(prijzen['5-cijfers'])}` : ''}</option>
+          <option value="7">7 cijfers{prijzen['7-cijfers'] != null ? ` · ${euro(prijzen['7-cijfers'])}` : ''}</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="po-aantal">Aantal</label>
+        <input id="po-aantal" name="aantal" type="number" min="1" max="10" value="1" inputmode="numeric" class="input" aria-describedby="po-aantal-msg" />
+        <p id="po-aantal-msg" class="error" data-msg></p>
+      </div>
+    </fieldset>
+
+    <fieldset class="grid gap-4 sm:grid-cols-2">
+      <legend class="mb-2 text-lg font-medium">Bedrijf</legend>
+      <div class="field sm:col-span-2">
+        <label for="po-bedrijf">Bedrijfsnaam <span class="req" aria-hidden="true">*</span></label>
+        <input id="po-bedrijf" name="bedrijf" class="input" autocomplete="organization" required aria-describedby="po-bedrijf-msg" />
+        <p id="po-bedrijf-msg" class="error" data-msg></p>
+      </div>
+      <div class="field">
+        <label for="po-land">Land</label>
+        <select id="po-land" name="land" class="input">
+          <option value="NL">Nederland</option>
+          <option value="BE">België</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="po-bedrijfsnummer">KvK- of KBO-nummer <span class="font-normal text-muted">(optioneel)</span></label>
+        <input id="po-bedrijfsnummer" name="bedrijfsnummer" class="input" inputmode="numeric" />
+      </div>
+      <div class="field sm:col-span-2">
+        <label for="po-btw">Btw-nummer <span class="font-normal text-muted">(optioneel; bij een Belgisch bedrijf wordt de btw verlegd)</span></label>
+        <input id="po-btw" name="btw" class="input" autocomplete="off" placeholder="NL123456789B01" aria-describedby="po-btw-msg" />
+        <p id="po-btw-msg" class="hint" data-btw-hint></p>
+      </div>
+    </fieldset>
+
+    <fieldset class="grid gap-4 sm:grid-cols-6">
+      <legend class="mb-2 text-lg font-medium">Bezorgadres</legend>
+      <div class="field sm:col-span-4">
+        <label for="po-straat">Straat <span class="req" aria-hidden="true">*</span></label>
+        <input id="po-straat" name="straat" class="input" autocomplete="address-line1" required aria-describedby="po-straat-msg" />
+        <p id="po-straat-msg" class="error" data-msg></p>
+      </div>
+      <div class="field sm:col-span-1">
+        <label for="po-huisnummer">Nr. <span class="req" aria-hidden="true">*</span></label>
+        <input id="po-huisnummer" name="huisnummer" class="input" inputmode="numeric" required aria-describedby="po-huisnummer-msg" />
+        <p id="po-huisnummer-msg" class="error" data-msg></p>
+      </div>
+      <div class="field sm:col-span-1">
+        <label for="po-toevoeging">Toev.</label>
+        <input id="po-toevoeging" name="toevoeging" class="input" />
+      </div>
+      <div class="field sm:col-span-2">
+        <label for="po-postcode">Postcode <span class="req" aria-hidden="true">*</span></label>
+        <input id="po-postcode" name="postcode" class="input" autocomplete="postal-code" required aria-describedby="po-postcode-msg" />
+        <p id="po-postcode-msg" class="error" data-msg></p>
+      </div>
+      <div class="field sm:col-span-4">
+        <label for="po-plaats">Plaats <span class="req" aria-hidden="true">*</span></label>
+        <input id="po-plaats" name="plaats" class="input" autocomplete="address-level2" required aria-describedby="po-plaats-msg" />
+        <p id="po-plaats-msg" class="error" data-msg></p>
+      </div>
+    </fieldset>
+
+    <fieldset class="grid gap-4 sm:grid-cols-2">
+      <legend class="mb-2 text-lg font-medium">Contactpersoon</legend>
+      <div class="field">
+        <label for="po-voornaam">Voornaam <span class="req" aria-hidden="true">*</span></label>
+        <input id="po-voornaam" name="voornaam" class="input" autocomplete="given-name" required aria-describedby="po-voornaam-msg" />
+        <p id="po-voornaam-msg" class="error" data-msg></p>
+      </div>
+      <div class="field">
+        <label for="po-achternaam">Achternaam <span class="req" aria-hidden="true">*</span></label>
+        <input id="po-achternaam" name="achternaam" class="input" autocomplete="family-name" required aria-describedby="po-achternaam-msg" />
+        <p id="po-achternaam-msg" class="error" data-msg></p>
+      </div>
+      <div class="field">
+        <label for="po-email">E-mailadres <span class="req" aria-hidden="true">*</span></label>
+        <input id="po-email" name="email" type="email" class="input" autocomplete="email" required aria-describedby="po-email-msg" />
+        <p id="po-email-msg" class="error" data-msg></p>
+      </div>
+      <div class="field">
+        <label for="po-telefoon">Telefoonnummer <span class="req" aria-hidden="true">*</span></label>
+        <input id="po-telefoon" name="telefoon" type="tel" class="input" autocomplete="tel" required aria-describedby="po-telefoon-msg" />
+        <p id="po-telefoon-msg" class="error" data-msg></p>
+      </div>
+      <div class="field sm:col-span-2">
+        <label for="po-factuur">Factuur naar <span class="font-normal text-muted">(optioneel, als dit een ander e-mailadres is)</span></label>
+        <input id="po-factuur" name="factuur_email" type="email" class="input" autocomplete="off" aria-describedby="po-factuur-msg" />
+        <p id="po-factuur-msg" class="error" data-msg></p>
+      </div>
+    </fieldset>
+
+    <div class="rounded-2xl bg-brand-50 p-5 ring-1 ring-brand-200" aria-live="polite">
+      <h3 class="font-medium">Overzicht</h3>
+      <dl class="mt-3 grid gap-1.5 text-sm">
+        <div class="flex justify-between gap-4"><dt data-po-regel>1× live reviewteller Google, 5 cijfers</dt><dd data-po-excl></dd></div>
+        <div class="flex justify-between gap-4"><dt>Verzending (NL en BE)</dt><dd>gratis</dd></div>
+        <div class="flex justify-between gap-4"><dt data-po-btw-label>Btw 21%</dt><dd data-po-btw></dd></div>
+        <div class="flex justify-between gap-4 border-t border-brand-200 pt-2 text-base font-semibold"><dt>Totaal</dt><dd data-po-totaal></dd></div>
+      </dl>
+    </div>
+
+    <div class="hidden" aria-hidden="true">
+      <label for="po-hp">Laat dit veld leeg</label>
+      <input id="po-hp" name="hp_website" tabindex="-1" autocomplete="off" />
+    </div>
+
+    <div class="field">
+      <label class="check !font-normal">
+        <input type="checkbox" id="po-akkoord" name="akkoord" required aria-describedby="po-akkoord-msg" />
+        <span>
+          Ik bestel namens een bedrijf en ga akkoord met de
+          <a class="text-brand-600 underline" href={url('/pre-ordervoorwaarden')} target="_blank">pre-ordervoorwaarden<span class="sr-only"> (opent in een nieuw tabblad)</span></a>
+          en de <a class="text-brand-600 underline" href={`${brand.mainSiteUrl}/privacy-policy`} target="_blank" rel="noopener">privacyverklaring<span class="sr-only"> (opent in een nieuw tabblad)</span></a>.
+          <span class="req" aria-hidden="true">*</span>
+        </span>
+      </label>
+      <p id="po-akkoord-msg" class="error" data-msg></p>
+    </div>
+
+    <div data-turnstile-slot class="min-h-[65px]" hidden={!LEAD.turnstileSiteKey}></div>
+
+    <div class="flex flex-wrap items-center gap-4">
+      <button type="submit" class="btn btn-primary btn-lg" data-po-knop>Pre-order en betaal</button>
+      <p class="text-sm text-muted">Je gaat naar de beveiligde betaalpagina van Mollie.</p>
+    </div>
+    <p class="error" role="alert" data-po-fout></p>
+  </form>
+</section>
+
+<script>
+  import { track } from '@/lib/client/analytics';
+
+  // Window.turnstile is gedeclareerd in lib/client/flow.ts.
+  const form = document.querySelector<HTMLFormElement>('[data-preorder]');
+  if (form) {
+    const d = form.dataset;
+    const prijzen = JSON.parse(d.prijzen ?? '{}') as Record<string, number | null>;
+    const veld = (naam: string) => form.elements.namedItem(naam) as HTMLInputElement;
+    const waarde = (naam: string) => veld(naam).value.trim();
+    const euro = (n: number) => `€ ${n.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const melding = (naam: string, tekst: string) => {
+      const el = veld(naam);
+      const msg = document.getElementById(`${el.id}-msg`);
+      if (msg) msg.textContent = tekst;
+      if (tekst) el.setAttribute('aria-invalid', 'true');
+      else el.removeAttribute('aria-invalid');
+    };
+    const btwNormaal = () => waarde('btw').toUpperCase().replace(/[\s.-]/g, '');
+    /** Btw verlegd: Belgisch bedrijf met een geldig BE-btw-nummer (zelfde regel als Make). */
+    const verlegd = () => waarde('land') === 'BE' && /^BE[01][0-9]{9}$/.test(btwNormaal());
+    const aantal = () => Math.min(10, Math.max(1, Math.floor(Number(waarde('aantal')) || 1)));
+
+    // Status na terugkomst van Mollie.
+    const status = new URLSearchParams(location.search).get('status');
+    const statusBlok = status ? document.querySelector<HTMLElement>(`[data-preorder-status="${status}"]`) : null;
+    if (statusBlok) {
+      statusBlok.classList.remove('hidden');
+      statusBlok.focus();
+      if (status === 'betaald') track('preorder_betaald', {});
+    }
+
+    const overzicht = () => {
+      const variant = `${waarde('cijfers')}-cijfers`;
+      const prijs = prijzen[variant] ?? 0;
+      const excl = prijs * aantal();
+      const btw = verlegd() ? 0 : Math.round(excl * 21) / 100;
+      form.querySelector('[data-po-regel]')!.textContent = `${aantal()}× live reviewteller ${waarde('platform')}, ${waarde('cijfers')} cijfers`;
+      form.querySelector('[data-po-excl]')!.textContent = `${euro(excl)} excl. btw`;
+      form.querySelector('[data-po-btw-label]')!.textContent = verlegd() ? 'Btw verlegd' : 'Btw 21%';
+      form.querySelector('[data-po-btw]')!.textContent = euro(btw);
+      form.querySelector('[data-po-totaal]')!.textContent = euro(excl + btw);
+      form.querySelector('[data-btw-hint]')!.textContent =
+        waarde('land') === 'BE' && waarde('btw') && !verlegd() ? 'Vul een geldig Belgisch btw-nummer in (BE0123456789) om de btw te verleggen.' : '';
+    };
+
+    // Keuze uit de tellerkiezer overnemen (nu en bij elke wijziging).
+    const neemOver = (platform?: string, cijfers?: string | number) => {
+      if (platform) veld('platform').value = platform;
+      if (cijfers) veld('cijfers').value = String(cijfers);
+      overzicht();
+    };
+    const kast = document.getElementById(d.kiezerId ?? '');
+    neemOver(kast?.dataset.platform, kast?.dataset.cijfers);
+    window.addEventListener('reviewteller:keuze', (e) => {
+      const { platform, cijfers, id } = (e as CustomEvent<{ platform: string; cijfers: number; id: string }>).detail;
+      if (id === d.kiezerId) neemOver(platform, cijfers);
+    });
+    form.addEventListener('input', overzicht);
+    form.addEventListener('change', overzicht);
+
+    // Turnstile pas laden als iemand het formulier gebruikt.
+    let widgetId: string | undefined;
+    const laadTurnstile = () => {
+      const slot = form.querySelector<HTMLElement>('[data-turnstile-slot]');
+      if (!d.turnstile || !slot || widgetId !== undefined) return;
+      const render = () => {
+        if (window.turnstile && widgetId === undefined) {
+          widgetId = window.turnstile.render(slot, { sitekey: d.turnstile, language: 'nl', appearance: 'interaction-only', action: 'preorder' });
+        }
+      };
+      if (window.turnstile) return render();
+      const s = document.createElement('script');
+      s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+      s.async = true;
+      s.onload = render;
+      document.head.append(s);
+    };
+    form.addEventListener('focusin', laadTurnstile, { once: true });
+    form.querySelectorAll('input').forEach((el) => el.addEventListener('input', () => melding(el.name, '')));
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fout = form.querySelector<HTMLElement>('[data-po-fout]')!;
+      fout.textContent = '';
+      if (waarde('hp_website')) return;
+
+      let eerste = null as HTMLElement | null;
+      const controleer = (naam: string, ok: boolean, tekst: string) => {
+        melding(naam, ok ? '' : tekst);
+        if (!ok) eerste ??= veld(naam);
+      };
+      const land = waarde('land');
+      controleer('aantal', Number.isInteger(Number(waarde('aantal'))) && aantal() === Number(waarde('aantal')), 'Kies een aantal van 1 tot 10.');
+      controleer('bedrijf', !!waarde('bedrijf'), 'Vul je bedrijfsnaam in.');
+      controleer('straat', !!waarde('straat'), 'Vul de straat in.');
+      controleer('huisnummer', /^\d+/.test(waarde('huisnummer')), 'Vul het huisnummer in.');
+      controleer(
+        'postcode',
+        land === 'BE' ? /^\d{4}$/.test(waarde('postcode')) : /^\d{4}\s?[A-Za-z]{2}$/.test(waarde('postcode')),
+        land === 'BE' ? 'Vul een Belgische postcode in, bijvoorbeeld 2000.' : 'Vul een postcode in, bijvoorbeeld 1234 AB.',
+      );
+      controleer('plaats', !!waarde('plaats'), 'Vul de plaats in.');
+      controleer('voornaam', !!waarde('voornaam'), 'Vul je voornaam in.');
+      controleer('achternaam', !!waarde('achternaam'), 'Vul je achternaam in.');
+      controleer('email', /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(waarde('email')), 'Vul een geldig e-mailadres in, bijvoorbeeld naam@bedrijf.nl.');
+      controleer('telefoon', waarde('telefoon').replace(/\D/g, '').length >= 9, 'Vul een telefoonnummer in waarop we je kunnen bereiken.');
+      controleer('factuur_email', !waarde('factuur_email') || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(waarde('factuur_email')), 'Vul een geldig e-mailadres in, of laat dit veld leeg.');
+      controleer('akkoord', veld('akkoord').checked, 'Ga akkoord met de pre-ordervoorwaarden en de privacyverklaring.');
+      if (eerste) return eerste.focus();
+
+      const knop = form.querySelector<HTMLButtonElement>('[data-po-knop]')!;
+      knop.disabled = true;
+      knop.textContent = 'Je gaat naar de betaalpagina…';
+      try {
+        laadTurnstile();
+        let token: string | null = null;
+        if (d.turnstile) {
+          for (let i = 0; i < 20 && !token; i++) {
+            token = window.turnstile?.getResponse(widgetId) || null;
+            if (!token) await new Promise((r) => setTimeout(r, 300));
+          }
+          if (!token) throw new Error('turnstile');
+        }
+        const ref = `RP-PO-${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+        const land2 = land === 'BE' ? 'BE' : 'NL';
+        const res = await fetch(d.webhook!, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            payload_version: 1,
+            request_type: 'preorder',
+            lead_ref: ref,
+            lead_source: 'shop',
+            submitted_at: new Date().toISOString(),
+            pagina: location.href.split('#')[0],
+            product: { slug: 'live-reviewteller', variant: `${waarde('cijfers')}-cijfers`, platform: waarde('platform'), aantal: aantal() },
+            bedrijf: { naam: waarde('bedrijf'), land: land2, bedrijfsnummer: waarde('bedrijfsnummer') || null, btw_nummer: btwNormaal() || null },
+            adres: {
+              straat: waarde('straat'),
+              huisnummer: waarde('huisnummer'),
+              toevoeging: waarde('toevoeging') || null,
+              postcode: land2 === 'NL' ? waarde('postcode').toUpperCase().replace(/^(\d{4})\s?([A-Z]{2})$/, '$1 $2') : waarde('postcode'),
+              plaats: waarde('plaats'),
+              land: land2,
+            },
+            contact: { voornaam: waarde('voornaam'), achternaam: waarde('achternaam'), email: waarde('email'), telefoon: waarde('telefoon') },
+            factuur_email: waarde('factuur_email') || null,
+            akkoord: { voorwaarden: true, versie: d.versie, tijdstip: new Date().toISOString() },
+            turnstile_token: token,
+          }),
+        });
+        const antwoord = (await res.json().catch(() => ({}))) as { ok?: boolean; checkoutUrl?: string };
+        if (!res.ok || !antwoord.ok || !antwoord.checkoutUrl) throw new Error(String(res.status));
+        track('preorder_gestart', { platform: waarde('platform'), cijfers: waarde('cijfers') });
+        location.href = antwoord.checkoutUrl;
+      } catch (err) {
+        window.turnstile?.reset(widgetId);
+        knop.disabled = false;
+        knop.textContent = 'Pre-order en betaal';
+        fout.textContent =
+          err instanceof Error && err.message === 'turnstile'
+            ? 'De beveiligingscontrole is nog niet afgerond. Staat er een vakje "Ik ben geen robot"? Vink het aan en klik daarna opnieuw op de knop.'
+            : `Het plaatsen van je pre-order is niet gelukt. Probeer het opnieuw of mail ons via ${d.fallbackEmail}.`;
+      }
+    });
+  }
+</script>

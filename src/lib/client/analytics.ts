@@ -19,7 +19,8 @@ export type EventName =
   | 'reviewteller_keuze'
   | 'reviewteller_demo'
   | 'reviewteller_eigen'
-  | 'offerte_verzonden';
+  | 'preorder_gestart'
+  | 'preorder_betaald';
 
 type Props = Record<string, string | number | boolean>;
 

@@ -59,28 +59,31 @@ export function visibleSpecs(p: Product): { label: string; value: string }[] {
   return rows.filter((r) => r.value && !/^TODO/i.test(r.value));
 }
 
-// ── Producten op offerte (live reviewteller) ─────────────────────────────────────────────────────
+// ── Producten buiten de gratis actie (live reviewteller, pre-order) ─────────────────────────────────────────────────────
 export type Teller = CollectionEntry<'tellers'>['data'];
 
 export async function getTellers(): Promise<Teller[]> {
   return (await getCollection('tellers')).map((e) => e.data).sort((a, b) => a.volgorde - b.volgorde);
 }
 
-/** "vanaf € 399" als er prijzen zijn, anders "Prijs volgt". Prijzen excl. btw. */
+/** "vanaf € 499" als er prijzen zijn, anders "Prijs volgt". Prijzen excl. btw. */
 export function tellerPrijsLabel(t: Teller): string {
   const prijzen = t.varianten.map((v) => v.prijs).filter((x): x is number => x !== null);
   if (!prijzen.length) return 'Prijs volgt';
   const min = Math.min(...prijzen);
-  return `${new Set(prijzen).size > 1 ? 'vanaf ' : ''}€ ${min.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `${new Set(prijzen).size > 1 ? 'vanaf ' : ''}€ ${min.toLocaleString('nl-NL', { minimumFractionDigits: min % 1 ? 2 : 0, maximumFractionDigits: 2 })}`;
 }
 
-/** Offerteproducten voor /products.json, onder een eigen sleutel (Make leest alleen `products`). */
+/**
+ * Voor /products.json, onder de sleutel `offerte_producten` (naam niet wijzigen: de Make-route Pre-order leest de prijzen
+ * daaruit; route 1 leest alleen `products`).
+ */
 export function tellerPubliek(t: Teller) {
   return {
     slug: t.slug,
     naam: t.naam,
     status: t.status,
-    bestellen: 'offerte',
+    bestellen: t.status === 'pre-order' ? 'preorder' : 'offerte',
     varianten: t.varianten.map((v) => ({ id: v.id, label: v.label, prijs: v.prijs })),
   };
 }

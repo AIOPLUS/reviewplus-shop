@@ -1,0 +1,61 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { brand } from '@/config/brand';
+import { getTellers } from '@/lib/catalog';
+import { PREORDER_VOORWAARDEN_VERSIE } from '@/config/preorder';
+import { breadcrumbSchema } from '@/lib/schema';
+import { url } from '@/lib/url';
+
+const [t] = await getTellers();
+const prijs = (id: string) => {
+  const p = t?.varianten.find((v) => v.id === id)?.prijs;
+  return p == null ? 'volgt' : `€ ${p.toLocaleString('nl-NL')}`;
+};
+const datum = new Date(PREORDER_VOORWAARDEN_VERSIE + 'T12:00:00').toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+// TODO: laat deze pre-ordervoorwaarden controleren door een jurist (zie docs/REVIEWTELLER.md).
+---
+<BaseLayout
+  title="Pre-ordervoorwaarden live reviewteller | Review Plus"
+  description="De voorwaarden voor een pre-order van de Review Plus live reviewteller: prijs, betaling vooraf via Mollie, levering en terugbetaling als we niet kunnen leveren."
+  path="/pre-ordervoorwaarden"
+  page="actievoorwaarden"
+  schemas={[breadcrumbSchema([{ name: 'Shop', path: '/' }, { name: 'Pre-ordervoorwaarden', path: '/pre-ordervoorwaarden' }])]}
+>
+  <article class="container-rp max-w-3xl py-12 md:py-16">
+    <h1 class="text-4xl">Pre-ordervoorwaarden live reviewteller</h1>
+    <p class="mt-4 text-lg text-ink-soft">
+      Met een pre-order reserveer en betaal je de live reviewteller van Review Plus voordat hij geleverd kan worden. Hieronder
+      lees je wat dat betekent.
+    </p>
+    <p class="mt-4 text-sm text-muted">Versie {PREORDER_VOORWAARDEN_VERSIE}, laatst bijgewerkt op {datum}.</p>
+
+    <div class="prose-rp mt-8">
+      <h2>1. Voor wie</h2>
+      <p>De pre-order is alleen voor bedrijven in Nederland en België. Je bestelt namens het bedrijf dat je in het formulier invult.</p>
+
+      <h2>2. Prijs en betaling</h2>
+      <ul>
+        <li>De live reviewteller kost {prijs('5-cijfers')} (5 cijfers) of {prijs('7-cijfers')} (7 cijfers) per stuk, exclusief btw.</li>
+        <li>Over het bedrag rekenen we 21% btw. Bij een Belgisch bedrijf met een geldig btw-nummer wordt de btw verlegd.</li>
+        <li>Verzending naar een adres in Nederland of België is gratis.</li>
+        <li>Je betaalt het volledige bedrag vooraf via Mollie (iDEAL, Bancontact of creditcard). Je pre-order is geplaatst zodra de betaling gelukt is. Je ontvangt daarvan een bevestiging per e-mail en daarna een factuur.</li>
+      </ul>
+
+      <h2>3. Levering</h2>
+      <ul>
+        <li>Er is nog geen vaste leverdatum. Zodra de eerste tellers binnen zijn, laten we je de verwachte leverdatum weten.</li>
+        <li>We leveren op het bezorgadres dat je in het formulier invult. Controleer het adres goed. Wil je het adres wijzigen, antwoord dan op de bevestigingsmail.</li>
+        <li>Op de site staat een illustratie van de teller. Het geleverde product kan daarvan afwijken, bijvoorbeeld in de weergave van het logo en de score.</li>
+      </ul>
+
+      <h2>4. Kunnen we niet leveren?</h2>
+      <p>Kunnen we de teller onverwacht niet leveren, dan krijg je het volledige bedrag dat je betaald hebt terug.</p>
+
+      <h2>5. Vragen</h2>
+      <p>
+        Mail ons via <a href={`mailto:${brand.email}`}>{brand.email}</a> of beantwoord de bevestigingsmail. Hoe we met je gegevens
+        omgaan, lees je in onze <a href={`${brand.mainSiteUrl}/privacy-policy`}>privacyverklaring</a>. Terug naar de <a href={url('/live-reviewteller')}>live reviewteller</a>.
+      </p>
+    </div>
+  </article>
+</BaseLayout>

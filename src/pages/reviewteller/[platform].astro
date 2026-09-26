@@ -2,7 +2,7 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import TellerKiezer from '@/components/shop/TellerKiezer.astro';
 import EigenScore from '@/components/shop/EigenScore.astro';
-import OfferteForm from '@/components/shop/OfferteForm.astro';
+import PreorderForm from '@/components/shop/PreorderForm.astro';
 import Faq from '@/components/shop/Faq.astro';
 import { getTellers, tellerPrijsLabel } from '@/lib/catalog';
 import { breadcrumbSchema, faqSchema, tellerSchema } from '@/lib/schema';
@@ -66,13 +66,13 @@ const faq = [
       <TellerKiezer modus="pagina" platform={platform} platformKeuze={false} />
     </div>
     <div class="grid content-start gap-6 lg:col-start-2 lg:row-span-2 lg:row-start-1">
-      <p class="chip w-fit">Op offerte · 5 of 7 cijfers</p>
+      <p class="chip w-fit">Pre-order · 5 of 7 cijfers</p>
       <h1 class="text-4xl md:text-5xl">{pp.titel}</h1>
       <p class="text-lg leading-relaxed text-ink-soft">{pp.intro}</p>
       <p class="text-ink-soft">{pp.branches}</p>
       <div class="flex flex-wrap items-center gap-4">
-        <p class="text-2xl font-semibold text-ink">{tellerPrijsLabel(t)}</p>
-        <a href="#offerte" class="btn btn-primary btn-lg">Vraag een offerte aan</a>
+        <p class="text-2xl font-semibold text-ink">{tellerPrijsLabel(t)} <span class="text-base font-normal text-muted">excl. btw</span></p>
+        <a href="#preorder" class="btn btn-primary btn-lg">Pre-order</a>
       </div>
       <p class="text-sm text-muted">
         Liever een ander platform? <a class="text-brand-600 underline" href={url(`/${t.slug}`)}>Bekijk alle reviewtellers</a>.
@@ -82,7 +82,7 @@ const faq = [
   </section>
 
   <div class="container-rp max-w-4xl py-8">
-    <OfferteForm platform={platform} />
+    <PreorderForm platform={platform} />
   </div>
 
   <Faq items={faq} />

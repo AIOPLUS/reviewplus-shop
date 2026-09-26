@@ -23,7 +23,7 @@ We verkopen de **Custom Counter** van Smiirl als reseller. Het is een houten tel
 
 | Waar | Wat |
 |---|---|
-| `/live-reviewteller` | Productpagina met tellerkiezer (platform, 5 of 7 cijfers, "Nieuwe review", gemiddelde omhoog/omlaag), "Probeer met je eigen score", specificaties, offerteformulier en FAQ. De keuze staat in de URL: `?platform=booking&cijfers=7`. |
+| `/live-reviewteller` | Productpagina (pre-order, € 499 / € 699 excl. btw) met tellerkiezer (platform, 5 of 7 cijfers, "Nieuwe review", gemiddelde omhoog/omlaag), "Probeer met je eigen score", specificaties, offerteformulier en FAQ. De keuze staat in de URL: `?platform=booking&cijfers=7`. |
 | `/reviewteller/<platform>` | Pagina per platform (`google`, `trustpilot`, `tripadvisor`, `booking`, `airbnb`, `yelp`). Het platform staat vast. |
 | Homepage | Productkaart in "Het aanbod" en het blok "Nieuw: laat je reviews live zien in je zaak". |
 | `/voor/<branche>` | Productkaart en een blok met voorbeelden per branche: `reviewteller:` in `src/content/sectors/*.md`. |
@@ -38,17 +38,13 @@ Onder elke teller staat "Illustratie. Productfoto's volgen."
 - **Animatie en invoercontrole**: `src/lib/client/reviewteller.ts`.
 - **Kiezer**: `TellerKiezer.astro`.
 - **"Probeer met je eigen score"**: `EigenScore.astro`.
-- **Offerteformulier**: `OfferteForm.astro`.
+- **Pre-orderformulier**: `PreorderForm.astro`, voorwaarden op `/pre-ordervoorwaarden`.
 - **Productkaart en blok**: `TellerKaart.astro` en `ReviewTellerBlok.astro`.
 - **Productinhoud**: `src/content/tellers/live-reviewteller.md`.
 
 ## Prijzen
 
-Er zijn nog geen verkoopprijzen. In `src/content/tellers/live-reviewteller.md` staat bij beide varianten `prijs: null`. Daardoor toont de shop overal "Prijs volgt" met een offerteknop, en geeft het productschema geen prijs aan Google.
-
-Zet je een prijs in (excl. btw), dan verschijnt die in de kiezer, op de kaart, in `llms.txt`, in `products.json` en in het schema (als Offer).
-
-De adviesprijzen van Smiirl zijn € 399 (5 cijfers) en € 549 (7 cijfers) excl. btw. **Publiceer ze niet zonder akkoord van Jordan.**
+€ 499 (5 cijfers) en € 699 (7 cijfers) per stuk, exclusief btw (Jordan, 26-09-2026). Ze staan in `src/content/tellers/live-reviewteller.md` en gaan via `/products.json` (sleutel `offerte_producten`) naar Make. Wijzig je een prijs, dan rekent Make na de volgende deploy automatisch met de nieuwe prijs.
 
 ## Productschema: waarom een eigen collectie
 
@@ -71,17 +67,35 @@ In `/products.json` staan ze onder een eigen sleutel `offerte_producten`. De sle
 
 Wil je de teller later echt online verkopen (in een winkelwagen, met Mollie), dan is een aparte bestelroute in Make nodig. Route 1 rekent alleen met de extra's van de kaartenset en de totem. **Dat is een wijziging in Make: eerst overleggen.**
 
-## Offertes: via de bestaande contactroute in Make
+## Pre-order met betaling via Mollie (sinds 26-09-2026)
 
-Het offerteformulier stuurt `request_type: contact` naar dezelfde webhook. Route 5b ("Contactbericht", achter Turnstile) verwerkt het al:
-- er gaat een mail naar support@reviewplus.io met Reply-To naar de klant;
-- de klant krijgt een kopie.
+Op de productpagina's staat het formulier "Pre-order je live reviewteller" (`src/components/shop/PreorderForm.astro`). De klant vult in:
+- platform, cijfers en aantal (1–10);
+- bedrijf, land (NL/BE), eventueel KvK/KBO en btw-nummer;
+- bezorgadres en contactpersoon;
+- akkoord op de [pre-ordervoorwaarden](../src/pages/pre-ordervoorwaarden.astro) (versie in `src/config/preorder.ts`).
 
-In het bericht staan het platform, het aantal cijfers, het aantal tellers en de opmerking van de klant. Er gaat ook een veld `offerte` mee (`product`, `platform`, `cijfers`, `aantal`) en `lead_source: shop-reviewteller`. Make gebruikt die velden nu niet.
+Het formulier toont een overzicht met btw en totaal. Verzending naar NL en BE is gratis. Bij een Belgisch bedrijf met een geldig btw-nummer (BE0123456789) wordt de btw verlegd.
 
-**Make is niet gewijzigd.** Een nieuwe `request_type` (zoals `offerte`) zou via route 2 als gratis aanvraag verwerkt worden en een onvolledige mail sturen. Daarom gebruiken we `contact`.
+**Flow**
+1. De site stuurt `request_type: preorder` naar de Make-webhook (payload: `docs/LEAD-PAYLOAD.md`).
+2. Make, route "Pre-order" (modules 170–178):
+   - haalt `/products.json` op en rekent het bedrag **zelf** uit: prijs × aantal, plus 21% btw of verlegd;
+   - maakt een Mollie-betaling aan en slaat het record `betaling:<ref>` op met `soort: preorder` (met de bestelling in `waarde`);
+   - antwoordt de site met `checkoutUrl` en mailt support ("nog niet betaald").
 
-De onderwerpregel van de mail is "Contactbericht via reviewplus.io: <naam>". Wil je een eigen onderwerp, een Teamleader-deal of een eigen fase voor offertes, dan kan dat met een aparte route in Make. Dat vraagt om een wijziging in Make en toestemming van Jordan.
+   Ongeldige invoer (onbekend platform of variant, geen prijs, geen akkoord) geeft `{"ok": false}` (400) en er wordt geen betaling aangemaakt.
+3. De klant betaalt bij Mollie en komt terug via route 4 (terugkeer) op `/live-reviewteller?status=betaald#preorder`. Bij annuleren komt hij terug op `?status=geannuleerd`.
+4. Mollie meldt de betaling via route 3 (statusmelding):
+   - support krijgt "Pre-order betaald";
+   - de klant krijgt een bevestiging (module 179).
+
+**Testmodus:** de pre-orderroute staat nog in Mollie-**testmodus**: variabele `testmode` = `{{true}}` in module 171. Zo werkt het:
+1. Na de livegang van deze shopversie doet Jordan een testbestelling. Mollie toont dan een testbetaalpagina: kies "Paid".
+2. Controleer de mails en de runs in Make.
+3. Zet daarna in Make module 171 `testmode` op `{{false}}`. De betaalde extra's (route 1, module 4) staan al live.
+
+**Na een betaalde pre-order (handwerk):** stuur de factuur, bestel de teller bij Smiirl en laat de klant de verwachte leverdatum weten.
 
 ## Open vragen (navragen bij Smiirl)
 

@@ -2,10 +2,10 @@
 /**
  * Kies je reviewteller, zoals de tellerkiezer op smiirl.com: platform (een pil met logo per platform) en 5 of 7 cijfers.
  * De teller wisselt direct mee; "Nieuwe review" laat het aantal met één omklappen.
- * - modus "pagina" (productpagina): de keuze staat in de URL (?platform=…&cijfers=…) en de knop gaat naar het offerteformulier;
+ * - modus "pagina" (productpagina): de keuze staat in de URL (?platform=…&cijfers=…) en de knop gaat naar het pre-orderformulier;
  * - modus "teaser" (homepage, branchepagina's): de knop gaat naar de productpagina met de keuze ingevuld.
  * Met `platformKeuze={false}` staat het platform vast (platformpagina's).
- * Andere onderdelen (EigenScore, OfferteForm) luisteren naar het event `reviewteller:keuze` op window.
+ * Andere onderdelen (EigenScore, PreorderForm) luisteren naar het event `reviewteller:keuze` op window.
  */
 import Teller from './Teller.astro';
 import { pilLogo, platformGegevens } from '@/lib/reviewplatformdata';
@@ -34,7 +34,7 @@ const gegevens = {
 const pil =
   'grid size-12 cursor-pointer place-items-center rounded-full transition-[background-color,box-shadow] hover:bg-white/70 has-checked:bg-white has-checked:shadow-sm has-checked:ring-2 has-checked:ring-brand-600 has-focus-visible:ring-4 has-focus-visible:ring-brand-200';
 const stapKnop = 'grid size-11 cursor-pointer place-items-center rounded-full bg-brand-50 text-brand-600 ring-1 ring-brand-200 transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-40';
-const knop = modus === 'pagina' ? { tekst: 'Vraag een offerte aan', href: '#offerte' } : { tekst: 'Bekijk de reviewteller', href: url('/live-reviewteller') };
+const knop = modus === 'pagina' ? { tekst: 'Pre-order', href: '#preorder' } : { tekst: 'Bekijk en pre-order', href: url('/live-reviewteller') };
 ---
 <div class={`card grid overflow-hidden !rounded-[var(--radius-panel)] !p-0 shadow-[var(--shadow-glow)] ${cls}`} data-kiezer data-gegevens={JSON.stringify(gegevens)}>
   <div class="kiezer-scene grid place-items-center px-[6%] pb-[8%] pt-[10%]">
@@ -116,7 +116,7 @@ const knop = modus === 'pagina' ? { tekst: 'Vraag een offerte aan', href: '#offe
     urlSync: boolean;
   }
 
-  const euro = (n: number) => `€ ${n.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} excl. btw`;
+  const euro = (n: number) => `€ ${n.toLocaleString('nl-NL', { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 })} excl. btw`;
 
   document.querySelectorAll<HTMLElement>('[data-kiezer]').forEach((wrap) => {
     const g = JSON.parse(wrap.dataset.gegevens ?? '{}') as Gegevens;

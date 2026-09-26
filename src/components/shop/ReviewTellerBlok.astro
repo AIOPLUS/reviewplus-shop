@@ -3,6 +3,7 @@
 import TellerKiezer from './TellerKiezer.astro';
 import { url } from '@/lib/url';
 import { platformStijl, type ReviewPlatform } from '@/lib/reviewplatformen';
+import { getTellers, tellerPrijsLabel } from '@/lib/catalog';
 
 interface Props {
   platform?: ReviewPlatform;
@@ -17,6 +18,7 @@ const {
   tekst = 'De live reviewteller is een houten teller met klapcijfers. Hij toont het logo van je reviewplatform, je gemiddelde score en het aantal reviews. Voor Google, Trustpilot, Tripadvisor, Booking.com, Airbnb en Yelp.',
   voorbeelden = [],
 } = Astro.props;
+const [teller] = await getTellers();
 ---
 <section class="container-rp py-12" aria-labelledby="reviewteller-blok">
   <div class="grid items-center gap-8 rounded-[var(--radius-panel)] bg-brand-50 p-6 ring-1 ring-brand-200 md:p-10 lg:grid-cols-[1fr_1.1fr]">
@@ -36,9 +38,9 @@ const {
       )}
       <div class="flex flex-wrap gap-2">
         <a href={url('/live-reviewteller')} class="btn btn-primary">Bekijk de reviewteller</a>
-        <a href={`${url('/live-reviewteller')}#offerte`} class="btn btn-secondary">Vraag een offerte aan</a>
+        <a href={`${url('/live-reviewteller')}#preorder`} class="btn btn-secondary">Pre-order</a>
       </div>
-      <p class="text-sm text-muted">Prijs volgt · 5 of 7 cijfers · NL &amp; BE</p>
+      <p class="text-sm text-muted">Pre-order · {teller ? tellerPrijsLabel(teller) : 'Prijs volgt'} excl. btw · 5 of 7 cijfers · NL &amp; BE</p>
     </div>
     <TellerKiezer id="blok-teller" platform={platform} modus="teaser" />
   </div>

@@ -2,7 +2,7 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import TellerKiezer from '@/components/shop/TellerKiezer.astro';
 import EigenScore from '@/components/shop/EigenScore.astro';
-import OfferteForm from '@/components/shop/OfferteForm.astro';
+import PreorderForm from '@/components/shop/PreorderForm.astro';
 import Faq from '@/components/shop/Faq.astro';
 import { getTellers, tellerPrijsLabel } from '@/lib/catalog';
 import { breadcrumbSchema, faqSchema, tellerSchema } from '@/lib/schema';
@@ -43,12 +43,12 @@ const prijs = tellerPrijsLabel(t);
     </div>
 
     <div class="grid content-start gap-6 lg:col-start-2 lg:row-span-2 lg:row-start-1">
-      <p class="chip w-fit">Nieuw in de shop · op offerte</p>
+      <p class="chip w-fit">Nieuw · pre-order · levering: datum volgt</p>
       <h1 class="text-4xl md:text-5xl">{t.naam}</h1>
       <p class="text-lg leading-relaxed text-ink-soft">{t.samenvatting}</p>
       <div class="flex flex-wrap items-center gap-4">
-        <p class="text-2xl font-semibold text-ink">{prijs}</p>
-        <a href="#offerte" class="btn btn-primary btn-lg">Vraag een offerte aan</a>
+        <p class="text-2xl font-semibold text-ink">{prijs} <span class="text-base font-normal text-muted">excl. btw</span></p>
+        <a href="#preorder" class="btn btn-primary btn-lg">Pre-order</a>
       </div>
 
       <ul class="grid gap-2 text-ink-soft">
@@ -96,7 +96,7 @@ const prijs = tellerPrijsLabel(t);
   </section>
 
   <div class="container-rp max-w-4xl py-8">
-    <OfferteForm />
+    <PreorderForm />
   </div>
 
   <Faq items={t.faq} />

@@ -10,7 +10,7 @@ export const GET: APIRoute = async () => {
   const [products, sectors, tellers] = await Promise.all([getProducts(), getSectors(), getTellers()]);
   const tellerLines = tellers.map(
     (t) =>
-      `- [${t.naam}](${absoluteUrl(`/${t.slug}`)}): ${t.kort} 5 of 7 cijfers. ${tellerPrijsLabel(t)}; offerte aanvragen op de productpagina. Per platform: ${PLATFORMEN.map((p) => `[${p}](${absoluteUrl(`/reviewteller/${platformStijl[p].slug}`)})`).join(', ')}.`,
+      `- [${t.naam}](${absoluteUrl(`/${t.slug}`)}): ${t.kort} 5 of 7 cijfers. ${tellerPrijsLabel(t)} excl. btw; pre-order met betaling vooraf via Mollie, levering: datum volgt. Voorwaarden: ${absoluteUrl('/pre-ordervoorwaarden')}. Per platform: ${PLATFORMEN.map((p) => `[${p}](${absoluteUrl(`/reviewteller/${platformStijl[p].slug}`)})`).join(', ')}.`,
   );
   const productLines = products.map((p) => {
     const cond = p.gratisVoorwaarde === 'bij-demo' ? 'gratis bij het inplannen van een demo' : 'altijd gratis';
@@ -23,7 +23,7 @@ export const GET: APIRoute = async () => {
 ## Aanbod
 ${productLines.join('\n')}
 
-## Op offerte (geen onderdeel van de gratis actie)
+## Pre-order (geen onderdeel van de gratis actie)
 ${tellerLines.join('\n')}
 
 ## Voorwaarden (kort)

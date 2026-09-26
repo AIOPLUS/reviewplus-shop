@@ -46,9 +46,9 @@ const products = defineCollection({
 });
 
 /**
- * Producten op offerte (zoals de live reviewteller). Apart van `products`, omdat de aanvraagflow, de gratis actie,
+ * Producten buiten de gratis actie (zoals de live reviewteller, nu als pre-order). Apart van `products`, omdat de aanvraagflow, de gratis actie,
  * /products.json (sleutel `products`) en Make (route 1 rekent met prijsExtra van nfc-kaartenset en nfc-totem) alleen
- * met die gratis leadproducten werken. Prijzen excl. btw per variant; `null` = "Prijs volgt" (offerte aanvragen).
+ * met die gratis leadproducten werken. Prijzen excl. btw per variant; `null` = "Prijs volgt". Make (route Pre-order) leest ze uit /products.json (sleutel `offerte_producten`).
  * Zie docs/REVIEWTELLER.md.
  */
 const tellers = defineCollection({
@@ -66,7 +66,7 @@ const tellers = defineCollection({
     specs: z.array(z.object({ label: z.string(), waarde: z.string() })).default([]),
     voordelen: z.array(z.string()),
     inDeDoos: z.array(z.string()).default([]),
-    status: z.enum(['beschikbaar', 'binnenkort', 'op-aanvraag']),
+    status: z.enum(['beschikbaar', 'binnenkort', 'op-aanvraag', 'pre-order']),
     volgorde: z.number().default(0),
     faq,
   }),

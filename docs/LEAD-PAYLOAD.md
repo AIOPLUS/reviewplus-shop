@@ -152,6 +152,32 @@ Klikt de klant na het versturen op "Ik heb mijn demo ingepland" (`/bedankt?demo=
 
 Make zoekt de deal bij `ref` op, controleert het e-mailadres en zet de deal in Teamleader in fase **Demo Ingepland**. Antwoord: `200 { "ok": true }`. Het is wat de klant zelf aangeeft; de afspraak zelf staat in Teamleader Bookings.
 
+## Pre-order live reviewteller (`request_type: preorder`)
+
+Vanaf `/live-reviewteller` en `/reviewteller/<platform>` (`src/components/shop/PreorderForm.astro`). Make rekent het bedrag zelf uit (`/products.json` → `offerte_producten`) en antwoordt met `{"ok": true, "checkoutUrl": "…"}` of `{"ok": false}` (400).
+
+```json
+{
+  "payload_version": 1,
+  "request_type": "preorder",
+  "lead_ref": "RP-PO-MUIJFYI7LTIS",
+  "lead_source": "shop",
+  "submitted_at": "2026-09-26T15:22:08.623Z",
+  "pagina": "https://shop.reviewplus.io/live-reviewteller?platform=booking&cijfers=7",
+  "product": { "slug": "live-reviewteller", "variant": "7-cijfers", "platform": "Booking.com", "aantal": 2 },
+  "bedrijf": { "naam": "TEST BV", "land": "BE", "bedrijfsnummer": null, "btw_nummer": "BE0123456789" },
+  "adres": { "straat": "Teststraat", "huisnummer": "1", "toevoeging": null, "postcode": "2000", "plaats": "Antwerpen", "land": "BE" },
+  "contact": { "voornaam": "Test", "achternaam": "Persoon", "email": "test@example.com", "telefoon": "+32 470 12 34 56" },
+  "factuur_email": null,
+  "akkoord": { "voorwaarden": true, "versie": "2026-09-26", "tijdstip": "2026-09-26T15:22:08.623Z" },
+  "turnstile_token": "…"
+}
+```
+
+- `product.variant`: `5-cijfers` of `7-cijfers`;
+- `product.platform`: Google, Trustpilot, Tripadvisor, Booking.com, Airbnb of Yelp;
+- `product.aantal`: 1–10.
+
 ## Respons van Make
 
 Gebruik in Make de module **Webhooks → Webhook response**:

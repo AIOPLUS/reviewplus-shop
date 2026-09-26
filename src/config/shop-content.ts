@@ -58,7 +58,7 @@ export const shopFaq = [
   {
     vraag: 'Wat is de live reviewteller?',
     antwoord:
-      'Een houten teller met mechanische klapcijfers die het logo van je reviewplatform, je gemiddelde score en je aantal reviews laat zien. Er is een versie voor Google, Trustpilot, Tripadvisor, Booking.com, Airbnb en Yelp, met 5 of 7 cijfers. De prijs volgt; je kunt nu een offerte aanvragen.',
+      'Een houten teller met mechanische klapcijfers die het logo van je reviewplatform, je gemiddelde score en je aantal reviews laat zien. Er is een versie voor Google, Trustpilot, Tripadvisor, Booking.com, Airbnb en Yelp, met 5 of 7 cijfers. Nu te pre-orderen vanaf € 499 excl. btw.',
   },
   {
     vraag: 'Hoe snel worden de kaarten verstuurd?',

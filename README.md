@@ -69,9 +69,13 @@ Overige instellingen in code:
 - **Logo**: officiële bronbestanden in `src/assets/brand/`. Het icoon is als SVG nagebouwd in `src/components/layout/Logo.astro` (kleur `--color-logo: #1818FF`); `public/favicon.svg`, `public/apple-touch-icon.png` en `public/assets/brand/logo-512.png` (voor Google/schema) zijn daaruit gemaakt.
 - **`src/assets/referentie/`**: beeld ter inspiratie (bv. van concurrenten); wordt niet op de site gebruikt.
 
-## Live reviewteller (op offerte)
+## Live reviewteller (pre-order)
 
-Nieuwe productlijn: houten tellers met klapcijfers (Smiirl Custom Counter) voor Google, Trustpilot, Tripadvisor, Booking.com, Airbnb en Yelp, met 5 of 7 cijfers. Het gaat om `/live-reviewteller` en `/reviewteller/<platform>`, plus een productkaart en een blok op de homepage en de branchepagina's. De inhoud staat in `src/content/tellers/`, de platformen in `src/lib/reviewplatformen.ts`. Zolang `prijs: null` is, staat er "Prijs volgt" met een offerteformulier; dat verstuurt via de contactroute in Make. Uitleg, het schemavoorstel en de open vragen voor Smiirl staan in [`docs/REVIEWTELLER.md`](docs/REVIEWTELLER.md).
+Nieuwe productlijn: houten tellers met klapcijfers (Smiirl Custom Counter) voor Google, Trustpilot, Tripadvisor, Booking.com, Airbnb en Yelp, met 5 of 7 cijfers. De prijs is € 499 of € 699 per stuk, excl. btw.
+- **Pagina's:** `/live-reviewteller` en `/reviewteller/<platform>`, plus een productkaart en een blok op de homepage en de branchepagina's.
+- **Inhoud en prijzen:** `src/content/tellers/`; de platformen staan in `src/lib/reviewplatformen.ts`.
+- **Bestellen:** als pre-order met betaling vooraf via Mollie (`PreorderForm`, voorwaarden op `/pre-ordervoorwaarden`). Het formulier gaat naar Make-route 5e, die het bedrag zelf uitrekent uit `/products.json`.
+- **Testmodus:** de Mollie-betaling staat nog in testmodus; zie [`docs/REVIEWTELLER.md`](docs/REVIEWTELLER.md), met ook de open vragen voor Smiirl.
 
 ## Labelwisselaar (AIO Plus)
 
