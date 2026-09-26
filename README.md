@@ -75,7 +75,7 @@ Nieuwe productlijn: houten tellers met klapcijfers (Smiirl Custom Counter) voor 
 - **Pagina's:** `/live-reviewteller` en `/reviewteller/<platform>`, plus een productkaart en een blok op de homepage en de branchepagina's.
 - **Inhoud en prijzen:** `src/content/tellers/`; de platformen staan in `src/lib/reviewplatformen.ts`.
 - **Bestellen:** als pre-order met betaling vooraf via Mollie (`PreorderForm`, voorwaarden op `/pre-ordervoorwaarden`). Het formulier gaat naar Make-route 5e, die het bedrag zelf uitrekent uit `/products.json`.
-- **Testmodus:** de Mollie-betaling staat nog in testmodus; zie [`docs/REVIEWTELLER.md`](docs/REVIEWTELLER.md), met ook de open vragen voor Smiirl.
+- **Betalingen:** live sinds 26-09-2026. Meer uitleg en de open vragen voor Smiirl staan in [`docs/REVIEWTELLER.md`](docs/REVIEWTELLER.md).
 
 ## Labelwisselaar (AIO Plus)
 

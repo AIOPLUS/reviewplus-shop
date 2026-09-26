@@ -90,10 +90,7 @@ Het formulier toont een overzicht met btw en totaal. Verzending naar NL en BE is
    - support krijgt "Pre-order betaald";
    - de klant krijgt een bevestiging (module 179).
 
-**Testmodus:** de pre-orderroute staat nog in Mollie-**testmodus**: variabele `testmode` = `{{true}}` in module 171. Zo werkt het:
-1. Na de livegang van deze shopversie doet Jordan een testbestelling. Mollie toont dan een testbetaalpagina: kies "Paid".
-2. Controleer de mails en de runs in Make.
-3. Zet daarna in Make module 171 `testmode` op `{{false}}`. De betaalde extra's (route 1, module 4) staan al live.
+**Live sinds 26-09-2026.** Jordan heeft een testbestelling gedaan (betaald in Mollie-testmodus, alle mails kwamen aan). Daarna is `testmode` in module 171 op `{{false}}` gezet, dus klanten betalen echt. Terug naar testen: zet hem weer op `{{true}}`. In `waarde` van het betaalrecord staan de bestelling en de btw-tekst, gescheiden door `|` (bijvoorbeeld `1× live reviewteller Google, 5 cijfers|incl. 21% btw`). De mails lezen dat uit.
 
 **Na een betaalde pre-order (handwerk):** stuur de factuur, bestel de teller bij Smiirl en laat de klant de verwachte leverdatum weten.
 
