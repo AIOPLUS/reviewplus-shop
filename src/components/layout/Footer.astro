@@ -3,6 +3,7 @@ import { brand, footerNav } from '@/config/brand';
 import { PIXELS } from '@/config/site';
 import { url } from '@/lib/url';
 import Logo from './Logo.astro';
+import LabelList from './LabelList.astro';
 
 const hasPixels = Boolean(PIXELS.metaPixelId || PIXELS.gadsId);
 const socials = [
@@ -52,6 +53,12 @@ const year = new Date().getFullYear();
         </div>
       ))}
     </nav>
+  </div>
+  <div class="border-t border-brand-200">
+    <div class="container-rp flex flex-wrap items-center gap-x-6 gap-y-3 py-5">
+      <p class="text-sm text-muted">Onderdeel van AIO Plus:</p>
+      <LabelList plek="footer" />
+    </div>
   </div>
   <div class="border-t border-brand-200">
     <div class="container-rp flex flex-wrap items-center justify-between gap-3 py-5 text-sm text-muted">

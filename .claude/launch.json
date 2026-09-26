@@ -19,6 +19,20 @@
         "scripts/mock-webhook.mjs"
       ],
       "port": 8787
+    },
+    {
+      "name": "viewplus-shop-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "C:/Users/jorda/.claude/projects/viewplus-shop",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "4324"
+      ],
+      "port": 4324
     }
   ]
 }

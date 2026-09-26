@@ -1,0 +1,186 @@
+---
+/**
+ * Labelwisselaar vanuit het logo: het beeldmerk is de knop. Bij hover schuiven de vier vlakken uit
+ * elkaar en kleuren ze naar de vier labels (linksboven Review, rechtsboven View, linksonder Website,
+ * rechtsonder Tab); bij klik vouwt het menu uit. Hover op een label licht het bijbehorende vlak op.
+ * Werkt zonder JavaScript (<details>); het script regelt sluiten, de hover-koppeling en een eenmalige hint.
+ * Labels: src/lib/labels.ts (centrale lijst van reviewplus.io). Kopie van reviewplus-site; in de shop linkt
+ * het huidige label (Review Plus) naar de hoofdsite.
+ */
+import Logo from './Logo.astro';
+import LabelMark from './LabelMark.astro';
+import { labels, bundel, labelLink, HUIDIG_LABEL } from '@/lib/labels';
+
+const huidig = labels.find((l) => l.id === HUIDIG_LABEL);
+const labelKleuren = labels.slice(0, 4).map((l) => l.kleur);
+---
+<details class="lw relative" data-labels>
+  <summary class="lw-knop grid size-11 cursor-pointer list-none place-items-center rounded-full [&::-webkit-details-marker]:hidden" title="Onze labels">
+    <LabelMark size={24} kleuren={huidig?.kleur ?? 'var(--color-logo)'} naar={labelKleuren} />
+    <span class="sr-only">Onze labels (AIO Plus)</span>
+  </summary>
+
+  <div class="lw-paneel absolute left-0 top-[calc(100%+8px)] z-50 w-[min(340px,calc(100vw-32px))] rounded-[20px] border border-line bg-white p-2 shadow-[var(--shadow-card)]">
+    <p class="lw-item px-3 pb-1.5 pt-2 text-xs text-muted">Onderdeel van AIO Plus</p>
+    <ul class="grid gap-0.5">
+      {labels.map((l, i) => {
+        const isHuidig = l.id === HUIDIG_LABEL;
+        const inhoud = (
+          <>
+            <Logo size={26} color={l.kleur} />
+            <span class="min-w-0 flex-1">
+              <span class:list={['block text-[15px] font-medium', l.status === 'live' ? 'text-ink' : 'text-muted']}>{l.naam}</span>
+              {l.omschrijving && <span class="block text-[13px] leading-snug text-muted">{l.omschrijving}</span>}
+            </span>
+          </>
+        );
+        return (
+          <li class="lw-item" style={`--i:${i + 1}`} data-vlak={i + 1}>
+            {isHuidig ? (
+              <a href={labelLink(l, 'wisselaar')} class="flex items-center gap-3 rounded-xl bg-brand-100 px-3 py-2.5 hover:bg-brand-200" data-track="label_klik" data-track-label={l.id}>
+                {inhoud}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="text-brand-600" aria-hidden="true"><path d="m5 12 5 5L20 7" /></svg>
+                <span class="sr-only">(dit label, naar de homepage)</span>
+              </a>
+            ) : l.status === 'live' ? (
+              <a href={labelLink(l, 'wisselaar')} class="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-[#fafafa]" data-track="label_klik" data-track-label={l.id}>
+                {inhoud}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="text-muted" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9" /></svg>
+              </a>
+            ) : (
+              <span class="flex items-center gap-3 rounded-xl px-3 py-2.5">
+                {inhoud}
+                <span class="rounded-full bg-[#fdf3dc] px-2.5 py-0.5 text-xs text-[#7a4a00]">Binnenkort</span>
+              </span>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+    <div class="lw-item mt-1.5 flex items-center gap-3 border-t border-line px-3 pb-1.5 pt-3" style="--i:5">
+      <LabelMark size={22} kleuren={labelKleuren as [string, string, string, string]} />
+      <span class="min-w-0 flex-1">
+        <span class="block text-sm font-medium text-ink">{bundel.naam}</span>
+        {bundel.omschrijving && <span class="block text-[13px] text-muted">{bundel.omschrijving}</span>}
+      </span>
+      {bundel.status === 'live' ? (
+        <a href={labelLink(bundel, 'wisselaar')} class="text-sm text-brand-600 hover:underline" data-track="label_klik" data-track-label={bundel.id}>Bekijk</a>
+      ) : (
+        <span class="rounded-full bg-[#fdf3dc] px-2.5 py-0.5 text-xs text-[#7a4a00]">Binnenkort</span>
+      )}
+    </div>
+  </div>
+</details>
+
+<style is:global>
+  .lw-knop .vlak {
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: fill 0.35s ease, transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+  }
+  .lw-knop .vlak-2 { transition-delay: 40ms; }
+  .lw-knop .vlak-3 { transition-delay: 80ms; }
+  .lw-knop .vlak-4 { transition-delay: 120ms; }
+  .lw-knop:focus-visible { outline: 2px solid var(--color-brand-600); outline-offset: 2px; }
+
+  /* Hover, focus, open of de eenmalige hint: vlakken uit elkaar en in de labelkleuren. */
+  .lw-knop:hover .vlak, .lw-knop:focus-visible .vlak, .lw[open] .lw-knop .vlak, .lw.lw-hint .lw-knop .vlak { fill: var(--l, var(--k)); }
+  .lw-knop .vlak-1 { --tx: -9%; --ty: -9%; }
+  .lw-knop .vlak-2 { --tx: 9%; --ty: -9%; }
+  .lw-knop .vlak-3 { --tx: -9%; --ty: 9%; }
+  .lw-knop .vlak-4 { --tx: 9%; --ty: 9%; }
+  .lw-knop:hover .vlak, .lw-knop:focus-visible .vlak, .lw[open] .lw-knop .vlak, .lw.lw-hint .lw-knop .vlak {
+    transform: translate(var(--tx), var(--ty)) scale(var(--s, 1));
+  }
+
+  /* Hover op een label in het menu: dat vlak licht op, de rest vervaagt. */
+  .lw[data-actief] .lw-knop .vlak { opacity: 0.25; }
+  .lw[data-actief="1"] .lw-knop .vlak-1, .lw[data-actief="2"] .lw-knop .vlak-2,
+  .lw[data-actief="3"] .lw-knop .vlak-3, .lw[data-actief="4"] .lw-knop .vlak-4 { opacity: 1; --s: 1.2; }
+
+  /* Menu vouwt uit vanuit het logo; items komen er gestaffeld in. */
+  .lw[open] .lw-paneel { animation: lw-open 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; transform-origin: 20px -10px; }
+  .lw[open] .lw-item { animation: lw-item 0.35s ease both; animation-delay: calc(var(--i, 0) * 45ms + 60ms); }
+  @keyframes lw-open { from { opacity: 0; transform: scale(0.6) translateY(-6px); } to { opacity: 1; transform: none; } }
+  @keyframes lw-item { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lw-knop .vlak { transition: fill 0.2s ease; transform: none !important; }
+    .lw[open] .lw-paneel, .lw[open] .lw-item { animation: none; }
+  }
+</style>
+
+<script>
+  import { track } from '@/lib/client/analytics';
+
+  const el = document.querySelector<HTMLDetailsElement>('[data-labels]');
+  if (el) {
+    // Sluiten bij klikken buiten het menu of Escape.
+    document.addEventListener('click', (e) => {
+      if (el.open && !el.contains(e.target as Node)) el.open = false;
+    });
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && el.open) {
+        el.open = false;
+        el.querySelector('summary')?.focus();
+      }
+    });
+    el.addEventListener('toggle', () => {
+      if (el.open) track('labels_geopend');
+      else delete el.dataset.actief;
+    });
+
+    // Met de muis: openen bij hover, sluiten kort na het verlaten (de korte vertraging overbrugt
+    // het gat tussen logo en menu). Touch en toetsenbord blijven op klikken werken.
+    const summary = el.querySelector('summary');
+    let sluitTimer: ReturnType<typeof setTimeout> | undefined;
+    let viaHover = false;
+    el.addEventListener('pointerenter', (e) => {
+      if (e.pointerType !== 'mouse') return;
+      clearTimeout(sluitTimer);
+      if (!el.open) {
+        viaHover = true;
+        el.open = true;
+      }
+    });
+    el.addEventListener('pointerleave', (e) => {
+      if (e.pointerType !== 'mouse' || !viaHover) return;
+      sluitTimer = setTimeout(() => {
+        el.open = false;
+        viaHover = false;
+      }, 250);
+    });
+    el.addEventListener('toggle', () => {
+      if (!el.open) viaHover = false;
+    });
+    // Klikken op het logo terwijl het menu via hover al open is: open laten in plaats van dichtklappen.
+    summary?.addEventListener('click', (e) => {
+      if (viaHover && el.open) {
+        e.preventDefault();
+        viaHover = false;
+      }
+    });
+
+    // Hover of focus op een label: het bijbehorende vlak in het logo licht op.
+    el.querySelectorAll<HTMLElement>('[data-vlak]').forEach((item) => {
+      const aan = () => (el.dataset.actief = item.dataset.vlak);
+      const uit = () => delete el.dataset.actief;
+      item.addEventListener('pointerenter', aan);
+      item.addEventListener('pointerleave', uit);
+      item.addEventListener('focusin', aan);
+      item.addEventListener('focusout', uit);
+    });
+
+    // Eenmalige hint per bezoek: het logo bloeit kort op, zodat bezoekers zien dat het klikbaar is.
+    const rustig = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let gezien = false;
+    try { gezien = sessionStorage.getItem('rp_shop_labels_hint') === '1'; } catch { /* geen opslag: toch tonen */ }
+    if (!rustig && !gezien) {
+      setTimeout(() => {
+        el.classList.add('lw-hint');
+        setTimeout(() => el.classList.remove('lw-hint'), 1400);
+        try { sessionStorage.setItem('rp_labels_hint', '1'); } catch { /* negeren */ }
+      }, 1800);
+    }
+  }
+</script>

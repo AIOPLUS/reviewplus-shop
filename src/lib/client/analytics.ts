@@ -13,7 +13,9 @@ export type EventName =
   | 'demo_klik'
   | 'demo_later'
   | 'demo_ingepland'
-  | 'betaling_gestart';
+  | 'betaling_gestart'
+  | 'label_klik'
+  | 'labels_geopend';
 
 type Props = Record<string, string | number | boolean>;
 
@@ -53,6 +55,7 @@ export function bindTrackedClicks(): void {
     if (!el) return;
     const props: Props = {};
     if (el.dataset.trackPlek) props.plek = el.dataset.trackPlek;
+    if (el.dataset.trackLabel) props.label = el.dataset.trackLabel;
     track(el.dataset.track as EventName, props);
   });
 }

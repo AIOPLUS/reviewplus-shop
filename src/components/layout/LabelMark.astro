@@ -1,0 +1,28 @@
+---
+/**
+ * Het beeldmerk in vier losse vlakken (zelfde vorm als Logo.astro), zodat elk vlak een eigen kleur
+ * en animatie kan krijgen. Volgorde = labels.json: linksboven, rechtsboven, linksonder, rechtsonder.
+ */
+interface Props {
+  size?: number;
+  /** Eén kleur voor het hele merk, of vier kleuren (één per vlak). */
+  kleuren: string | [string, string, string, string];
+  /** Optioneel: kleuren waar de vlakken naartoe animeren (CSS-variabele --l, zie LabelSwitcher). */
+  naar?: string[];
+  class?: string;
+}
+const { size = 26, kleuren, naar = [], class: cls = '' } = Astro.props;
+const k = typeof kleuren === 'string' ? [kleuren, kleuren, kleuren, kleuren] : kleuren;
+const stijl = (i: number) => `--k:${k[i]}` + (naar[i] ? `;--l:${naar[i]}` : '');
+const width = Math.round((size * 906) / 958);
+---
+<svg width={width} height={size} viewBox="0 0 906 958" aria-hidden="true" class={`shrink-0 overflow-visible ${cls}`}>
+  <path class="vlak vlak-1" style={stijl(0)} d="M0 0H386V410A386 410 0 0 1 0 0Z" />
+  <rect class="vlak vlak-2" style={stijl(1)} x="520" width="386" height="410" />
+  <path class="vlak vlak-3" style={stijl(2)} d="M386 548V958H0A386 410 0 0 1 386 548Z" />
+  <rect class="vlak vlak-4" style={stijl(3)} x="520" y="548" width="386" height="410" />
+</svg>
+
+<style>
+  .vlak { fill: var(--k); }
+</style>

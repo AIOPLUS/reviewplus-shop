@@ -69,6 +69,10 @@ Overige instellingen in code:
 - **Logo**: officiële bronbestanden in `src/assets/brand/`. Het icoon is als SVG nagebouwd in `src/components/layout/Logo.astro` (kleur `--color-logo: #1818FF`); `public/favicon.svg`, `public/apple-touch-icon.png` en `public/assets/brand/logo-512.png` (voor Google/schema) zijn daaruit gemaakt.
 - **`src/assets/referentie/`**: beeld ter inspiratie (bv. van concurrenten); wordt niet op de site gebruikt.
 
+## Labelwisselaar (AIO Plus)
+
+Het beeldmerk in de header opent een menu met alle labels van AIO Plus: met de muis bij hover, op touch met een tik. Er staat ook een lijst in het mobiele menu en in de footer. De componenten (`LabelSwitcher`, `LabelMark`, `LabelList`) zijn een kopie van reviewplus-site. De labels komen bij het bouwen uit `https://www.reviewplus.io/labels.json`; lukt dat niet, dan uit `src/data/labels.json`. Een label aanpassen doe je in reviewplus-site. Deploy daarna de shop opnieuw, of wacht op de volgende push.
+
 ## Structuur
 
 ```

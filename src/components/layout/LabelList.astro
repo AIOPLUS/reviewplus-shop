@@ -1,0 +1,28 @@
+---
+/** Compacte lijst van de AIO Plus-labels, voor het mobiele menu en de footer. */
+import Logo from './Logo.astro';
+import { labels, labelLink, HUIDIG_LABEL } from '@/lib/labels';
+
+interface Props {
+  plek: 'menu' | 'footer';
+}
+const { plek } = Astro.props;
+const anderen = labels.filter((l) => l.id !== HUIDIG_LABEL);
+---
+<ul class={plek === 'menu' ? 'grid gap-3 px-3' : 'flex flex-wrap gap-x-6 gap-y-3'}>
+  {anderen.map((l) => (
+    <li>
+      {l.status === 'live' ? (
+        <a href={labelLink(l, plek)} class="flex items-center gap-2.5 text-[15px] text-ink hover:text-brand-600" data-track="label_klik" data-track-label={l.id} data-track-plek={plek}>
+          <Logo size={18} color={l.kleur} />{l.naam}
+          {l.omschrijving && <span class="text-muted">· {l.omschrijving}</span>}
+        </a>
+      ) : (
+        <span class="flex items-center gap-2.5 text-[15px] text-muted">
+          <Logo size={18} color={l.kleur} />{l.naam}
+          <span class="rounded-full bg-[#fdf3dc] px-2 py-0.5 text-xs text-[#7a4a00]">Binnenkort</span>
+        </span>
+      )}
+    </li>
+  ))}
+</ul>
