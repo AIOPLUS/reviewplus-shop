@@ -1,19 +1,25 @@
 import type { APIRoute, GetStaticPaths } from 'astro';
 import sharp, { type OverlayOptions } from 'sharp';
 import { join } from 'node:path';
-import { getProducts, getSectors } from '@/lib/catalog';
+import { getProducts, getSectors, getTellers, tellerPrijsLabel } from '@/lib/catalog';
+import { brandIcon } from '@/lib/icons';
+import { PLATFORMEN, platformStijl, scoreTekst, type ReviewPlatform } from '@/lib/reviewplatformen';
 import { formatPrice } from '@/lib/format';
 
-/** Open Graph-afbeeldingen (1200×630) per product en sectorpagina, bij het builden gegenereerd met de productfoto. */
+/**
+ * Open Graph-afbeeldingen (1200×630) per product en sectorpagina, bij het builden gegenereerd met de productfoto.
+ * De live reviewteller heeft nog geen foto: die wordt als vector getekend (zoals in de View Plus Shop).
+ */
 type Og = {
   title: string;
   sub: string;
   badge: string;
   image: string;
+  teller?: ReviewPlatform;
 };
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  const [products, sectors] = await Promise.all([getProducts(), getSectors()]);
+  const [products, sectors, tellers] = await Promise.all([getProducts(), getSectors(), getTellers()]);
   const set = products.find((p) => p.type === 'kaartenset');
   const setImage = set?.afbeeldingen[0] ?? '';
   const paths: { params: { slug: string }; props: Og }[] = [
@@ -33,8 +39,55 @@ export const getStaticPaths: GetStaticPaths = async () => {
   for (const s of sectors) {
     paths.push({ params: { slug: `voor-${s.slug}` }, props: { title: s.heroTitel, sub: 'Gratis NFC-reviewkaarten · NL & BE', badge: s.naam, image: setImage } });
   }
+  for (const t of tellers) {
+    const sub = `${tellerPrijsLabel(t)} · 5 of 7 cijfers · NL & BE`;
+    paths.push({ params: { slug: t.slug }, props: { title: t.naam, sub, badge: `${PLATFORMEN.length} platformen`, image: '', teller: 'Google' } });
+    for (const platform of PLATFORMEN) {
+      paths.push({
+        params: { slug: `reviewteller-${platformStijl[platform].slug}` },
+        props: { title: `Live reviewteller voor ${platform}`, sub, badge: platform, image: '', teller: platform },
+      });
+    }
+  }
   return paths;
 };
+
+/** Reviewteller als vector: [logo] [ster + score] [5 zwarte klapcijfers], op het vlak rechts. */
+function tellerSvg(platform: ReviewPlatform): string {
+  const st = platformStijl[platform];
+  const fw = 46, fh = 62, gap = 6, pad = 18, tegel = 44, scoreW = 54;
+  const w = pad * 2 + tegel + scoreW + 5 * fw + 6 * gap;
+  const h = fh + pad * 2;
+  const x0 = PHOTO.x + (PHOTO.w - w) / 2, y0 = PHOTO.y + (PHOTO.h - h) / 2;
+  const logo = brandIcon(st.logo, st.logoKleur);
+  const lx = x0 + pad, ly = y0 + pad;
+  const sx = lx + tegel + gap, cx = sx + scoreW / 2;
+  const tekst = scoreTekst(st.voorbeeld.score, st.decimalen);
+  const font = 'Poppins, Arial, sans-serif';
+  const score =
+    st.score.vorm === 'vlak'
+      ? `<rect x="${sx + 5}" y="${ly + 9}" width="${scoreW - 10}" height="${scoreW - 10}" rx="7" fill="${st.score.kleur}"/><text x="${cx}" y="${ly + 9 + (scoreW - 10) / 2 + 7}" font-family="${font}" font-size="19" font-weight="700" fill="#fff" text-anchor="middle">${tekst}</text>`
+      : (st.score.vorm === 'ster'
+          ? `<path transform="translate(${cx - 12} ${ly + 6})" d="M12 2.2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.4l-6.1 3.4 1.4-6.8L2.2 9.3l6.9-.8z" fill="${st.score.kleur}"/>`
+          : `<circle cx="${cx}" cy="${ly + 17}" r="11" fill="${st.score.kleur}"/>`) +
+        `<text x="${cx}" y="${ly + 52}" font-family="${font}" font-size="${st.decimalen === 2 ? 17 : 20}" font-weight="700" fill="#150E08" text-anchor="middle">${tekst}</text>`;
+  const cijfers = String(st.voorbeeld.aantal).padStart(5, ' ').split('');
+  const flappen = cijfers
+    .map((c, i) => {
+      const x = sx + scoreW + gap + i * (fw + gap);
+      return (
+        `<rect x="${x}" y="${ly}" width="${fw}" height="${fh}" rx="7" fill="url(#flap)"/><rect x="${x}" y="${ly + fh / 2 - 1}" width="${fw}" height="2" fill="#000" opacity=".35"/>` +
+        (c.trim() ? `<text x="${x + fw / 2}" y="${ly + fh / 2 + 12}" font-family="${font}" font-size="34" font-weight="600" fill="#fff" text-anchor="middle">${c}</text>` : '')
+      );
+    })
+    .join('');
+  return (
+    `<rect x="${x0}" y="${y0}" width="${w}" height="${h}" rx="12" fill="url(#hout)"/>` +
+    `<svg x="${lx + 4}" y="${ly + 10}" width="${tegel - 8}" height="${fh - 20}" viewBox="${logo.viewBox}">${logo.body.replaceAll('__ID__', '-og')}</svg>` +
+    score +
+    flappen
+  );
+}
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 
@@ -56,10 +109,14 @@ const LOGO = '<path d="M0 0H386V410A386 410 0 0 1 0 0Z"/><rect x="520" width="38
 const PHOTO = { x: 700, y: 60, w: 440, h: 510, r: 32 };
 
 export const GET: APIRoute = async ({ props }) => {
-  const { title, sub, badge, image } = props as Og;
+  const { title, sub, badge, image, teller } = props as Og;
   const lines = wrap(title, 17);
   const titleY = 285;
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="hout" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F6ECDD"/><stop offset="1" stop-color="#EAD8BD"/></linearGradient>
+    <linearGradient id="flap" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2e2e2e"/><stop offset=".49" stop-color="#2e2e2e"/><stop offset=".51" stop-color="#141414"/><stop offset="1" stop-color="#141414"/></linearGradient>
+  </defs>
   <rect width="1200" height="630" fill="#ffffff"/>
   <path d="M0 630V545A150 85 0 0 1 150 630Z" fill="#1818FF"/>
   <g stroke="#ffffff" stroke-opacity=".25" stroke-width="2">${[40, 90].map((x) => `<path d="M${x} 560V630"/>`).join('')}<path d="M0 595H130"/></g>
@@ -70,6 +127,7 @@ export const GET: APIRoute = async ({ props }) => {
   ${lines.map((l, i) => `<text x="80" y="${titleY + i * 64}" font-family="Poppins, Arial, sans-serif" font-size="54" font-weight="700" fill="#0f1d44">${esc(l)}</text>`).join('')}
   <text x="80" y="${titleY + lines.length * 64 + 8}" font-family="Poppins, Arial, sans-serif" font-size="26" fill="#4b5563">${esc(sub)}</text>
   <rect x="${PHOTO.x}" y="${PHOTO.y}" width="${PHOTO.w}" height="${PHOTO.h}" rx="${PHOTO.r}" fill="#EFF4FF"/>
+  ${teller ? tellerSvg(teller) : ''}
 </svg>`;
 
   const layers: OverlayOptions[] = [];

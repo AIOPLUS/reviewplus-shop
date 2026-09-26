@@ -1,6 +1,6 @@
 import { brand } from '@/config/brand';
 import { absoluteUrl } from './url';
-import type { Product } from './catalog';
+import type { Product, Teller } from './catalog';
 
 type Json = Record<string, unknown>;
 
@@ -82,5 +82,36 @@ export function productSchema(p: Product, imageUrl: string): Json {
         shippingDetails: shipping,
       },
     ],
+  };
+}
+
+/**
+ * Product op offerte (live reviewteller). Zonder bekende prijs geen Offer: we geven geen prijs op die niet klopt.
+ */
+export function tellerSchema(t: Teller, path: string, imageUrl: string, naam = t.naam): Json {
+  const pageUrl = absoluteUrl(path);
+  const prijzen = t.varianten.filter((v) => v.prijs !== null);
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: `${brand.name} ${naam}`,
+    description: t.kort,
+    sku: t.slug,
+    image: imageUrl,
+    url: pageUrl,
+    brand: { '@type': 'Brand', name: brand.name },
+    ...(prijzen.length
+      ? {
+          offers: prijzen.map((v) => ({
+            '@type': 'Offer',
+            url: pageUrl,
+            name: v.label,
+            price: v.prijs!.toFixed(2),
+            priceCurrency: 'EUR',
+            eligibleRegion: ['NL', 'BE'],
+            seller: { '@id': `${brand.mainSiteUrl}/#organization` },
+          })),
+        }
+      : {}),
   };
 }

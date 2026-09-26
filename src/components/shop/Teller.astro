@@ -1,0 +1,92 @@
+---
+/**
+ * Illustratie van de live reviewteller (geen productfoto): [logo] [ster + gemiddelde] [zwarte klapcijfers].
+ * Schaalt mee met de breedte (container query units). Een script kan platform, cijfers, aantal en score wijzigen
+ * (lib/client/reviewteller.ts); de tegels worden dan opnieuw opgebouwd, daarom zijn de stijlen globaal.
+ * Overgenomen uit de View Plus Shop en aangepast voor reviews.
+ */
+import { brandIcon, uniekeIds } from '@/lib/icons';
+import { FLAP_ZWART, platformStijl, scoreTekst, type ReviewPlatform } from '@/lib/reviewplatformen';
+import { scoreHtml } from '@/lib/tellerscore';
+
+interface Props {
+  platform?: ReviewPlatform;
+  cijfers?: 5 | 7;
+  aantal?: number;
+  score?: number;
+  class?: string;
+  /** Id voor een script dat de teller aanpast. */
+  id?: string;
+  label?: string;
+}
+const { platform = 'Google', cijfers = 5, class: cls = '', id, label } = Astro.props;
+const stijl = platformStijl[platform];
+const aantal = Astro.props.aantal ?? stijl.voorbeeld.aantal;
+const score = Astro.props.score ?? stijl.voorbeeld.score;
+const tekst = String(aantal).padStart(cijfers, ' ').slice(-cijfers);
+const logo = brandIcon(stijl.logo, stijl.logoKleur);
+const [flapBoven, flapOnder] = FLAP_ZWART;
+const breedte = cijfers === 5 ? 42 : 56.4;
+const beschrijving =
+  label ??
+  `Illustratie van een live reviewteller voor ${platform} met ${cijfers} cijfers: score ${scoreTekst(score, stijl.decimalen)} ${stijl.schaal === 10 ? 'op 10' : 'op 5'}, ${aantal.toLocaleString('nl-NL')} reviews`;
+---
+<div class={`@container ${cls}`} role="img" aria-label={beschrijving} data-teller-wrap>
+  <div
+    class="teller-kast"
+    style={`aspect-ratio:${breedte}/10.5;--flap-boven:${flapBoven};--flap-onder:${flapOnder}`}
+    id={id}
+    data-teller
+    data-cijfers={cijfers}
+    data-waarde={aantal}
+    data-score={score}
+    data-platform={platform}
+    data-schaal={stijl.schaal}
+    data-decimalen={stijl.decimalen}
+  >
+    <span class="teller-icoon" aria-hidden="true"><svg viewBox={logo.viewBox} set:html={uniekeIds(logo.body)} /></span>
+    <span class="teller-score" aria-hidden="true" set:html={scoreHtml(stijl.score.vorm, stijl.score.kleur, scoreTekst(score, stijl.decimalen))} />
+    {[...tekst].map((c) => (
+      <span class="teller-flap" aria-hidden="true"><span>{c.trim()}</span></span>
+    ))}
+  </div>
+</div>
+
+<style is:global>
+  .teller-kast {
+    display: flex; align-items: center; gap: 1.4cqw; width: 100%;
+    padding: 2.4cqw 3cqw; border-radius: 2.4cqw;
+    background: linear-gradient(180deg, #f6ecdd 0%, #ead8bd 100%);
+    box-shadow: inset 0 0 0 0.35cqw rgba(255,255,255,.6), 0 2cqw 5cqw -1.5cqw rgba(0,40,120,.3), 0 0.6cqw 1.2cqw rgba(0,0,0,.08);
+  }
+  /* Logo en score staan, net als op de echte teller, gedrukt op het hout. */
+  .teller-icoon { flex: 1; aspect-ratio: 3 / 4; display: grid; place-items: center; }
+  .teller-icoon svg { width: 80%; height: auto; max-height: 80%; }
+  .teller-score {
+    flex: 1.15; aspect-ratio: 3.45 / 4; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 0.4cqw; color: #150e08;
+  }
+  .teller-score-symbool { width: 48%; height: auto; }
+  .teller-score-getal { font-weight: 700; line-height: 1; font-size: var(--scoregrootte, 5.4cqw); font-variant-numeric: tabular-nums; }
+  .teller-score-vlak {
+    display: grid; place-items: center; width: 80%; aspect-ratio: 1; border-radius: 1.4cqw 1.4cqw 1.4cqw 0;
+    color: #fff; font-weight: 700; line-height: 1; font-size: var(--scoregrootte, 5.4cqw); font-variant-numeric: tabular-nums;
+  }
+  .teller-flap {
+    position: relative; flex: 1; aspect-ratio: 3 / 4; display: grid; place-items: center; overflow: hidden;
+    border-radius: 1.2cqw; perspective: 30cqw;
+    background: linear-gradient(180deg,
+      color-mix(in srgb, var(--flap-boven, #2e2e2e) 85%, #fff) 0%, var(--flap-boven, #2e2e2e) 49.4%,
+      var(--flap-onder, #141414) 50.6%, color-mix(in srgb, var(--flap-onder, #141414) 82%, #000) 100%);
+    box-shadow: inset 0 -0.5cqw 0 rgba(0,0,0,.18);
+  }
+  .teller-flap::after { content: ''; position: absolute; inset: 49.6% 0 auto; height: 0.25cqw; background: rgba(0,0,0,.35); }
+  .teller-flap > span {
+    display: block; color: #fff; font-weight: 600; line-height: 1; font-size: var(--cijfergrootte, 8.2cqw);
+    font-variant-numeric: tabular-nums; backface-visibility: hidden;
+  }
+  .teller-kast[data-cijfers='7'] { --cijfergrootte: 6.4cqw; --scoregrootte: 4.2cqw; }
+  /* Airbnb toont twee decimalen (4,87): iets kleiner, zodat de score in het vak past. */
+  .teller-kast[data-decimalen='2'] { --scoregrootte: 4.4cqw; }
+  .teller-kast[data-cijfers='7'][data-decimalen='2'] { --scoregrootte: 3.5cqw; }
+</style>

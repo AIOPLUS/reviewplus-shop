@@ -15,7 +15,11 @@ export type EventName =
   | 'demo_ingepland'
   | 'betaling_gestart'
   | 'label_klik'
-  | 'labels_geopend';
+  | 'labels_geopend'
+  | 'reviewteller_keuze'
+  | 'reviewteller_demo'
+  | 'reviewteller_eigen'
+  | 'offerte_verzonden';
 
 type Props = Record<string, string | number | boolean>;
 

@@ -16,6 +16,9 @@ voorbeelden:
   - titel: Bij de servicebalie
     tekst: Een kaart bij de servicebalie vangt klanten die net goed geholpen zijn.
     product: kaartenset
+reviewteller:
+  - platform: Google
+    tekst: "Bij de kassa of in de etalage: voorbijgangers en klanten zien hoeveel Google-reviews je winkel heeft."
 faq:
   - vraag: Helpen reviews mijn winkel in Google Maps?
     antwoord: Reviews zijn een van de signalen die Google gebruikt voor lokale zoekresultaten. Meer recente, echte reviews helpen je zichtbaarheid.

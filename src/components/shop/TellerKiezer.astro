@@ -1,0 +1,155 @@
+---
+/**
+ * Kies je reviewteller, zoals de tellerkiezer op smiirl.com: platform (een pil met logo per platform) en 5 of 7 cijfers.
+ * De teller wisselt direct mee; "Nieuwe review" laat het aantal met één omklappen.
+ * - modus "pagina" (productpagina): de keuze staat in de URL (?platform=…&cijfers=…) en de knop gaat naar het offerteformulier;
+ * - modus "teaser" (homepage, branchepagina's): de knop gaat naar de productpagina met de keuze ingevuld.
+ * Met `platformKeuze={false}` staat het platform vast (platformpagina's).
+ * Andere onderdelen (EigenScore, OfferteForm) luisteren naar het event `reviewteller:keuze` op window.
+ */
+import Teller from './Teller.astro';
+import { pilLogo, platformGegevens } from '@/lib/reviewplatformdata';
+import { PLATFORMEN, type ReviewPlatform } from '@/lib/reviewplatformen';
+import { getTellers, tellerPrijsLabel } from '@/lib/catalog';
+import { uniekeIds } from '@/lib/icons';
+import { url } from '@/lib/url';
+
+interface Props {
+  id?: string;
+  class?: string;
+  platform?: ReviewPlatform;
+  platformKeuze?: boolean;
+  modus?: 'pagina' | 'teaser';
+}
+const { id = 'kiezer', class: cls = '', platform = 'Google', platformKeuze = true, modus = 'teaser' } = Astro.props;
+const [teller] = await getTellers();
+const prijzen = Object.fromEntries((teller?.varianten ?? []).map((v) => [v.id, v.prijs]));
+const gegevens = {
+  platformen: platformGegevens(),
+  prijzen,
+  modus,
+  productUrl: url('/live-reviewteller'),
+  urlSync: modus === 'pagina' && platformKeuze,
+};
+const pil =
+  'grid size-12 cursor-pointer place-items-center rounded-full transition-[background-color,box-shadow] hover:bg-white/70 has-checked:bg-white has-checked:shadow-sm has-checked:ring-2 has-checked:ring-brand-600 has-focus-visible:ring-4 has-focus-visible:ring-brand-200';
+const knop = modus === 'pagina' ? { tekst: 'Vraag een offerte aan', href: '#offerte' } : { tekst: 'Bekijk de reviewteller', href: url('/live-reviewteller') };
+---
+<div class={`card grid overflow-hidden !rounded-[var(--radius-panel)] !p-0 shadow-[var(--shadow-glow)] ${cls}`} data-kiezer data-gegevens={JSON.stringify(gegevens)}>
+  <div class="kiezer-scene grid place-items-center px-[6%] pb-[8%] pt-[10%]">
+    <Teller id={id} platform={platform} class="w-full" />
+  </div>
+
+  <div class="grid gap-4 p-5 md:p-6">
+    <fieldset class="grid justify-items-center gap-2" hidden={!platformKeuze}>
+      <legend class="sr-only">Kies het reviewplatform</legend>
+      <div class="flex flex-wrap justify-center gap-1.5 rounded-full bg-brand-50 p-1.5 ring-1 ring-brand-200">
+        {PLATFORMEN.map((p) => {
+          const logo = pilLogo(p);
+          return (
+            <label class={pil} title={p}>
+              <input type="radio" name={`${id}-platform`} value={p} class="sr-only" checked={p === platform} />
+              <svg width="22" height="22" viewBox={logo.viewBox} aria-hidden="true" set:html={uniekeIds(logo.body)} />
+              <span class="sr-only">{p}</span>
+            </label>
+          );
+        })}
+      </div>
+    </fieldset>
+
+    <div class="flex flex-wrap items-center justify-center gap-2">
+      <fieldset class="flex rounded-full bg-brand-50 p-1 ring-1 ring-brand-200">
+        <legend class="sr-only">Aantal cijfers</legend>
+        {[5, 7].map((n, i) => (
+          <label class="cursor-pointer rounded-full px-4 py-2 text-[.92rem] text-ink-soft transition-colors hover:text-brand-600 has-checked:bg-white has-checked:text-ink has-checked:shadow-sm has-focus-visible:ring-4 has-focus-visible:ring-brand-200">
+            <input type="radio" name={`${id}-cijfers`} value={n} class="sr-only" checked={i === 0} />{n} cijfers
+          </label>
+        ))}
+      </fieldset>
+      <button type="button" class="btn btn-secondary !min-h-[44px]" data-kiezer-review aria-controls={id}>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+        Nieuwe review
+      </button>
+      <a href={knop.href} class="btn btn-primary !min-h-[44px]" data-kiezer-cta>{knop.tekst}</a>
+    </div>
+
+    <p class="text-center text-sm text-ink-soft" aria-live="polite" data-kiezer-info>
+      {platform} · tot 99.999 reviews · {teller ? tellerPrijsLabel(teller) : 'Prijs volgt'}
+    </p>
+    <p class="text-center text-xs text-muted">Illustratie. Productfoto's volgen.</p>
+  </div>
+</div>
+
+<style>
+  /* Sfeerbeeld zoals op smiirl.com: zachte achtergrond met een tafelblad onder de teller, in Review Plus-blauw. */
+  .kiezer-scene {
+    background:
+      linear-gradient(180deg, transparent 0 66%, #dbe6fb 66% 68%, #eaf1ff 68% 100%),
+      radial-gradient(120% 90% at 50% 10%, #ffffff 0%, var(--color-brand-50) 55%, var(--color-brand-100) 100%);
+  }
+</style>
+
+<script>
+  import { setTeller, zetCijfers, zetPlatform, type PlatformGegevens } from '@/lib/client/reviewteller';
+  import { track } from '@/lib/client/analytics';
+
+  interface Gegevens {
+    platformen: Record<string, PlatformGegevens>;
+    prijzen: Record<string, number | null>;
+    modus: 'pagina' | 'teaser';
+    productUrl: string;
+    urlSync: boolean;
+  }
+
+  const euro = (n: number) => `€ ${n.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} excl. btw`;
+
+  document.querySelectorAll<HTMLElement>('[data-kiezer]').forEach((wrap) => {
+    const g = JSON.parse(wrap.dataset.gegevens ?? '{}') as Gegevens;
+    const kast = wrap.querySelector<HTMLElement>('[data-teller]')!;
+    const info = wrap.querySelector<HTMLElement>('[data-kiezer-info]')!;
+    const cta = wrap.querySelector<HTMLAnchorElement>('[data-kiezer-cta]')!;
+    const radio = (naam: string, waarde?: string) =>
+      wrap.querySelector<HTMLInputElement>(`input[name$="-${naam}"]${waarde ? `[value="${CSS.escape(waarde)}"]` : ':checked'}`);
+    const keuze = (naam: string) => radio(naam)?.value ?? '';
+
+    // Keuze uit de URL overnemen (?platform=google&cijfers=7), alleen op de productpagina.
+    if (g.urlSync) {
+      const q = new URLSearchParams(location.search);
+      const slug = q.get('platform');
+      const naam = Object.entries(g.platformen).find(([, v]) => v.slug === slug)?.[0];
+      if (naam) radio('platform', naam)!.checked = true;
+      if (q.get('cijfers') === '7') radio('cijfers', '7')!.checked = true;
+    }
+
+    const update = (bron: 'start' | 'keuze') => {
+      const platform = keuze('platform');
+      const cijfers = Number(keuze('cijfers')) === 7 ? 7 : 5;
+      const pg = g.platformen[platform]!;
+      zetCijfers(kast, cijfers);
+      zetPlatform(kast, platform, pg);
+      if (bron === 'keuze' || Number(kast.dataset.waarde) !== pg.voorbeeld.aantal) void setTeller(kast, pg.voorbeeld.aantal);
+      const prijs = g.prijzen[`${cijfers}-cijfers`];
+      info.textContent = [platform, `tot ${cijfers === 5 ? '99.999' : '9.999.999'} reviews`, prijs != null ? euro(prijs) : 'Prijs volgt'].join(' · ');
+      const params = new URLSearchParams({ platform: pg.slug, cijfers: String(cijfers) });
+      if (g.modus === 'teaser') cta.href = `${g.productUrl}?${params}`;
+      else if (g.urlSync && bron === 'keuze') history.replaceState(null, '', `${location.pathname}?${params}${location.hash}`);
+      window.dispatchEvent(new CustomEvent('reviewteller:keuze', { detail: { platform, cijfers, id: kast.id } }));
+    };
+    wrap.querySelectorAll('input[type=radio]').forEach((el) =>
+      el.addEventListener('change', () => {
+        update('keuze');
+        track('reviewteller_keuze', { platform: keuze('platform'), cijfers: keuze('cijfers') });
+      }),
+    );
+    update('start');
+
+    let bezig = false;
+    wrap.querySelector('[data-kiezer-review]')?.addEventListener('click', async () => {
+      if (bezig) return;
+      bezig = true;
+      await setTeller(kast, Number(kast.dataset.waarde ?? 0) + 1);
+      track('reviewteller_demo', { platform: keuze('platform') });
+      bezig = false;
+    });
+  });
+</script>

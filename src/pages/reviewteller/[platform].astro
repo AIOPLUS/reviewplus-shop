@@ -1,0 +1,89 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import TellerKiezer from '@/components/shop/TellerKiezer.astro';
+import EigenScore from '@/components/shop/EigenScore.astro';
+import OfferteForm from '@/components/shop/OfferteForm.astro';
+import Faq from '@/components/shop/Faq.astro';
+import { getTellers, tellerPrijsLabel } from '@/lib/catalog';
+import { breadcrumbSchema, faqSchema, tellerSchema } from '@/lib/schema';
+import { PLATFORMEN, platformStijl, scoreTekst, type ReviewPlatform } from '@/lib/reviewplatformen';
+import { platformPaginas } from '@/config/reviewteller';
+import { absoluteUrl, url } from '@/lib/url';
+
+export function getStaticPaths() {
+  return PLATFORMEN.map((platform) => ({ params: { platform: platformStijl[platform].slug }, props: { platform } }));
+}
+
+interface Props {
+  platform: ReviewPlatform;
+}
+const { platform } = Astro.props;
+const [t] = await getTellers();
+if (!t) throw new Error('Geen reviewteller in src/content/tellers');
+const pp = platformPaginas[platform];
+const stijl = platformStijl[platform];
+const path = `/reviewteller/${stijl.slug}`;
+const ogImage = `/og/reviewteller-${stijl.slug}.png`;
+const faq = [
+  {
+    vraag: `Hoe ziet de ${platform}-reviewteller eruit?`,
+    antwoord: `${pp.intro} Op deze pagina zie je een illustratie; productfoto's volgen.`,
+  },
+  {
+    vraag: 'Welke score kan ik invullen?',
+    antwoord:
+      stijl.schaal === 10
+        ? 'Booking.com geeft een score op 10, bijvoorbeeld 8,7. In het voorbeeld hierboven vul je een score van 1 tot 10 in.'
+        : `${platform} geeft een score op 5, bijvoorbeeld ${scoreTekst(stijl.voorbeeld.score, stijl.decimalen)}. In het voorbeeld hierboven vul je een score van 1 tot 5 in.`,
+  },
+  ...t.faq.filter((f) => !/platformen/.test(f.vraag)),
+];
+---
+<BaseLayout
+  title={`${pp.titel} met klapcijfers | Review Plus`}
+  description={`${pp.intro} Kies 5 of 7 cijfers. ${pp.branches}`.slice(0, 158).replace(/\s+\S*$/, '') + '…'}
+  path={path}
+  ogImage={ogImage}
+  page="product"
+  schemas={[
+    tellerSchema(t, path, absoluteUrl(ogImage), pp.titel),
+    breadcrumbSchema([{ name: 'Shop', path: '/' }, { name: t.naam, path: `/${t.slug}` }, { name: platform, path }]),
+    faqSchema(faq),
+  ]}
+>
+  <nav aria-label="Kruimelpad" class="container-rp pt-6 text-sm text-muted">
+    <ol class="flex flex-wrap gap-2">
+      <li><a href={url('/')} class="hover:text-brand-600">Shop</a></li>
+      <li aria-hidden="true">/</li>
+      <li><a href={url(`/${t.slug}`)} class="hover:text-brand-600">{t.naam}</a></li>
+      <li aria-hidden="true">/</li>
+      <li aria-current="page" class="text-ink">{platform}</li>
+    </ol>
+  </nav>
+
+  <section class="container-rp grid gap-8 py-8 lg:grid-cols-[1.15fr_1fr] lg:grid-rows-[auto_1fr] lg:gap-x-10 lg:py-12">
+    <div class="lg:col-start-1 lg:row-start-1">
+      <TellerKiezer modus="pagina" platform={platform} platformKeuze={false} />
+    </div>
+    <div class="grid content-start gap-6 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+      <p class="chip w-fit">Op offerte · 5 of 7 cijfers</p>
+      <h1 class="text-4xl md:text-5xl">{pp.titel}</h1>
+      <p class="text-lg leading-relaxed text-ink-soft">{pp.intro}</p>
+      <p class="text-ink-soft">{pp.branches}</p>
+      <div class="flex flex-wrap items-center gap-4">
+        <p class="text-2xl font-semibold text-ink">{tellerPrijsLabel(t)}</p>
+        <a href="#offerte" class="btn btn-primary btn-lg">Vraag een offerte aan</a>
+      </div>
+      <p class="text-sm text-muted">
+        Liever een ander platform? <a class="text-brand-600 underline" href={url(`/${t.slug}`)}>Bekijk alle reviewtellers</a>.
+      </p>
+    </div>
+    <EigenScore voor="kiezer" class="lg:col-start-1 lg:row-start-2 lg:self-start" />
+  </section>
+
+  <div class="container-rp max-w-4xl py-8">
+    <OfferteForm platform={platform} />
+  </div>
+
+  <Faq items={faq} />
+</BaseLayout>

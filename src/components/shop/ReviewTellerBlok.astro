@@ -1,0 +1,45 @@
+---
+/** Promotieblok voor de live reviewteller (homepage en branchepagina's), met de tellerkiezer als teaser. */
+import TellerKiezer from './TellerKiezer.astro';
+import { url } from '@/lib/url';
+import { platformStijl, type ReviewPlatform } from '@/lib/reviewplatformen';
+
+interface Props {
+  platform?: ReviewPlatform;
+  titel?: string;
+  tekst?: string;
+  /** Voorbeelden per branche (van de branchepagina). */
+  voorbeelden?: { platform: ReviewPlatform; tekst: string }[];
+}
+const {
+  platform = 'Google',
+  titel = 'Nieuw: laat je reviews live zien in je zaak',
+  tekst = 'De live reviewteller is een houten teller met klapcijfers. Hij toont het logo van je reviewplatform, je gemiddelde score en het aantal reviews. Voor Google, Trustpilot, Tripadvisor, Booking.com, Airbnb en Yelp.',
+  voorbeelden = [],
+} = Astro.props;
+---
+<section class="container-rp py-12" aria-labelledby="reviewteller-blok">
+  <div class="grid items-center gap-8 rounded-[var(--radius-panel)] bg-brand-50 p-6 ring-1 ring-brand-200 md:p-10 lg:grid-cols-[1fr_1.1fr]">
+    <div class="grid gap-4">
+      <p class="eyebrow">Live reviewteller</p>
+      <h2 id="reviewteller-blok" class="text-3xl md:text-4xl">{titel}</h2>
+      <p class="text-ink-soft">{tekst}</p>
+      {voorbeelden.length > 0 && (
+        <ul class="grid gap-3">
+          {voorbeelden.map((v) => (
+            <li class="flex gap-3 text-ink-soft">
+              <span class="mt-2 size-2 shrink-0 rounded-full" style={`background:${platformStijl[v.platform].score.kleur}`} aria-hidden="true"></span>
+              <span><strong class="font-medium text-ink">{v.platform}:</strong> {v.tekst}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div class="flex flex-wrap gap-2">
+        <a href={url('/live-reviewteller')} class="btn btn-primary">Bekijk de reviewteller</a>
+        <a href={`${url('/live-reviewteller')}#offerte`} class="btn btn-secondary">Vraag een offerte aan</a>
+      </div>
+      <p class="text-sm text-muted">Prijs volgt · 5 of 7 cijfers · NL &amp; BE</p>
+    </div>
+    <TellerKiezer id="blok-teller" platform={platform} modus="teaser" />
+  </div>
+</section>

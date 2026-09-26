@@ -16,6 +16,11 @@ voorbeelden:
   - titel: Bij afhalen en bezorgen
     tekst: Leg een kaart bij de afhaalbalie. Klanten die even wachten, tikken makkelijk even.
     product: kaartenset
+reviewteller:
+  - platform: Tripadvisor
+    tekst: "Op de bar of bij de ingang: toeristen en nieuwe gasten zien meteen hoe vaak je op Tripadvisor bent beoordeeld."
+  - platform: Google
+    tekst: "Aan de muur bij de kassa: je aantal Google-reviews staat groot in beeld voor elke gast."
 faq:
   - vraag: Mogen horecabedrijven om Google-reviews vragen?
     antwoord: Ja, je mag gasten vragen om een review, zolang je iedereen gelijk behandelt en geen beloning geeft in ruil voor een positieve review.

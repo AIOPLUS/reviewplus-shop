@@ -16,6 +16,9 @@ voorbeelden:
   - titel: In de wachtruimte
     tekst: Een kaart bij de koffie of tijdschriften doet het werk voor je.
     product: kaartenset
+reviewteller:
+  - platform: Google
+    tekst: "Bij de balie: klanten zien tijdens het afrekenen hoeveel Google-reviews je salon al heeft."
 faq:
   - vraag: Waarom zijn reviews belangrijk voor een salon?
     antwoord: Nieuwe klanten kiezen een salon vaak op basis van reviews en foto's. Veel recente reviews maken de drempel om te boeken lager.

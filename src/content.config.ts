@@ -1,6 +1,7 @@
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
+import { PLATFORMEN } from './lib/reviewplatformen';
 
 const faq = z.array(z.object({ vraag: z.string(), antwoord: z.string() })).default([]);
 
@@ -44,6 +45,33 @@ const products = defineCollection({
   }),
 });
 
+/**
+ * Producten op offerte (zoals de live reviewteller). Apart van `products`, omdat de aanvraagflow, de gratis actie,
+ * /products.json (sleutel `products`) en Make (route 1 rekent met prijsExtra van nfc-kaartenset en nfc-totem) alleen
+ * met die gratis leadproducten werken. Prijzen excl. btw per variant; `null` = "Prijs volgt" (offerte aanvragen).
+ * Zie docs/REVIEWTELLER.md.
+ */
+const tellers = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/tellers' }),
+  schema: z.object({
+    slug: z.string(),
+    naam: z.string(),
+    /** Eén zin voor de productkaart. */
+    kort: z.string(),
+    /** 40–60 woorden, antwoord-eerst, bovenaan de productpagina. */
+    samenvatting: z.string(),
+    varianten: z
+      .array(z.object({ id: z.enum(['5-cijfers', '7-cijfers']), label: z.string(), omschrijving: z.string(), prijs: z.number().min(0).nullable() }))
+      .min(1),
+    specs: z.array(z.object({ label: z.string(), waarde: z.string() })).default([]),
+    voordelen: z.array(z.string()),
+    inDeDoos: z.array(z.string()).default([]),
+    status: z.enum(['beschikbaar', 'binnenkort', 'op-aanvraag']),
+    volgorde: z.number().default(0),
+    faq,
+  }),
+});
+
 const sectors = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/sectors' }),
   schema: z.object({
@@ -55,8 +83,10 @@ const sectors = defineCollection({
     heroTekst: z.string(),
     samenvatting: z.string(),
     voorbeelden: z.array(z.object({ titel: z.string(), tekst: z.string(), product: z.enum(['kaartenset', 'totem']) })),
+    /** Voorbeelden met de live reviewteller: welk platform past bij deze branche, en waarom. */
+    reviewteller: z.array(z.object({ platform: z.enum(PLATFORMEN), tekst: z.string() })).default([]),
     faq,
   }),
 });
 
-export const collections = { products, sectors };
+export const collections = { products, tellers, sectors };

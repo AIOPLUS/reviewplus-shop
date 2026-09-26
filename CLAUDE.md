@@ -15,5 +15,6 @@ Lead-shop, live op https://shop.reviewplus.io. **Een push naar `main` staat dire
   - `docs/MAKE-SCENARIO.md`: alle routes, de datastore en de Teamleader-velden, ook voor de formulieren van de hoofdsite;
   - `docs/LEAD-PAYLOAD.md`: het payloadcontract.
   - Werk deze documenten bij als je Make wijzigt.
+- **Live reviewteller (op offerte)**: `src/content/tellers/`, `src/lib/reviewplatformen.ts`, componenten `Teller*`, `EigenScore`, `OfferteForm`; zie `docs/REVIEWTELLER.md`. Aparte collectie, zodat de gratis aanvraagflow, `products` in /products.json en Make ongemoeid blijven.
 - **Opvolgmails**: `docs/OPVOLGING.md` en `docs/templates/`.
 - **Lokaal testen zonder Make**: `npm run mock-webhook`.

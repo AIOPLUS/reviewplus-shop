@@ -9,7 +9,9 @@ import SocialProof from '@/components/shop/SocialProof.astro';
 import MaatwerkBlok from '@/components/shop/MaatwerkBlok.astro';
 import Faq from '@/components/shop/Faq.astro';
 import CtaBand from '@/components/shop/CtaBand.astro';
-import { getProducts, getSectors, type Product, type Sector } from '@/lib/catalog';
+import TellerKaart from '@/components/shop/TellerKaart.astro';
+import ReviewTellerBlok from '@/components/shop/ReviewTellerBlok.astro';
+import { getProducts, getSectors, getTellers, type Product, type Sector } from '@/lib/catalog';
 import { breadcrumbSchema, faqSchema } from '@/lib/schema';
 import { url } from '@/lib/url';
 
@@ -27,6 +29,8 @@ const set = products.find((p) => p.type === 'kaartenset')!;
 const totem = products.find((p) => p.type === 'totem')!;
 const byType = { kaartenset: set, totem };
 const q = `?sector=${s.slug}`;
+const tellers = await getTellers();
+const tellerPlatform = s.reviewteller[0]?.platform ?? 'Google';
 ---
 <BaseLayout
   title={s.metaTitle}
@@ -79,12 +83,21 @@ const q = `?sector=${s.slug}`;
 
   <section class="container-rp py-12" aria-labelledby="prod-title">
     <h2 id="prod-title" class="text-3xl md:text-4xl">Het aanbod</h2>
-    <div class="mt-8 grid gap-6 md:grid-cols-2">
+    <div class="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {products.map((p) => <ProductCard product={p} sector={s.slug} />)}
+      {tellers.map((t) => <TellerKaart teller={t} platform={tellerPlatform} />)}
     </div>
   </section>
 
   <TotemPromo totem={totem} sector={s.slug} />
+  {s.reviewteller.length > 0 && (
+    <ReviewTellerBlok
+      platform={tellerPlatform}
+      titel={`Live reviewteller voor ${s.naam.toLowerCase()}`}
+      tekst="Een houten teller met klapcijfers die je aantal reviews en je gemiddelde laat zien. Zo zet je hem in:"
+      voorbeelden={s.reviewteller}
+    />
+  )}
   <MaatwerkBlok sector={s.slug} />
   <SocialProof />
   <Faq items={s.faq} />

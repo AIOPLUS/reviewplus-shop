@@ -6,6 +6,7 @@ module.exports = {
       url: [
         'http://localhost/index.html',
         'http://localhost/nfc-kaartenset.html',
+        'http://localhost/live-reviewteller.html',
         'http://localhost/aanvragen.html',
         'http://localhost/voor/horeca.html',
       ],

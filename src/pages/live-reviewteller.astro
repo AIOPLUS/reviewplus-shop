@@ -1,0 +1,103 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import TellerKiezer from '@/components/shop/TellerKiezer.astro';
+import EigenScore from '@/components/shop/EigenScore.astro';
+import OfferteForm from '@/components/shop/OfferteForm.astro';
+import Faq from '@/components/shop/Faq.astro';
+import { getTellers, tellerPrijsLabel } from '@/lib/catalog';
+import { breadcrumbSchema, faqSchema, tellerSchema } from '@/lib/schema';
+import { PLATFORMEN, platformStijl } from '@/lib/reviewplatformen';
+import { pilLogo } from '@/lib/reviewplatformdata';
+import { uniekeIds } from '@/lib/icons';
+import { absoluteUrl, url } from '@/lib/url';
+
+const [t] = await getTellers();
+if (!t) throw new Error('Geen reviewteller in src/content/tellers');
+const path = `/${t.slug}`;
+const ogImage = `/og/${t.slug}.png`;
+const prijs = tellerPrijsLabel(t);
+---
+<BaseLayout
+  title="Live reviewteller voor Google, Booking.com, Airbnb en meer | Review Plus"
+  description="Houten teller met klapcijfers die je aantal reviews en je gemiddelde laat zien. Voor Google, Trustpilot, Tripadvisor, Booking.com, Airbnb of Yelp, met 5 of 7 cijfers."
+  path={path}
+  ogImage={ogImage}
+  page="product"
+  schemas={[
+    tellerSchema(t, path, absoluteUrl(ogImage)),
+    breadcrumbSchema([{ name: 'Shop', path: '/' }, { name: t.naam, path }]),
+    faqSchema(t.faq),
+  ]}
+>
+  <nav aria-label="Kruimelpad" class="container-rp pt-6 text-sm text-muted">
+    <ol class="flex gap-2">
+      <li><a href={url('/')} class="hover:text-brand-600">Shop</a></li>
+      <li aria-hidden="true">/</li>
+      <li aria-current="page" class="text-ink">{t.naam}</li>
+    </ol>
+  </nav>
+
+  <section class="container-rp grid gap-8 py-8 lg:grid-cols-[1.15fr_1fr] lg:grid-rows-[auto_1fr] lg:gap-x-10 lg:py-12">
+    <div class="lg:col-start-1 lg:row-start-1">
+      <TellerKiezer modus="pagina" />
+    </div>
+
+    <div class="grid content-start gap-6 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+      <p class="chip w-fit">Nieuw in de shop · op offerte</p>
+      <h1 class="text-4xl md:text-5xl">{t.naam}</h1>
+      <p class="text-lg leading-relaxed text-ink-soft">{t.samenvatting}</p>
+      <div class="flex flex-wrap items-center gap-4">
+        <p class="text-2xl font-semibold text-ink">{prijs}</p>
+        <a href="#offerte" class="btn btn-primary btn-lg">Vraag een offerte aan</a>
+      </div>
+
+      <ul class="grid gap-2 text-ink-soft">
+        {t.voordelen.map((v) => (
+          <li class="flex gap-3"><span class="text-brand-600" aria-hidden="true">✓</span>{v}</li>
+        ))}
+      </ul>
+
+      <div>
+        <h2 class="text-xl">Per platform</h2>
+        <ul class="mt-3 flex flex-wrap gap-2">
+          {PLATFORMEN.map((p) => {
+            const logo = pilLogo(p);
+            return (
+              <li>
+                <a href={url(`/reviewteller/${platformStijl[p].slug}`)} class="btn btn-secondary !min-h-[44px] gap-2">
+                  <svg width="18" height="18" viewBox={logo.viewBox} aria-hidden="true" set:html={uniekeIds(logo.body)} />
+                  {p}
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      <div class="card p-5">
+        <h2 class="text-xl">Specificaties</h2>
+        <dl class="mt-3 grid gap-2 text-sm">
+          {t.specs.map((s) => (
+            <div class="grid grid-cols-[9rem_1fr] gap-3 border-b border-line pb-2 last:border-0">
+              <dt class="text-muted">{s.label}</dt>
+              <dd class="text-ink">{s.waarde}</dd>
+            </div>
+          ))}
+        </dl>
+        {t.inDeDoos.length > 0 && (
+          <>
+            <h3 class="mt-5 font-medium">In de doos</h3>
+            <ul class="mt-2 list-disc pl-5 text-sm text-ink-soft">{t.inDeDoos.map((x) => <li>{x}</li>)}</ul>
+          </>
+        )}
+      </div>
+    </div>
+    <EigenScore voor="kiezer" class="lg:col-start-1 lg:row-start-2 lg:self-start" />
+  </section>
+
+  <div class="container-rp max-w-4xl py-8">
+    <OfferteForm />
+  </div>
+
+  <Faq items={t.faq} />
+</BaseLayout>

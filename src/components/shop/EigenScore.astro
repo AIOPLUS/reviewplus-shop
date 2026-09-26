@@ -1,0 +1,84 @@
+---
+/**
+ * "Probeer met je eigen score": gemiddelde en aantal reviews invullen; de teller met `voor` (id) toont ze.
+ * Controle: score 1–5 (Booking.com 1–10), aantal niet meer dan het gekozen aantal cijfers kan tonen.
+ */
+interface Props {
+  voor: string;
+  class?: string;
+}
+const { voor, class: cls = '' } = Astro.props;
+---
+<form class={`card grid gap-4 p-5 md:p-6 ${cls}`} data-eigen-score={voor} novalidate aria-labelledby="eigen-score-titel">
+  <div>
+    <h2 id="eigen-score-titel" class="text-xl">Probeer met je eigen score</h2>
+    <p class="mt-1 text-sm text-ink-soft">Vul je gemiddelde en je aantal reviews in. De teller hierboven laat zien hoe dat eruitziet.</p>
+  </div>
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div class="grid content-start gap-1.5">
+      <label for="eigen-score" class="text-sm font-medium">Gemiddelde score <span class="text-muted" data-eigen-schaal>(1 tot 5)</span></label>
+      <input id="eigen-score" name="score" class="input" inputmode="decimal" autocomplete="off" placeholder="4,2" aria-describedby="eigen-score-fout" />
+      <p id="eigen-score-fout" class="error" aria-live="polite"></p>
+    </div>
+    <div class="grid content-start gap-1.5">
+      <label for="eigen-aantal" class="text-sm font-medium">Aantal reviews <span class="text-muted" data-eigen-max>(tot 99.999)</span></label>
+      <input id="eigen-aantal" name="aantal" class="input" inputmode="numeric" autocomplete="off" placeholder="1.248" aria-describedby="eigen-aantal-fout" />
+      <p id="eigen-aantal-fout" class="error" aria-live="polite"></p>
+    </div>
+  </div>
+  <button type="submit" class="btn btn-primary w-full sm:w-fit">Toon op de teller</button>
+</form>
+
+<script>
+  import { leesAantal, leesScore, setTeller, zetScore, type PlatformGegevens } from '@/lib/client/reviewteller';
+  import { track } from '@/lib/client/analytics';
+
+  document.querySelectorAll<HTMLFormElement>('[data-eigen-score]').forEach((form) => {
+    const kast = document.getElementById(form.dataset.eigenScore!) as HTMLElement | null;
+    const kiezer = kast?.closest<HTMLElement>('[data-kiezer]');
+    if (!kast || !kiezer) return;
+    const platformen = (JSON.parse(kiezer.dataset.gegevens ?? '{}') as { platformen: Record<string, PlatformGegevens> }).platformen;
+    const scoreVeld = form.elements.namedItem('score') as HTMLInputElement;
+    const aantalVeld = form.elements.namedItem('aantal') as HTMLInputElement;
+    const fout = (veld: HTMLInputElement, tekst: string) => {
+      document.getElementById(`${veld.id}-fout`)!.textContent = tekst;
+      if (tekst) veld.setAttribute('aria-invalid', 'true');
+      else veld.removeAttribute('aria-invalid');
+    };
+    const huidig = () => {
+      const g = platformen[kast.dataset.platform ?? 'Google']!;
+      const cijfers = (Number(kast.dataset.cijfers) === 7 ? 7 : 5) as 5 | 7;
+      return { g, cijfers };
+    };
+    const labels = () => {
+      const { g, cijfers } = huidig();
+      form.querySelector('[data-eigen-schaal]')!.textContent = `(1 tot ${g.schaal})`;
+      form.querySelector('[data-eigen-max]')!.textContent = `(tot ${(10 ** cijfers - 1).toLocaleString('nl-NL')})`;
+      scoreVeld.placeholder = g.schaal === 10 ? '8,7' : g.decimalen === 2 ? '4,87' : '4,2';
+    };
+    labels();
+    window.addEventListener('reviewteller:keuze', (e) => {
+      if ((e as CustomEvent<{ id: string }>).detail.id !== kast.id) return;
+      labels();
+      fout(scoreVeld, '');
+      fout(aantalVeld, '');
+    });
+    scoreVeld.addEventListener('input', () => fout(scoreVeld, ''));
+    aantalVeld.addEventListener('input', () => fout(aantalVeld, ''));
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const { g, cijfers } = huidig();
+      const s = leesScore(scoreVeld.value, g.schaal, g.decimalen);
+      const a = leesAantal(aantalVeld.value, cijfers);
+      fout(scoreVeld, 'fout' in s ? s.fout : '');
+      fout(aantalVeld, 'fout' in a ? a.fout : '');
+      if ('fout' in s) return scoreVeld.focus();
+      if ('fout' in a) return aantalVeld.focus();
+      zetScore(kast, s.score, g);
+      track('reviewteller_eigen', { platform: kast.dataset.platform ?? '' });
+      kast.closest('[data-teller-wrap]')?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+      await setTeller(kast, a.aantal);
+    });
+  });
+</script>

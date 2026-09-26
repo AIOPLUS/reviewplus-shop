@@ -1,0 +1,42 @@
+---
+/** Productkaart van de live reviewteller, in dezelfde vorm als ProductCard. */
+import Teller from './Teller.astro';
+import { tellerPrijsLabel, type Teller as TellerProduct } from '@/lib/catalog';
+import { url } from '@/lib/url';
+import type { ReviewPlatform } from '@/lib/reviewplatformen';
+
+interface Props {
+  teller: TellerProduct;
+  platform?: ReviewPlatform;
+  /** Kopniveau van de productnaam (h3 in een productraster, h2 als losse kaart). */
+  kop?: 'h2' | 'h3';
+}
+const { teller: t, platform = 'Google', kop: Kop = 'h3' } = Astro.props;
+const href = url(`/${t.slug}`);
+---
+<article class="card flex flex-col overflow-hidden">
+  <a href={href} class="teller-kaart-scene relative grid aspect-[4/3] place-items-center overflow-hidden px-[8%]" tabindex="-1" aria-hidden="true">
+    <Teller platform={platform} class="w-full" label="" />
+    <span class="chip absolute left-4 top-4 !bg-white shadow-sm">Nieuw · op offerte</span>
+  </a>
+  <div class="flex flex-1 flex-col gap-4 p-6">
+    <div class="grid gap-2">
+      <Kop class="text-xl"><a href={href} class="hover:underline">{t.naam}</a></Kop>
+      <p class="text-ink-soft">{t.kort}</p>
+    </div>
+    <p class="font-semibold text-ink">{tellerPrijsLabel(t)}</p>
+    <p class="text-xs text-muted">Illustratie. Productfoto's volgen.</p>
+    <div class="mt-auto flex flex-wrap gap-2 pt-2">
+      <a href={`${href}#offerte`} class="btn btn-primary">Vraag een offerte aan</a>
+      <a href={href} class="btn btn-ghost">Meer info<span class="sr-only"> over de {t.naam.toLowerCase()}</span></a>
+    </div>
+  </div>
+</article>
+
+<style>
+  .teller-kaart-scene {
+    background:
+      linear-gradient(180deg, transparent 0 64%, #dbe6fb 64% 66%, #eaf1ff 66% 100%),
+      radial-gradient(120% 90% at 50% 10%, #ffffff 0%, var(--color-brand-50) 55%, var(--color-brand-100) 100%);
+  }
+</style>

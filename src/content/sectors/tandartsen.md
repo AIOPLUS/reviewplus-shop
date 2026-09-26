@@ -16,6 +16,9 @@ voorbeelden:
   - titel: Na de behandeling
     tekst: De mondhygiënist of tandarts kan de kaart even laten zien aan tevreden patiënten.
     product: kaartenset
+reviewteller:
+  - platform: Google
+    tekst: "In de wachtkamer: patiënten zien hoeveel mensen je praktijk op Google hebben beoordeeld."
 faq:
   - vraag: Zijn reviews geschikt voor zorgpraktijken?
     antwoord: Ja. Veel patiënten kiezen een praktijk op basis van online reviews. Vraag alleen om een review, deel geen medische informatie en reageer altijd zonder patiëntgegevens te noemen.

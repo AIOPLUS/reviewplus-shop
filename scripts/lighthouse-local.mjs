@@ -13,7 +13,7 @@ import lighthouse from 'lighthouse';
 import * as chromeLauncher from 'chrome-launcher';
 
 const DIST = fileURLToPath(new URL('../dist/', import.meta.url));
-const PAGES = ['/', '/nfc-kaartenset', '/nfc-totem', '/aanvragen', '/voor/horeca', '/actievoorwaarden'];
+const PAGES = ['/', '/nfc-kaartenset', '/nfc-totem', '/live-reviewteller', '/reviewteller/airbnb', '/aanvragen', '/voor/horeca', '/voor/hospitality', '/actievoorwaarden'];
 const TYPES = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.png': 'image/png', '.woff2': 'font/woff2', '.json': 'application/json', '.txt': 'text/plain', '.xml': 'application/xml', '.avif': 'image/avif', '.webp': 'image/webp' };
 
 const server = http.createServer((req, res) => {

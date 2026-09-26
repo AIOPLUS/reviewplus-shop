@@ -9,7 +9,9 @@ import SocialProof from '@/components/shop/SocialProof.astro';
 import MaatwerkBlok from '@/components/shop/MaatwerkBlok.astro';
 import Faq from '@/components/shop/Faq.astro';
 import CtaBand from '@/components/shop/CtaBand.astro';
-import { getProducts, getSectors } from '@/lib/catalog';
+import TellerKaart from '@/components/shop/TellerKaart.astro';
+import ReviewTellerBlok from '@/components/shop/ReviewTellerBlok.astro';
+import { getProducts, getSectors, getTellers } from '@/lib/catalog';
 import { shopFaq } from '@/config/shop-content';
 import { breadcrumbSchema, faqSchema } from '@/lib/schema';
 import { formatPrice } from '@/lib/format';
@@ -17,6 +19,7 @@ import { url } from '@/lib/url';
 
 const products = await getProducts();
 const sectors = await getSectors();
+const tellers = await getTellers();
 const set = products.find((p) => p.type === 'kaartenset')!;
 const totem = products.find((p) => p.type === 'totem')!;
 ---
@@ -59,12 +62,14 @@ const totem = products.find((p) => p.type === 'totem')!;
   <section id="producten" class="container-rp scroll-mt-24 py-12" aria-labelledby="producten-title">
     <p class="eyebrow">Het aanbod</p>
     <h2 id="producten-title" class="mt-2 text-3xl md:text-4xl">Kies wat bij jouw bedrijf past</h2>
-    <div class="mt-8 grid gap-6 md:grid-cols-2">
+    <div class="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {products.map((p) => <ProductCard product={p} />)}
+      {tellers.map((t) => <TellerKaart teller={t} />)}
     </div>
   </section>
 
   <TotemPromo totem={totem} />
+  <ReviewTellerBlok />
   <MaatwerkBlok />
   <SocialProof />
 

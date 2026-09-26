@@ -16,6 +16,13 @@ voorbeelden:
   - titel: In het restaurant of de lounge
     tekst: Een kaart bij het ontbijt of de bar vangt gasten op hun meest ontspannen moment.
     product: kaartenset
+reviewteller:
+  - platform: Booking.com
+    tekst: "Bij de receptie: gasten zien bij het inchecken je Booking.com-score en het aantal beoordelingen."
+  - platform: Tripadvisor
+    tekst: "In de lobby of bij het ontbijt: laat zien hoeveel gasten je al op Tripadvisor hebben beoordeeld."
+  - platform: Airbnb
+    tekst: "Bij de ingang van je B&B of vakantiewoning: gasten zien hoeveel Airbnb-reviews je al hebt."
 faq:
   - vraag: Werkt de kaart ook voor Tripadvisor?
     antwoord: De kaart verwijst naar de reviewpagina die je kiest, zoals Google of Tripadvisor. Tijdens de demo laten we zien welke platformen je met Review Plus beheert.
