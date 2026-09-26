@@ -3,7 +3,8 @@ import sharp, { type OverlayOptions } from 'sharp';
 import { join } from 'node:path';
 import { getProducts, getSectors, getTellers, tellerPrijsLabel } from '@/lib/catalog';
 import { brandIcon } from '@/lib/icons';
-import { PLATFORMEN, platformStijl, scoreTekst, type ReviewPlatform } from '@/lib/reviewplatformen';
+import { PLATFORMEN, platformStijl, type ReviewPlatform } from '@/lib/reviewplatformen';
+import { scoreTekens } from '@/lib/tellerscore';
 import { formatPrice } from '@/lib/format';
 
 /**
@@ -52,39 +53,56 @@ export const getStaticPaths: GetStaticPaths = async () => {
   return paths;
 };
 
-/** Reviewteller als vector: [logo] [ster + score] [5 zwarte klapcijfers], op het vlak rechts. */
+/** Reviewteller als vector: [logo] [ster + score in kleine klapcijfers] [5 zwarte klapcijfers], op het vlak rechts. */
 function tellerSvg(platform: ReviewPlatform): string {
   const st = platformStijl[platform];
-  const fw = 46, fh = 62, gap = 6, pad = 18, tegel = 44, scoreW = 54;
+  const fw = 44, fh = 62, gap = 6, pad = 18, tegel = 44, scoreW = 66;
   const w = pad * 2 + tegel + scoreW + 5 * fw + 6 * gap;
   const h = fh + pad * 2;
   const x0 = PHOTO.x + (PHOTO.w - w) / 2, y0 = PHOTO.y + (PHOTO.h - h) / 2;
   const logo = brandIcon(st.logo, st.logoKleur);
   const lx = x0 + pad, ly = y0 + pad;
   const sx = lx + tegel + gap, cx = sx + scoreW / 2;
-  const tekst = scoreTekst(st.voorbeeld.score, st.decimalen);
   const font = 'Poppins, Arial, sans-serif';
-  const score =
-    st.score.vorm === 'vlak'
-      ? `<rect x="${sx + 5}" y="${ly + 9}" width="${scoreW - 10}" height="${scoreW - 10}" rx="7" fill="${st.score.kleur}"/><text x="${cx}" y="${ly + 9 + (scoreW - 10) / 2 + 7}" font-family="${font}" font-size="19" font-weight="700" fill="#fff" text-anchor="middle">${tekst}</text>`
-      : (st.score.vorm === 'ster'
-          ? `<path transform="translate(${cx - 12} ${ly + 6})" d="M12 2.2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.4l-6.1 3.4 1.4-6.8L2.2 9.3l6.9-.8z" fill="${st.score.kleur}"/>`
-          : `<circle cx="${cx}" cy="${ly + 17}" r="11" fill="${st.score.kleur}"/>`) +
-        `<text x="${cx}" y="${ly + 52}" font-family="${font}" font-size="${st.decimalen === 2 ? 17 : 20}" font-weight="700" fill="#150E08" text-anchor="middle">${tekst}</text>`;
+
+  // Score in kleine klapcijfers met een gedrukte komma, zoals op de site (lib/tellerscore.ts).
+  const { heel, dec } = scoreTekens(st.voorbeeld.score, st.schaal, st.decimalen);
+  const mw = 15, mh = 20, mg = 2, komma = 6;
+  const rijW = (heel.length + dec.length) * mw + (heel.length + dec.length) * mg + komma;
+  const vlak = st.score.vorm === 'vlak';
+  const rijY = vlak ? ly + (fh - mh) / 2 : ly + 34;
+  let x = cx - rijW / 2;
+  const mini = (c: string) => {
+    const r = `<rect x="${x}" y="${rijY}" width="${mw}" height="${mh}" rx="3" fill="url(#flap)"/><rect x="${x}" y="${rijY + mh / 2 - 0.5}" width="${mw}" height="1" fill="#000" opacity=".4"/>` +
+      (c.trim() ? `<text x="${x + mw / 2}" y="${rijY + mh / 2 + 5}" font-family="${font}" font-size="14" font-weight="600" fill="#fff" text-anchor="middle">${c}</text>` : '');
+    x += mw + mg;
+    return r;
+  };
+  let rij = heel.map(mini).join('');
+  rij += `<text x="${x + komma / 2 - 1}" y="${rijY + mh - 1}" font-family="${font}" font-size="16" font-weight="700" fill="${vlak ? '#fff' : '#150E08'}" text-anchor="middle">,</text>`;
+  x += komma;
+  rij += dec.map(mini).join('');
+  const symbool = vlak
+    ? `<rect x="${cx - rijW / 2 - 5}" y="${rijY - 5}" width="${rijW + 10}" height="${mh + 10}" rx="6" fill="${st.score.kleur}"/>`
+    : st.score.vorm === 'ster'
+      ? `<path transform="translate(${cx - 13} ${ly + 3}) scale(1.08)" d="M12 2.2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.4l-6.1 3.4 1.4-6.8L2.2 9.3l6.9-.8z" fill="${st.score.kleur}"/>`
+      : `<circle cx="${cx}" cy="${ly + 15}" r="11" fill="${st.score.kleur}"/>`;
+
   const cijfers = String(st.voorbeeld.aantal).padStart(5, ' ').split('');
   const flappen = cijfers
     .map((c, i) => {
-      const x = sx + scoreW + gap + i * (fw + gap);
+      const fx = sx + scoreW + gap + i * (fw + gap);
       return (
-        `<rect x="${x}" y="${ly}" width="${fw}" height="${fh}" rx="7" fill="url(#flap)"/><rect x="${x}" y="${ly + fh / 2 - 1}" width="${fw}" height="2" fill="#000" opacity=".35"/>` +
-        (c.trim() ? `<text x="${x + fw / 2}" y="${ly + fh / 2 + 12}" font-family="${font}" font-size="34" font-weight="600" fill="#fff" text-anchor="middle">${c}</text>` : '')
+        `<rect x="${fx}" y="${ly}" width="${fw}" height="${fh}" rx="7" fill="url(#flap)"/><rect x="${fx}" y="${ly + fh / 2 - 1}" width="${fw}" height="2" fill="#000" opacity=".35"/>` +
+        (c.trim() ? `<text x="${fx + fw / 2}" y="${ly + fh / 2 + 12}" font-family="${font}" font-size="34" font-weight="600" fill="#fff" text-anchor="middle">${c}</text>` : '')
       );
     })
     .join('');
   return (
     `<rect x="${x0}" y="${y0}" width="${w}" height="${h}" rx="12" fill="url(#hout)"/>` +
     `<svg x="${lx + 4}" y="${ly + 10}" width="${tegel - 8}" height="${fh - 20}" viewBox="${logo.viewBox}">${logo.body.replaceAll('__ID__', '-og')}</svg>` +
-    score +
+    symbool +
+    rij +
     flappen
   );
 }

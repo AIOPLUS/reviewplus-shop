@@ -23,7 +23,7 @@ We verkopen de **Custom Counter** van Smiirl als reseller. Het is een houten tel
 
 | Waar | Wat |
 |---|---|
-| `/live-reviewteller` | Productpagina met tellerkiezer (platform, 5 of 7 cijfers, "Nieuwe review"), "Probeer met je eigen score", specificaties, offerteformulier en FAQ. De keuze staat in de URL: `?platform=booking&cijfers=7`. |
+| `/live-reviewteller` | Productpagina met tellerkiezer (platform, 5 of 7 cijfers, "Nieuwe review", gemiddelde omhoog/omlaag), "Probeer met je eigen score", specificaties, offerteformulier en FAQ. De keuze staat in de URL: `?platform=booking&cijfers=7`. |
 | `/reviewteller/<platform>` | Pagina per platform (`google`, `trustpilot`, `tripadvisor`, `booking`, `airbnb`, `yelp`). Het platform staat vast. |
 | Homepage | Productkaart in "Het aanbod" en het blok "Nieuw: laat je reviews live zien in je zaak". |
 | `/voor/<branche>` | Productkaart en een blok met voorbeelden per branche: `reviewteller:` in `src/content/sectors/*.md`. |
@@ -85,11 +85,11 @@ De onderwerpregel van de mail is "Contactbericht via reviewplus.io: <naam>". Wil
 
 ## Open vragen (navragen bij Smiirl)
 
-1. **Hoe toont de teller de score?** De Custom Counter heeft alleen klapcijfers. Er zijn twee mogelijkheden, en elk vraagt iets anders van de teksten en de prijs:
-   - de score (zoals "4,2") wordt vast gedrukt naast het logo en wordt dus niet bijgewerkt;
-   - er is een tweede teller of een speciale uitvoering nodig om de score live te tonen.
-
-   De illustratie laat nu een gedrukte score zien. De teksten beloven niet dat de score live meeloopt.
+1. **Kan de score live meelopen?** Jordan wil dat de gemiddelde score, net als het aantal, live kan stijgen en dalen (besluit 26-09-2026). De illustratie toont de score daarom in kleine klapcijfers onder de ster, bijvoorbeeld [4] , [7]; bij Booking.com [ ][8] , [7] in het blauwe vlak en bij Airbnb [4] , [8][7].
+   - Op de site laat "Nieuwe review" het aantal met 1 stijgen en rekent het gemiddelde opnieuw uit.
+   - Met de knoppen − en + stijgt of daalt het gemiddelde met 0,1.
+   - De Custom Counter heeft alleen één rij klapcijfers. Vraag Smiirl of een uitvoering met extra klapcijfers voor de score mogelijk is, of dat er een tweede (kleine) teller nodig is. Anders wordt de score vast gedrukt en loopt hij niet mee.
+   - De teksten op de site beloven dit nog niet expliciet; pas ze aan zodra Smiirl het bevestigt.
 2. **Mogen de logo's van Google, Trustpilot, Tripadvisor, Booking.com, Airbnb en Yelp op de teller?** Smiirl drukt alleen logo's waar de klant de rechten op heeft. Het weigert bijvoorbeeld de logo's van Facebook en Instagram. Mogelijke oplossingen: toestemming of richtlijnen van het platform, of het logo van de klant zelf.
 3. **Hoe komen de getallen op de teller?** Dit is nog niet gebouwd; hieronder alleen de uitwerking.
    - De Custom Counter heeft een API: `set-number`, `add-number` en `reset-number` via HTTP GET, met een teller-id en een token. Make kan die aanroepen.

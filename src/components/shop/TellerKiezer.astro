@@ -33,6 +33,7 @@ const gegevens = {
 };
 const pil =
   'grid size-12 cursor-pointer place-items-center rounded-full transition-[background-color,box-shadow] hover:bg-white/70 has-checked:bg-white has-checked:shadow-sm has-checked:ring-2 has-checked:ring-brand-600 has-focus-visible:ring-4 has-focus-visible:ring-brand-200';
+const stapKnop = 'grid size-11 cursor-pointer place-items-center rounded-full bg-brand-50 text-brand-600 ring-1 ring-brand-200 transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-40';
 const knop = modus === 'pagina' ? { tekst: 'Vraag een offerte aan', href: '#offerte' } : { tekst: 'Bekijk de reviewteller', href: url('/live-reviewteller') };
 ---
 <div class={`card grid overflow-hidden !rounded-[var(--radius-panel)] !p-0 shadow-[var(--shadow-glow)] ${cls}`} data-kiezer data-gegevens={JSON.stringify(gegevens)}>
@@ -73,7 +74,21 @@ const knop = modus === 'pagina' ? { tekst: 'Vraag een offerte aan', href: '#offe
       <a href={knop.href} class="btn btn-primary !min-h-[44px]" data-kiezer-cta>{knop.tekst}</a>
     </div>
 
-    <p class="text-center text-sm text-ink-soft" aria-live="polite" data-kiezer-info>
+    <div class="flex items-center justify-center gap-2" role="group" aria-label="Gemiddelde score laten stijgen of dalen">
+      <span class="text-sm text-ink-soft">Gemiddelde</span>
+      <button type="button" class={stapKnop} data-score-stap="-1" aria-controls={id}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14" /></svg>
+        <span class="sr-only">Gemiddelde omlaag</span>
+      </button>
+      <output class="min-w-[3.4rem] text-center font-semibold tabular-nums text-ink" data-score-uit aria-live="polite"></output>
+      <button type="button" class={stapKnop} data-score-stap="1" aria-controls={id}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+        <span class="sr-only">Gemiddelde omhoog</span>
+      </button>
+    </div>
+    <p class="min-h-5 text-center text-sm text-ink-soft" aria-live="polite" data-kiezer-status></p>
+
+    <p class="text-center text-sm text-ink-soft" data-kiezer-info>
       {platform} · tot 99.999 reviews · {teller ? tellerPrijsLabel(teller) : 'Prijs volgt'}
     </p>
     <p class="text-center text-xs text-muted">Illustratie. Productfoto's volgen.</p>
@@ -90,7 +105,7 @@ const knop = modus === 'pagina' ? { tekst: 'Vraag een offerte aan', href: '#offe
 </style>
 
 <script>
-  import { setTeller, zetCijfers, zetPlatform, type PlatformGegevens } from '@/lib/client/reviewteller';
+  import { nieuweReview, scoreTekst, setTeller, willekeurigeSterren, zetCijfers, zetPlatform, zetScore, type PlatformGegevens } from '@/lib/client/reviewteller';
   import { track } from '@/lib/client/analytics';
 
   interface Gegevens {
@@ -108,6 +123,20 @@ const knop = modus === 'pagina' ? { tekst: 'Vraag een offerte aan', href: '#offe
     const kast = wrap.querySelector<HTMLElement>('[data-teller]')!;
     const info = wrap.querySelector<HTMLElement>('[data-kiezer-info]')!;
     const cta = wrap.querySelector<HTMLAnchorElement>('[data-kiezer-cta]')!;
+    const status = wrap.querySelector<HTMLElement>('[data-kiezer-status]')!;
+    const scoreUit = wrap.querySelector<HTMLOutputElement>('[data-score-uit]')!;
+    const stappen = [...wrap.querySelectorAll<HTMLButtonElement>('[data-score-stap]')];
+    const huidig = () => g.platformen[keuze('platform')]!;
+
+    // Getoonde score naast de knoppen bijwerken (ook als "Probeer met je eigen score" hem wijzigt).
+    const toonScore = () => {
+      const pg = huidig();
+      const score = Number(kast.dataset.score);
+      scoreUit.value = `${scoreTekst(score, pg.decimalen)} / ${pg.schaal}`;
+      stappen[0]!.disabled = score <= 1;
+      stappen[1]!.disabled = score >= pg.schaal;
+    };
+    kast.addEventListener('teller:score', toonScore);
     const radio = (naam: string, waarde?: string) =>
       wrap.querySelector<HTMLInputElement>(`input[name$="-${naam}"]${waarde ? `[value="${CSS.escape(waarde)}"]` : ':checked'}`);
     const keuze = (naam: string) => radio(naam)?.value ?? '';
@@ -142,14 +171,31 @@ const knop = modus === 'pagina' ? { tekst: 'Vraag een offerte aan', href: '#offe
       }),
     );
     update('start');
+    toonScore();
 
+    // Nieuwe review: aantal +1 en het gemiddelde opnieuw berekend (meestal positief, soms laag, zodat hij ook daalt).
     let bezig = false;
     wrap.querySelector('[data-kiezer-review]')?.addEventListener('click', async () => {
       if (bezig) return;
       bezig = true;
-      await setTeller(kast, Number(kast.dataset.waarde ?? 0) + 1);
+      const pg = huidig();
+      const sterren = willekeurigeSterren(pg.schaal);
+      status.textContent = `Nieuwe review: ${sterren} van de ${pg.schaal}${pg.schaal === 5 ? ' sterren' : ''}`;
+      await nieuweReview(kast, sterren, pg);
       track('reviewteller_demo', { platform: keuze('platform') });
       bezig = false;
     });
+
+    // Gemiddelde met een stap van 0,1 laten stijgen of dalen.
+    stappen.forEach((knop) =>
+      knop.addEventListener('click', () => {
+        const pg = huidig();
+        const factor = 10 ** pg.decimalen;
+        const nu = Math.round(Number(kast.dataset.score) * factor) / factor;
+        const nieuw = Math.min(pg.schaal, Math.max(1, Math.round((nu + Number(knop.dataset.scoreStap) * 0.1) * factor) / factor));
+        status.textContent = '';
+        void zetScore(kast, nieuw, pg);
+      }),
+    );
   });
 </script>

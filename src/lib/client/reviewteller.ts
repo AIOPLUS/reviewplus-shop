@@ -1,12 +1,13 @@
 /**
  * Live reviewteller (components/shop/Teller.astro) aansturen in de browser:
- * - setTeller: naar een nieuw aantal klappen, cijfer voor cijfer;
+ * - setTeller: het aantal reviews naar een nieuw getal laten klappen, cijfer voor cijfer;
+ * - zetScore: het gemiddelde laten klappen (stijgen of dalen), ook in kleine klapcijfers;
+ * - nieuweReview: één review erbij met een score; aantal +1 en het gemiddelde opnieuw berekend;
  * - zetPlatform: logo en scorevak (ster, bol of blauw vlak) wisselen;
- * - zetScore: het gemiddelde aanpassen;
  * - zetCijfers: tussen 5 en 7 cijfers wisselen.
  * Zonder animatie als de bezoeker minder beweging wil. Overgenomen uit de View Plus Shop (lib/client/teller.ts).
  */
-import { scoreHtml, type ScoreVorm } from '@/lib/tellerscore';
+import { scoreHtml, scoreTekens, type ScoreVorm } from '@/lib/tellerscore';
 
 export interface PlatformGegevens {
   logo: { viewBox: string; body: string };
@@ -33,32 +34,63 @@ function werkLabelBij(kast: HTMLElement): void {
   );
 }
 
+/** Eén klapcijfer naar een nieuw teken laten omklappen. `omlaag` klapt de andere kant op (bij een dalende score). */
+async function klap(el: HTMLElement, nieuw: string, omlaag = false): Promise<void> {
+  if (el.textContent === nieuw) return;
+  if (rustig() || !el.animate) {
+    el.textContent = nieuw;
+    return;
+  }
+  const r = omlaag ? -1 : 1;
+  await el.animate([{ transform: 'rotateX(0deg)' }, { transform: `rotateX(${90 * r}deg)` }], { duration: 110, easing: 'ease-in' }).finished;
+  el.textContent = nieuw;
+  await el.animate([{ transform: `rotateX(${-90 * r}deg)` }, { transform: 'rotateX(0deg)' }], { duration: 160, easing: 'ease-out' }).finished;
+}
+
 export async function setTeller(kast: HTMLElement, waarde: number): Promise<void> {
   const cijfers = Number(kast.dataset.cijfers ?? 5);
   const tekst = String(Math.max(0, Math.min(waarde, 10 ** cijfers - 1))).padStart(cijfers, ' ');
+  const omlaag = waarde < Number(kast.dataset.waarde ?? 0);
   kast.dataset.waarde = String(waarde);
   werkLabelBij(kast);
   const flappen = [...kast.querySelectorAll<HTMLElement>('.teller-flap > span')];
-  await Promise.all(
-    flappen.map(async (el, i) => {
-      const nieuw = tekst[i]!.trim();
-      if (el.textContent === nieuw) return;
-      if (rustig() || !el.animate) {
-        el.textContent = nieuw;
-        return;
-      }
-      await el.animate([{ transform: 'rotateX(0deg)' }, { transform: 'rotateX(90deg)' }], { duration: 110, easing: 'ease-in' }).finished;
-      el.textContent = nieuw;
-      await el.animate([{ transform: 'rotateX(-90deg)' }, { transform: 'rotateX(0deg)' }], { duration: 160, easing: 'ease-out' }).finished;
-    }),
-  );
+  await Promise.all(flappen.map((el, i) => klap(el, tekst[i]!.trim(), omlaag)));
 }
 
-export function zetScore(kast: HTMLElement, score: number, g: PlatformGegevens): void {
+/**
+ * Gemiddelde aanpassen. De exacte waarde staat in data-score (voor het herberekenen bij een nieuwe review); de teller
+ * toont hem afgerond. Met `animeren: false` wordt het vak direct opnieuw opgebouwd (bij wisselen van platform).
+ */
+export async function zetScore(kast: HTMLElement, score: number, g: PlatformGegevens, animeren = true): Promise<void> {
+  const oud = Number(kast.dataset.score ?? score);
   kast.dataset.score = String(score);
-  const vak = kast.querySelector<HTMLElement>('.teller-score');
-  if (vak) vak.innerHTML = scoreHtml(g.score.vorm, g.score.kleur, scoreTekst(score, g.decimalen));
   werkLabelBij(kast);
+  kast.dispatchEvent(new CustomEvent('teller:score', { detail: { score } }));
+  const vak = kast.querySelector<HTMLElement>('.teller-score');
+  if (!vak) return;
+  const { heel, dec } = scoreTekens(score, g.schaal, g.decimalen);
+  const tekens = [...heel, ...dec];
+  const flappen = [...vak.querySelectorAll<HTMLElement>('.teller-miniflap > span')];
+  if (!animeren || flappen.length !== tekens.length) {
+    vak.innerHTML = scoreHtml(g.score.vorm, g.score.kleur, score, g.schaal, g.decimalen);
+    return;
+  }
+  await Promise.all(flappen.map((el, i) => klap(el, tekens[i]!.trim(), score < oud)));
+}
+
+/** Eén nieuwe review met `sterren` (1–5, of 1–10 bij Booking.com): aantal +1 en het gemiddelde opnieuw berekend. */
+export async function nieuweReview(kast: HTMLElement, sterren: number, g: PlatformGegevens): Promise<void> {
+  const aantal = Number(kast.dataset.waarde ?? 0);
+  const gemiddelde = Number(kast.dataset.score ?? g.voorbeeld.score);
+  const nieuw = (gemiddelde * aantal + sterren) / (aantal + 1);
+  await Promise.all([setTeller(kast, aantal + 1), zetScore(kast, nieuw, g)]);
+}
+
+/** Willekeurige reviewscore voor de demo, vooral positief maar soms laag (zodat het gemiddelde ook daalt). */
+export function willekeurigeSterren(schaal: 5 | 10): number {
+  const kans = Math.random();
+  const vijf = kans < 0.55 ? 5 : kans < 0.75 ? 4 : kans < 0.85 ? 3 : kans < 0.92 ? 2 : 1;
+  return schaal === 10 ? Math.max(1, vijf * 2 - (Math.random() < 0.5 ? 1 : 0)) : vijf;
 }
 
 export function zetPlatform(kast: HTMLElement, platform: string, g: PlatformGegevens, score = g.voorbeeld.score): void {
@@ -67,7 +99,7 @@ export function zetPlatform(kast: HTMLElement, platform: string, g: PlatformGege
   kast.dataset.decimalen = String(g.decimalen);
   const tegel = kast.querySelector<HTMLElement>('.teller-icoon');
   if (tegel) tegel.innerHTML = `<svg viewBox="${g.logo.viewBox}">${g.logo.body.replaceAll('__ID__', `-c${++volgnummer}`)}</svg>`;
-  zetScore(kast, score, g);
+  void zetScore(kast, score, g, false);
 }
 
 export function zetCijfers(kast: HTMLElement, cijfers: 5 | 7): void {

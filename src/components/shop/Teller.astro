@@ -45,7 +45,7 @@ const beschrijving =
     data-decimalen={stijl.decimalen}
   >
     <span class="teller-icoon" aria-hidden="true"><svg viewBox={logo.viewBox} set:html={uniekeIds(logo.body)} /></span>
-    <span class="teller-score" aria-hidden="true" set:html={scoreHtml(stijl.score.vorm, stijl.score.kleur, scoreTekst(score, stijl.decimalen))} />
+    <span class="teller-score" aria-hidden="true" set:html={scoreHtml(stijl.score.vorm, stijl.score.kleur, score, stijl.schaal, stijl.decimalen)} />
     {[...tekst].map((c) => (
       <span class="teller-flap" aria-hidden="true"><span>{c.trim()}</span></span>
     ))}
@@ -62,16 +62,25 @@ const beschrijving =
   /* Logo en score staan, net als op de echte teller, gedrukt op het hout. */
   .teller-icoon { flex: 1; aspect-ratio: 3 / 4; display: grid; place-items: center; }
   .teller-icoon svg { width: 80%; height: auto; max-height: 80%; }
+  /* Scorevak: ster of bol met het gemiddelde in kleine klapcijfers, zodat de score live kan stijgen en dalen. */
   .teller-score {
-    flex: 1.15; aspect-ratio: 3.45 / 4; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 0.4cqw; color: #150e08;
+    flex: 1.8; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5cqw;
   }
-  .teller-score-symbool { width: 48%; height: auto; }
-  .teller-score-getal { font-weight: 700; line-height: 1; font-size: var(--scoregrootte, 5.4cqw); font-variant-numeric: tabular-nums; }
-  .teller-score-vlak {
-    display: grid; place-items: center; width: 80%; aspect-ratio: 1; border-radius: 1.4cqw 1.4cqw 1.4cqw 0;
-    color: #fff; font-weight: 700; line-height: 1; font-size: var(--scoregrootte, 5.4cqw); font-variant-numeric: tabular-nums;
+  .teller-score-symbool { width: 40%; height: auto; }
+  .teller-score-flappen { display: flex; align-items: flex-end; gap: 0.3cqw; }
+  .teller-score-flappen.is-vlak { padding: 0.7cqw; border-radius: 1.2cqw 1.2cqw 1.2cqw 0; }
+  .teller-miniflap {
+    position: relative; width: var(--mini, 4.6cqw); aspect-ratio: 3 / 4; display: grid; place-items: center; overflow: hidden;
+    border-radius: 0.6cqw; perspective: 15cqw;
+    background: linear-gradient(180deg, #4a4a4a 0%, #2e2e2e 49.4%, #141414 50.6%, #0a0a0a 100%);
   }
+  .teller-miniflap::after { content: ''; position: absolute; inset: 49.4% 0 auto; height: 0.15cqw; background: rgba(0,0,0,.4); }
+  .teller-miniflap > span {
+    display: block; color: #fff; font-weight: 600; line-height: 1; font-size: calc(var(--mini, 4.6cqw) * 0.78);
+    font-variant-numeric: tabular-nums; backface-visibility: hidden;
+  }
+  .teller-komma { color: #150e08; font-weight: 700; line-height: 0.9; font-size: calc(var(--mini, 4.6cqw) * 0.95); }
+  .is-vlak .teller-komma { color: #fff; }
   .teller-flap {
     position: relative; flex: 1; aspect-ratio: 3 / 4; display: grid; place-items: center; overflow: hidden;
     border-radius: 1.2cqw; perspective: 30cqw;
@@ -85,8 +94,6 @@ const beschrijving =
     display: block; color: #fff; font-weight: 600; line-height: 1; font-size: var(--cijfergrootte, 8.2cqw);
     font-variant-numeric: tabular-nums; backface-visibility: hidden;
   }
-  .teller-kast[data-cijfers='7'] { --cijfergrootte: 6.4cqw; --scoregrootte: 4.2cqw; }
-  /* Airbnb toont twee decimalen (4,87): iets kleiner, zodat de score in het vak past. */
-  .teller-kast[data-decimalen='2'] { --scoregrootte: 4.4cqw; }
-  .teller-kast[data-cijfers='7'][data-decimalen='2'] { --scoregrootte: 3.5cqw; }
+  .teller-kast[data-cijfers='7'] { --cijfergrootte: 6.4cqw; --mini: 3.5cqw; }
+  .teller-kast[data-cijfers='7'] .teller-score-symbool { width: 32%; }
 </style>
