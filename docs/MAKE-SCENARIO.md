@@ -29,6 +29,7 @@ Zo staat het nu werkelijk in Make (team "My Team", zone eu1, **Core-plan**). De 
 |---|---|---|---|
 | AIO Plus | AIO Plus - Teamleader naar Moneybird (7643564) | aan | webhook `teamleader-facturen-moneybird` |
 | AIO Plus | AIO Plus - Moneybird-controle (dagelijks) (7644099) | aan | dagelijks 07:12 |
+| AIO Plus | AIO Plus - Weekrapport (maandag) (7644813) | test | maandag 07:45 |
 | Review Plus | Review Plus - Shop aanvragen (7570648) | aan | webhook `shop-aanvraag` (ook View Plus pre-orders via Mollie View Plus) |
 | Review Plus | Review Plus - Dagelijks (demo's en herinneringen) (7583249) | aan | dagelijks 09:00 |
 | View Plus | (nog leeg) | | |
@@ -160,6 +161,15 @@ Webhook weghalen: Teamleader API `webhooks.unregister` met dezelfde url en types
 Vangnet voor de sync. Draait elke dag om 07:12 (actief sinds 27-09-2026). Vergelijkt alle geboekte facturen (`outstanding`/`matched`) en creditnota's uit Teamleader van de laatste 60 dagen met de externe facturen in Moneybird, en mailt support@reviewplus.io als er iets ontbreekt ("Moneybird-controle: … ontbreken in Moneybird", met nummer, datum, bedrag en Teamleader-ID). Vergelijkt zonder spaties, dus `2026/95` telt als `2026 / 95`; creditnota's met `C` ervoor. Leest alleen, verandert niets. ±15 operaties per dag. De laatste telling staat in datastore `tl_moneybird_sync` onder `controle:telling`.
 
 Controle over heel 2026 (27-09-2026): alle facturen 1–152 en creditnota's 1–19 staan in Moneybird. Tot juni zijn ze met wisselende nummers ingevoerd (`89`, `2026/57`, `Creditnota 9`). Factuur 83 stond er twee keer in (`83` en `2026 / 83`, bevestigd dubbel, één moet weg in Moneybird). `Credit2026/23` is een handmatig ingevoerde creditnota in Moneybird zonder tegenhanger in Teamleader (bewust).
+
+### Scenario "AIO Plus - Weekrapport (maandag)" (id 7644813)
+
+Elke maandag om 07:45 een mail aan support@reviewplus.io over de vorige week (maandag t/m zondag), met Teamleader als bron:
+- omzet geboekt excl. btw (aantal facturen, creditnota's, netto);
+- alle openstaande facturen (aantal en bedrag incl. btw), met een tabel van de vervallen facturen;
+- de lijst met facturen van die week.
+
+Alleen lezen. Opbouw: Teamleader-lijsten ophalen, dan per onderdeel een route (iterator, filter op de week of op vervaldatum, aggregator, variabele) en tot slot één mail met *Get variables*. Handmatig starten (*Run once*) geeft altijd de laatste volledige week. ±25 operaties per week.
 
 ### Make-operaties (Core-plan sinds 27-09-2026: 10.000 per maand)
 
