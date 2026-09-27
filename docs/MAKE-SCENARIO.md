@@ -21,28 +21,32 @@ Zo staat het nu werkelijk in Make (team "My Team", zone eu1, **Core-plan**). De 
 
 ### Indeling en naamgeving
 
-Mappen per label. Review Plus en View Plus komen samen in één administratie in Moneybird (**PIEROT SALES**); wat daarvoor draait, staat in de map Administratie.
+- **AIO Plus** is het overkoepelende label. **Review Plus**, **View Plus**, **Website Plus** en **Tab Plus** zijn de labels (handelsnamen).
+- **PIEROT SALES** is alleen de bedrijfsnaam. Het is ook de naam van de (gedeelde) administratie in Moneybird.
+- In Make heeft elk label een eigen map. Wat voor alle labels samen geldt (administratie, Moneybird) staat in de map **AIO Plus**.
 
 | Map | Scenario | Status | Trigger |
 |---|---|---|---|
+| AIO Plus | AIO Plus - Teamleader naar Moneybird (7643564) | aan | webhook `teamleader-facturen-moneybird` |
+| AIO Plus | AIO Plus - Moneybird-controle (dagelijks) (7644099) | aan | dagelijks 07:12 |
 | Review Plus | Review Plus - Shop aanvragen (7570648) | aan | webhook `shop-aanvraag` (ook View Plus pre-orders via Mollie View Plus) |
 | Review Plus | Review Plus - Dagelijks (demo's en herinneringen) (7583249) | aan | dagelijks 09:00 |
 | View Plus | (nog leeg) | | |
-| Administratie (PIEROT SALES) | Administratie - Teamleader naar Moneybird (7643564) | aan | webhook `teamleader-facturen-moneybird` |
-| Administratie (PIEROT SALES) | Administratie - Moneybird-controle (dagelijks) (7644099) | aan | dagelijks 07:12 |
+| Website Plus | (nog leeg) | | |
+| Tab Plus | (nog leeg) | | |
 
-Naamgeving: scenario's `<Label of Administratie> - <wat het doet>`; koppelingen `<App> - <account of label>`; elk scenario heeft een korte beschrijving in Make. Nieuwe scenario's gaan in de map van hun label.
+Naamgeving: scenario's `<Label> - <wat het doet>` (label = AIO Plus, Review Plus, View Plus, Website Plus of Tab Plus); koppelingen `<App> - <label of account>`. Elk scenario heeft een korte beschrijving in Make. Nieuwe scenario's gaan in de map van hun label.
 
 | Koppeling | Gebruikt door |
 |---|---|
-| Gmail (support@reviewplus.io) | alle scenario's (mails) |
-| Mollie - shop betalingen (org Review Plus) | Shop aanvragen |
-| Mollie - View Plus (org View Plus) | Shop aanvragen (View Plus pre-orders) |
+| Jordan's Gmail connection (support@reviewplus.io) | alle scenario's (mails) |
+| Mollie - shop betalingen (Mollie-organisatie Review Plus) | Shop aanvragen |
+| Mollie - View Plus (Mollie-organisatie View Plus) | Shop aanvragen (View Plus pre-orders) |
 | Teamleader - shop (demo@reviewplus.io) | alle scenario's |
-| Moneybird - Review Plus (administratie PIEROT SALES) | beide Administratie-scenario's |
+| Moneybird - Review Plus (administratie PIEROT SALES) | beide AIO Plus-scenario's |
 | Key "GitHub Basic Auth - voorraadteller" | Shop aanvragen (Gist) |
 
-Datastores: `shop_data` (Review Plus) en `tl_moneybird_sync` (Administratie).
+Datastores: `shop_data` (Review Plus) en `tl_moneybird_sync` (AIO Plus).
 
 ### Scenario "Review Plus - Shop aanvragen" (actief, id 7570648)
 
@@ -130,9 +134,9 @@ Gebruikt de klant bij het boeken een ander e-mailadres, dan vindt Make de deal n
 
 Omdat stap 1 eerst draait, krijgt iemand die al geboekt heeft geen herinnering meer.
 
-### Scenario "Administratie - Teamleader naar Moneybird" (actief, id 7643564, vervangt Combidesk)
+### Scenario "AIO Plus - Teamleader naar Moneybird" (actief, id 7643564, vervangt Combidesk)
 
-Zet elke **geboekte** factuur en creditnota uit Teamleader in Moneybird (administratie "PIEROT SALES"). Gebouwd op 27-09-2026 als vervanger van de Combidesk-koppeling; actief sinds 27-09-2026.
+Zet elke **geboekte** factuur en creditnota uit Teamleader in Moneybird (administratie "PIEROT SALES", gedeeld door alle labels). Gebouwd op 27-09-2026 als vervanger van de Combidesk-koppeling; actief sinds 27-09-2026.
 
 - **Trigger**: eigen webhook `teamleader-facturen-moneybird` (`https://hook.eu1.make.com/p66n8v6egitt0gao0d928xo2j9mxat6r`), in Teamleader geregistreerd voor `invoice.booked` en `creditNote.booked` (27-09-2026). Het scenario verwerkt alleen die twee types.
 - **Dubbelcheck**: datastore `tl_moneybird_sync` (id 199508), key `doc:<teamleader-id>`, velden `soort`, `nummer`, `mb_id`, `mb_contact_id`, `totaal_tl`, `totaal_mb`, `gesynct`. Bestaat de key al, dan stopt de run. Wil je een document opnieuw laten overzetten, verwijder dan eerst het record (en het document in Moneybird).
@@ -151,7 +155,7 @@ Let op: Combidesk maakte soms per factuur een nieuw contact aan (Antojos staat e
 
 Webhook weghalen: Teamleader API `webhooks.unregister` met dezelfde url en types.
 
-### Scenario "Administratie - Moneybird-controle (dagelijks)" (actief, id 7644099)
+### Scenario "AIO Plus - Moneybird-controle (dagelijks)" (actief, id 7644099)
 
 Vangnet voor de sync. Draait elke dag om 07:12 (actief sinds 27-09-2026). Vergelijkt alle geboekte facturen (`outstanding`/`matched`) en creditnota's uit Teamleader van de laatste 60 dagen met de externe facturen in Moneybird, en mailt support@reviewplus.io als er iets ontbreekt ("Moneybird-controle: … ontbreken in Moneybird", met nummer, datum, bedrag en Teamleader-ID). Vergelijkt zonder spaties, dus `2026/95` telt als `2026 / 95`; creditnota's met `C` ervoor. Leest alleen, verandert niets. ±15 operaties per dag. De laatste telling staat in datastore `tl_moneybird_sync` onder `controle:telling`.
 
