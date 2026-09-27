@@ -128,11 +128,11 @@ Let op: Combidesk maakte soms per factuur een nieuw contact aan (Antojos staat e
 
 Webhook weghalen: Teamleader API `webhooks.unregister` met dezelfde url en types.
 
-### Scenario "Review Plus - Moneybird-controle (dagelijks)" (id 7644099)
+### Scenario "Review Plus - Moneybird-controle (dagelijks)" (actief, id 7644099)
 
-Vangnet voor de sync. Draait elke dag om 07:12 (zet het aan in Make). Vergelijkt alle geboekte facturen (`outstanding`/`matched`) en creditnota's uit Teamleader van de laatste 60 dagen met de externe facturen in Moneybird, en mailt support@reviewplus.io als er iets ontbreekt ("Moneybird-controle: … ontbreken in Moneybird", met nummer, datum, bedrag en Teamleader-ID). Vergelijkt zonder spaties, dus `2026/95` telt als `2026 / 95`; creditnota's met `C` ervoor. Leest alleen, verandert niets. ±15 operaties per dag. De laatste telling staat in datastore `tl_moneybird_sync` onder `controle:telling`.
+Vangnet voor de sync. Draait elke dag om 07:12 (actief sinds 27-09-2026). Vergelijkt alle geboekte facturen (`outstanding`/`matched`) en creditnota's uit Teamleader van de laatste 60 dagen met de externe facturen in Moneybird, en mailt support@reviewplus.io als er iets ontbreekt ("Moneybird-controle: … ontbreken in Moneybird", met nummer, datum, bedrag en Teamleader-ID). Vergelijkt zonder spaties, dus `2026/95` telt als `2026 / 95`; creditnota's met `C` ervoor. Leest alleen, verandert niets. ±15 operaties per dag. De laatste telling staat in datastore `tl_moneybird_sync` onder `controle:telling`.
 
-Controle over heel 2026 (27-09-2026): alle facturen 1–152 en creditnota's 1–19 staan in Moneybird. Tot juni zijn ze met wisselende nummers ingevoerd (`89`, `2026/57`, `Creditnota 9`). Twee dingen om na te kijken in Moneybird: factuur 83 staat er twee keer in (`83` en `2026 / 83`), en er staat een creditnota `Credit2026/23` die niet in Teamleader bestaat.
+Controle over heel 2026 (27-09-2026): alle facturen 1–152 en creditnota's 1–19 staan in Moneybird. Tot juni zijn ze met wisselende nummers ingevoerd (`89`, `2026/57`, `Creditnota 9`). Factuur 83 stond er twee keer in (`83` en `2026 / 83`, bevestigd dubbel, één moet weg in Moneybird). `Credit2026/23` is een handmatig ingevoerde creditnota in Moneybird zonder tegenhanger in Teamleader (bewust).
 
 ### Make-operaties (Core-plan sinds 27-09-2026: 10.000 per maand)
 
