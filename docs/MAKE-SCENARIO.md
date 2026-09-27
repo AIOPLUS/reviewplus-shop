@@ -124,7 +124,7 @@ Getest op 27-09-2026 met factuur 2026 / 149 (Antojos): bestaand contact gevonden
 
 **Overstap (27-09-2026)**: Combidesk-koppeling uitgezet, Teamleader-webhook geregistreerd en scenario aangezet. Combidesk had in september vier documenten gemist; die zijn nagezet: 2026 / 137, 2026 / 149, 2026 / 150 en creditnota C2026 / 19. Het eenmalige overstapscenario is daarna verwijderd. Combidesk opzeggen zodra een paar nieuwe facturen goed zijn overgekomen.
 
-Let op: Combidesk maakte soms per factuur een nieuw contact aan (Antojos staat er vier keer in, klantnummers 214–217, allemaal met KvK 89583787). Het scenario kiest het eerste contact met hetzelfde KvK-nummer dat Moneybird teruggeeft. Voeg dubbele contacten in Moneybird samen om de debiteurenstand per klant zuiver te houden.
+Let op: Combidesk maakte soms per factuur een nieuw contact aan (Antojos staat er meerdere keren in, in elk geval klantnummers 214, 215 en 217, allemaal met KvK 89583787). Het scenario kiest het eerste contact met hetzelfde KvK-nummer dat Moneybird teruggeeft. Voeg dubbele contacten in Moneybird samen om de debiteurenstand per klant zuiver te houden.
 
 Webhook weghalen: Teamleader API `webhooks.unregister` met dezelfde url en types.
 
