@@ -98,7 +98,7 @@ src/
   pages/         index, [product], aanvragen, bedankt, actievoorwaarden, voor/[sector], 404,
                  products.json, llms.txt, robots.txt, og/[slug].png
 scripts/         linkcheck, mock-webhook, lighthouse-local
-docs/            DOMEIN, MAKE-SCENARIO, LEAD-PAYLOAD, OPVOLGING, templates/
+docs/            DOMEIN, LEAD-PAYLOAD, OPVOLGING, REVIEWTELLER, templates/ (Make: zie hub AIOPLUS/claude)
 ```
 
 De hoofdsite staat in een aparte repo (`AIOPLUS/reviewplus-site`). De shop kan later onder `www.reviewplus.io/shop` komen; zie `docs/DOMEIN.md`.
@@ -139,7 +139,7 @@ Belangrijkste: specs (afmeting, materiaal, chip) per product · incl./excl. btw 
 - [x] GitHub-repo aanmaken, code pushen, Pages activeren (Source: GitHub Actions)
 - [x] DNS: `CNAME shop → <github-gebruiker>.github.io`; in GitHub Pages custom domain + **Enforce HTTPS**
 - [x] ~~Framer-redirect `/shop`~~ niet meer nodig: Framer is vervangen door reviewplus-site (25-09-2026)
-- [x] Make-scenario's bouwen volgens `docs/MAKE-SCENARIO.md`; webhook-URL in GitHub Variables (`PUBLIC_LEAD_WEBHOOK_URL`); CORS testen (klaar 24-09-2026, zie "Huidige inrichting")
+- [x] Make-scenario's bouwen volgens de Make-documentatie (nu in de hub: `AIOPLUS/claude`, `docs/make/MAKE-SCENARIO.md`); webhook-URL in GitHub Variables (`PUBLIC_LEAD_WEBHOOK_URL`); CORS testen (klaar 24-09-2026, zie "Huidige inrichting")
 - [x] Teamleader: pipeline + custom fields aanmaken (niet nodig: bestaande Sales Pipeline, fases Nieuw en Demo Ingepland)
 - [x] Cloudflare Turnstile: site-key (GitHub Variable `PUBLIC_TURNSTILE_SITE_KEY`) + secret (Make → Data stores → `shop_data` → `config:turnstile` → `waarde`). Eerst de site-key, dan de secret. Test daarna met een echte aanvraag: komt de bevestigingsmail, dan klopt het; krijg je "Aanvraag tegengehouden door spamfilter", dan hoort de secret niet bij de site-key. (live 24-09-2026)
 - [x] Beslissen: prijzen incl./excl. btw (`PRICE_NOTE`), reserveringstermijn totem (`TOTEM_RESERVATION_DAYS`), beleid bij no-show (excl. btw, 14 dagen, no-show = geen totem)

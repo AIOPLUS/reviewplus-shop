@@ -62,7 +62,7 @@ Bron van waarheid in code: `src/lib/client/lead.ts` (`LeadPayload`). Wijzig code
 | `attributie` | object \| null | Zie hieronder |
 | `pagina` | string | URL van de aanvraagpagina (zonder query) |
 | `turnstile_token` | string \| null | Verifiëren in Make (stap 2 van het scenario). `null` als Turnstile niet is geconfigureerd. |
-| `return_urls.betaald` / `geannuleerd` | string | Waar de klant na Mollie naartoe moet (zie MAKE-SCENARIO, "Terugkeer na betaling") |
+| `return_urls.betaald` / `geannuleerd` | string | Waar de klant na Mollie naartoe moet (zie de Make-documentatie in de hub, "Terugkeer na betaling") |
 
 ### `attributie`
 Vastgelegd bij het eerste bezoek in de sessie (`sessionStorage`), overschreven als er een nieuwe campagne-URL binnenkomt.
