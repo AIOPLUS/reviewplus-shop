@@ -161,7 +161,7 @@ Make stuurt zelf al `Access-Control-Allow-Origin: *` mee. Voeg in een Webhook re
 3. ~~Totem na demo~~ **Klaar (24-09-2026):** route 7 op de Teamleader-webhook `deal.moved`, zie "Totem na de demo".
 4. ~~Herinneringen totem~~ **Klaar (24-09-2026):** scenario "Review Plus - Dagelijks (demo's en herinneringen)", zie hierboven. Herkent ook Bookings-afspraken.
 
-Uitgeschakelde, ongebruikte scenario's die weg mogen: "Review Plus - Mollie (status + terugkeer)", "Review Plus - Mollie terugkeer", "Integration Mollie".
+De oude, ongebruikte scenario's "Review Plus - Mollie (status + terugkeer)", "Review Plus - Mollie terugkeer" en "Integration Mollie" en hun webhooks (`shop-mollie`, `shop-betaal-return`) zijn op 27-09-2026 verwijderd.
 
 ---
 
