@@ -92,7 +92,7 @@ Webhook bekijken of weghalen: Teamleader API `webhooks.list` / `webhooks.unregis
 
 ### Scenario "Review Plus - Dagelijks (demo's en herinneringen)" (actief, id 7583249)
 
-Draait elke dag om 09:00 (Europe/Amsterdam). Dit is het tweede en laatste actieve scenario op het gratis plan.
+Draait elke dag om 09:00 (Europe/Amsterdam).
 
 **1. Geboekte demo's herkennen.** Teamleader `events.list` met zoekterm "Demonstratie met Review Plus" en een eindtijd in de toekomst. Uit de omschrijving van elke afspraak haalt Make het e-mailadres (Bookings zet daar "E-mail: …"). Is er een shop-deal met dat e-mailadres die nog geen demo had (status leeg, `no_show` of `verlopen`), dan:
 - `status = demo_ingepland`;
@@ -107,9 +107,32 @@ Gebruikt de klant bij het boeken een ander e-mailadres, dan vindt Make de deal n
 
 Omdat stap 1 eerst draait, krijgt iemand die al geboekt heeft geen herinnering meer.
 
-### Make-operaties (gratis plan: 1.000 per maand)
+### Scenario "Review Plus - Teamleader naar Moneybird" (id 7643564, vervangt Combidesk)
 
-Globaal: een nieuwe aanvraag kost ±23 operaties (mails, teller, Gist en Teamleader), een aanvraag met extra's ±6 meer, een fasewissel in Teamleader ±4 (±7 als er een totem-taak komt) en het dagelijkse scenario ±5–10 per dag. Het gratis plan is dus genoeg voor ongeveer 25–30 aanvragen per maand. Kijk in Make bij *Organization → Usage* hoe het verbruik loopt. Is het op, dan stopt Make tot de volgende maand. Neem dan tijdig een betaald Make-abonnement.
+Zet elke **geboekte** factuur en creditnota uit Teamleader in Moneybird (administratie "PIEROT SALES"). Gebouwd op 27-09-2026 als vervanger van de Combidesk-koppeling. Staat uit tot de overstap (zie onder).
+
+- **Trigger**: eigen webhook `teamleader-facturen-moneybird` (`https://hook.eu1.make.com/p66n8v6egitt0gao0d928xo2j9mxat6r`). In Teamleader te registreren voor `invoice.booked` en `creditNote.booked`. Het scenario verwerkt alleen die twee types.
+- **Dubbelcheck**: datastore `tl_moneybird_sync` (id 199508), key `doc:<teamleader-id>`, velden `soort`, `nummer`, `mb_id`, `mb_contact_id`, `totaal_tl`, `totaal_mb`, `gesynct`. Bestaat de key al, dan stopt de run. Wil je een document opnieuw laten overzetten, verwijder dan eerst het record (en het document in Moneybird).
+- **Contact**: zoeken in Moneybird op de naam van de klant en kiezen op KvK-nummer, dan op exacte naam, dan (als er maar één resultaat is) op naam zonder hoofdletters. Niet gevonden: nieuw contact met naam, factuuradres, e-mail, KvK en btw-nummer uit Teamleader.
+- **Document**: *externe verkoopfactuur* (`external_sales_invoices`), net als Combidesk. Referentie = Teamleader-nummer (`2026 / 153`), creditnota's met een `C` ervoor en negatieve prijzen (`C2026 / 19`). Datum en vervaldatum uit Teamleader, bron "Teamleader" met link naar de factuur, grootboek *Omzet*. Regelkorting (percentage) wordt in de prijs verrekend. Daarna de PDF uit Teamleader als bijlage.
+- **Btw-koppeling** (Teamleader → Moneybird): 21% → 21% btw · 9% → 9% btw · 0% → 0% btw · Intracommunautair → Product binnen EU (btw verlegd) · Intracommunautair diensten → Dienst binnen EU (btw verlegd) · Buiten EU → Geen btw. De Belgische tarieven (6/12/13%) hebben geen tegenhanger: zo'n factuur geeft een foutmail.
+- **Betalingen** gaan niet mee (net als bij Combidesk). Je lettert af in Teamleader; Moneybird koppelt de bankbetalingen zelf.
+- **Mails aan support@reviewplus.io**: bij een fout per stap ("Moneybird-sync: … mislukt") en als het totaal in Moneybird afwijkt van Teamleader ("afrondingsverschil", meestal een paar cent omdat Moneybird per regel afrondt).
+- **Operaties**: ±18 per document (±19 met een extra regel of een nieuw contact).
+
+Getest op 27-09-2026 met factuur 2026 / 149 (Antojos): bestaand contact gevonden, totaal gelijk, PDF toegevoegd.
+
+**Overstap** (eenmalig scenario "EENMALIG - overstap Combidesk naar Make", id 7643224):
+1. Zet de koppeling in Combidesk uit.
+2. *Run once* op het eenmalige scenario. Dat registreert de Teamleader-webhook en zet de drie documenten die Combidesk in september miste in de wachtrij: 2026 / 137, 2026 / 150 en creditnota 2026 / 19 (2026 / 149 is al gedaan).
+3. Zet "Review Plus - Teamleader naar Moneybird" aan. De wachtrij wordt meteen verwerkt.
+4. Controleer na een paar geboekte facturen of alles in Moneybird staat. Zeg daarna Combidesk op en verwijder het eenmalige scenario.
+
+Webhook weghalen: Teamleader API `webhooks.unregister` met dezelfde url en types.
+
+### Make-operaties (Core-plan sinds 27-09-2026: 10.000 per maand)
+
+Globaal: een nieuwe aanvraag kost ±23 operaties (mails, teller, Gist en Teamleader), een aanvraag met extra's ±6 meer, een fasewissel in Teamleader ±4 (±7 als er een totem-taak komt) en het dagelijkse scenario ±5–10 per dag. De Moneybird-sync kost ±18 per factuur of creditnota. Op het Core-plan (10.000 operaties per maand, onbeperkt actieve scenario's) is dat ruim voldoende. Het gratis plan stond maar 2 actieve scenario's toe. Kijk in Make bij *Organization → Usage* hoe het verbruik loopt. Is het op, dan stopt Make tot de volgende maand.
 
 ### Datastore `shop_data` (id 196583)
 
