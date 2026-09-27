@@ -15,11 +15,34 @@ Payload-contract: zie [LEAD-PAYLOAD.md](LEAD-PAYLOAD.md). Secrets (Turnstile sec
 
 **Belangrijke volgorde:** de site wacht op het antwoord van scenario A (max. 20 s). Zet daarom de **Webhook response** zo vroeg mogelijk: direct na Turnstile, de dubbelcheck en (indien nodig) het aanmaken van de Mollie-betaling. Teamleader, mails en de verzendlijst komen ná de response.
 
-## Huidige inrichting in Make (stand 24 september 2026)
+## Huidige inrichting in Make (stand 27 september 2026)
 
-Zo staat het nu werkelijk in Make (team "My Team", zone eu1). De scenario's A–F hieronder zijn het volledige ontwerp; wat nog niet gebouwd is, staat onder "Nog te bouwen".
+Zo staat het nu werkelijk in Make (team "My Team", zone eu1, **Core-plan**). De scenario's A–F verderop zijn het oorspronkelijke ontwerp; wat nog niet gebouwd is, staat onder "Nog te bouwen".
 
-**Gratis Make-plan: maximaal 2 actieve scenario's en 1 MB datastore-opslag.** Daarom loopt alles wat direct moet reageren via **één** scenario en **één** webhook, en staat alle data in **één** datastore.
+### Indeling en naamgeving
+
+Mappen per label. Review Plus en View Plus komen samen in één administratie in Moneybird (**PIEROT SALES**); wat daarvoor draait, staat in de map Administratie.
+
+| Map | Scenario | Status | Trigger |
+|---|---|---|---|
+| Review Plus | Review Plus - Shop aanvragen (7570648) | aan | webhook `shop-aanvraag` (ook View Plus pre-orders via Mollie View Plus) |
+| Review Plus | Review Plus - Dagelijks (demo's en herinneringen) (7583249) | aan | dagelijks 09:00 |
+| View Plus | (nog leeg) | | |
+| Administratie (PIEROT SALES) | Administratie - Teamleader naar Moneybird (7643564) | aan | webhook `teamleader-facturen-moneybird` |
+| Administratie (PIEROT SALES) | Administratie - Moneybird-controle (dagelijks) (7644099) | aan | dagelijks 07:12 |
+
+Naamgeving: scenario's `<Label of Administratie> - <wat het doet>`; koppelingen `<App> - <account of label>`; elk scenario heeft een korte beschrijving in Make. Nieuwe scenario's gaan in de map van hun label.
+
+| Koppeling | Gebruikt door |
+|---|---|
+| Gmail (support@reviewplus.io) | alle scenario's (mails) |
+| Mollie - shop betalingen (org Review Plus) | Shop aanvragen |
+| Mollie - View Plus (org View Plus) | Shop aanvragen (View Plus pre-orders) |
+| Teamleader - shop (demo@reviewplus.io) | alle scenario's |
+| Moneybird - Review Plus (administratie PIEROT SALES) | beide Administratie-scenario's |
+| Key "GitHub Basic Auth - voorraadteller" | Shop aanvragen (Gist) |
+
+Datastores: `shop_data` (Review Plus) en `tl_moneybird_sync` (Administratie).
 
 ### Scenario "Review Plus - Shop aanvragen" (actief, id 7570648)
 
@@ -107,7 +130,7 @@ Gebruikt de klant bij het boeken een ander e-mailadres, dan vindt Make de deal n
 
 Omdat stap 1 eerst draait, krijgt iemand die al geboekt heeft geen herinnering meer.
 
-### Scenario "Review Plus - Teamleader naar Moneybird" (actief, id 7643564, vervangt Combidesk)
+### Scenario "Administratie - Teamleader naar Moneybird" (actief, id 7643564, vervangt Combidesk)
 
 Zet elke **geboekte** factuur en creditnota uit Teamleader in Moneybird (administratie "PIEROT SALES"). Gebouwd op 27-09-2026 als vervanger van de Combidesk-koppeling; actief sinds 27-09-2026.
 
@@ -128,7 +151,7 @@ Let op: Combidesk maakte soms per factuur een nieuw contact aan (Antojos staat e
 
 Webhook weghalen: Teamleader API `webhooks.unregister` met dezelfde url en types.
 
-### Scenario "Review Plus - Moneybird-controle (dagelijks)" (actief, id 7644099)
+### Scenario "Administratie - Moneybird-controle (dagelijks)" (actief, id 7644099)
 
 Vangnet voor de sync. Draait elke dag om 07:12 (actief sinds 27-09-2026). Vergelijkt alle geboekte facturen (`outstanding`/`matched`) en creditnota's uit Teamleader van de laatste 60 dagen met de externe facturen in Moneybird, en mailt support@reviewplus.io als er iets ontbreekt ("Moneybird-controle: … ontbreken in Moneybird", met nummer, datum, bedrag en Teamleader-ID). Vergelijkt zonder spaties, dus `2026/95` telt als `2026 / 95`; creditnota's met `C` ervoor. Leest alleen, verandert niets. ±15 operaties per dag. De laatste telling staat in datastore `tl_moneybird_sync` onder `controle:telling`.
 
