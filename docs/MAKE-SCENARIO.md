@@ -107,11 +107,11 @@ Gebruikt de klant bij het boeken een ander e-mailadres, dan vindt Make de deal n
 
 Omdat stap 1 eerst draait, krijgt iemand die al geboekt heeft geen herinnering meer.
 
-### Scenario "Review Plus - Teamleader naar Moneybird" (id 7643564, vervangt Combidesk)
+### Scenario "Review Plus - Teamleader naar Moneybird" (actief, id 7643564, vervangt Combidesk)
 
-Zet elke **geboekte** factuur en creditnota uit Teamleader in Moneybird (administratie "PIEROT SALES"). Gebouwd op 27-09-2026 als vervanger van de Combidesk-koppeling. Staat uit tot de overstap (zie onder).
+Zet elke **geboekte** factuur en creditnota uit Teamleader in Moneybird (administratie "PIEROT SALES"). Gebouwd op 27-09-2026 als vervanger van de Combidesk-koppeling; actief sinds 27-09-2026.
 
-- **Trigger**: eigen webhook `teamleader-facturen-moneybird` (`https://hook.eu1.make.com/p66n8v6egitt0gao0d928xo2j9mxat6r`). In Teamleader te registreren voor `invoice.booked` en `creditNote.booked`. Het scenario verwerkt alleen die twee types.
+- **Trigger**: eigen webhook `teamleader-facturen-moneybird` (`https://hook.eu1.make.com/p66n8v6egitt0gao0d928xo2j9mxat6r`), in Teamleader geregistreerd voor `invoice.booked` en `creditNote.booked` (27-09-2026). Het scenario verwerkt alleen die twee types.
 - **Dubbelcheck**: datastore `tl_moneybird_sync` (id 199508), key `doc:<teamleader-id>`, velden `soort`, `nummer`, `mb_id`, `mb_contact_id`, `totaal_tl`, `totaal_mb`, `gesynct`. Bestaat de key al, dan stopt de run. Wil je een document opnieuw laten overzetten, verwijder dan eerst het record (en het document in Moneybird).
 - **Contact**: zoeken in Moneybird op de naam van de klant en kiezen op KvK-nummer, dan op exacte naam, dan (als er maar één resultaat is) op naam zonder hoofdletters. Niet gevonden: nieuw contact met naam, factuuradres, e-mail, KvK en btw-nummer uit Teamleader.
 - **Document**: *externe verkoopfactuur* (`external_sales_invoices`), net als Combidesk. Referentie = Teamleader-nummer (`2026 / 153`), creditnota's met een `C` ervoor en negatieve prijzen (`C2026 / 19`). Datum en vervaldatum uit Teamleader, bron "Teamleader" met link naar de factuur, grootboek *Omzet*. Regelkorting (percentage) wordt in de prijs verrekend. Daarna de PDF uit Teamleader als bijlage.
@@ -122,11 +122,9 @@ Zet elke **geboekte** factuur en creditnota uit Teamleader in Moneybird (adminis
 
 Getest op 27-09-2026 met factuur 2026 / 149 (Antojos): bestaand contact gevonden, totaal gelijk, PDF toegevoegd.
 
-**Overstap** (eenmalig scenario "EENMALIG - overstap Combidesk naar Make", id 7643224):
-1. Zet de koppeling in Combidesk uit.
-2. *Run once* op het eenmalige scenario. Dat registreert de Teamleader-webhook en zet de drie documenten die Combidesk in september miste in de wachtrij: 2026 / 137, 2026 / 150 en creditnota 2026 / 19 (2026 / 149 is al gedaan).
-3. Zet "Review Plus - Teamleader naar Moneybird" aan. De wachtrij wordt meteen verwerkt.
-4. Controleer na een paar geboekte facturen of alles in Moneybird staat. Zeg daarna Combidesk op en verwijder het eenmalige scenario.
+**Overstap (27-09-2026)**: Combidesk-koppeling uitgezet, Teamleader-webhook geregistreerd en scenario aangezet. Combidesk had in september vier documenten gemist; die zijn nagezet: 2026 / 137, 2026 / 149, 2026 / 150 en creditnota C2026 / 19. Het eenmalige overstapscenario is daarna verwijderd. Combidesk opzeggen zodra een paar nieuwe facturen goed zijn overgekomen.
+
+Let op: Combidesk maakte soms per factuur een nieuw contact aan (Antojos staat er vier keer in, klantnummers 214–217, allemaal met KvK 89583787). Het scenario kiest het eerste contact met hetzelfde KvK-nummer dat Moneybird teruggeeft. Voeg dubbele contacten in Moneybird samen om de debiteurenstand per klant zuiver te houden.
 
 Webhook weghalen: Teamleader API `webhooks.unregister` met dezelfde url en types.
 
