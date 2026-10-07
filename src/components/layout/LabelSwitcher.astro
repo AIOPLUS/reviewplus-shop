@@ -30,7 +30,7 @@ const labelKleuren = labels.slice(0, 4).map((l) => l.kleur);
             <Logo size={26} color={l.kleur} />
             <span class="min-w-0 flex-1">
               <span class:list={['block text-[15px] font-medium', l.status === 'live' ? 'text-ink' : 'text-muted']}>{l.naam}</span>
-              {l.omschrijving && <span class="block text-[13px] leading-snug text-muted">{l.omschrijving}</span>}
+              {l.omschrijving && <span class:list={['block text-[13px] leading-snug', isHuidig ? 'text-ink-soft' : 'text-muted']}>{l.omschrijving}</span>}
             </span>
           </>
         );
