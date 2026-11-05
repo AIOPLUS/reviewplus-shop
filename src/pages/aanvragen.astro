@@ -154,6 +154,13 @@ const reviewCounts = ['0-10', '11-50', '51-100', '101-250', '250+', 'weet-niet']
 
           <div class="rounded-2xl bg-brand-50 p-4 text-sm" data-review></div>
 
+          {FEATURES.kortingscode && (
+            <div hidden data-kortingscode-wrap>
+              <Field id="kortingscode" label="Kortingscode" autocomplete="off" placeholder="RP-K7M2-X9QF" maxlength={20}
+                hint="Credits ingewisseld in je Review Plus-account? Vul je code in. De korting gaat van je extra's af (hooguit de helft) en zie je bij het betalen." />
+            </div>
+          )}
+
           <label class="check rounded-2xl border-2 border-brand-600 bg-brand-50 p-4">
             <input type="checkbox" name="totem_demo" checked data-totem-toggle />
             <span><strong class="text-ink">Ja, ik wil ook de gratis NFC-totem en plan een korte demo in.</strong><br />

@@ -6,6 +6,7 @@
  *
  * - Logt elke payload (en schrijft de laatste naar scripts/.last-payload.json)
  * - Antwoordt { ok: true } of, bij betaalde extra's, { ok: true, checkoutUrl } naar een nep-Mollie-pagina
+ * - Kortingscode RP-ZZZZ-ZZZZ → { ok: false, veld: 'kortingscode', message }; elke andere code geeft € 10 korting (max. de helft)
  * - GET /stock → { remaining } (voorraadteller; daalt per aanvraag)
  * - Herberekent het bedrag uit dist/products.json of src (zoals Make dat moet doen)
  */
@@ -75,8 +76,14 @@ http
         res.writeHead(422, { ...cors, 'Content-Type': 'application/json' });
         return res.end(JSON.stringify({ ok: false, message: errors.join(', ') }));
       }
+      // Kortingscode: Make controleert hem bij de app vóór alles. RP-ZZZZ-ZZZZ doet hier "onbekend"; elke andere code is € 10 waard.
+      if (p.kortingscode === 'RP-ZZZZ-ZZZZ') {
+        res.writeHead(200, { ...cors, 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ ok: false, veld: 'kortingscode', message: 'Deze kortingscode kennen we niet. Controleer de code in je Wallet.' }));
+      }
       if (p.request_type === 'aanvraag' && remaining > 0) remaining--;
-      const amount = (p.producten ?? []).reduce((s, l) => s + (l.extra || 0) * (PRICES[l.slug] ?? 0), 0);
+      let amount = (p.producten ?? []).reduce((s, l) => s + (l.extra || 0) * (PRICES[l.slug] ?? 0), 0);
+      if (p.kortingscode && amount > 0) amount -= Math.min(10, amount / 2); // hooguit de helft, zoals de app
       const out = { ok: true };
       if (amount > 0) {
         const id = Math.random().toString(36).slice(2, 10);

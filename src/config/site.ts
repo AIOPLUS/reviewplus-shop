@@ -49,6 +49,11 @@ export const FEATURES = {
   addressLookupNL: true,
   /** Cookiebanner tonen; alleen relevant als er pixels geconfigureerd zijn. */
   cookieBanner: true,
+  /**
+   * Veld "Kortingscode" (Review Plus credits) bij betaalde extra's. Alleen aanzetten (GitHub-variabele
+   * PUBLIC_KORTINGSCODE=1) als Make de code controleert en verrekent; zie docs/LEAD-PAYLOAD.md.
+   */
+  kortingscode: env.PUBLIC_KORTINGSCODE === '1',
 };
 
 /** Hoe prijzen getoond worden. */

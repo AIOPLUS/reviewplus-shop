@@ -55,6 +55,8 @@ export interface LeadPayload {
   heeft_betaalde_extras: boolean;
   /** Alleen indicatief; Make herberekent het bedrag uit /products.json. */
   bedrag_extras_indicatief: number;
+  /** Kortingscode (Review Plus credits), genormaliseerd als RP-XXXX-XXXX; alleen bij betaalde extra's, anders null. */
+  kortingscode: string | null;
   vragen: {
     huidige_reviewtool: string | null;
     huidige_reviewtool_anders: string | null;
@@ -82,6 +84,15 @@ export interface LeadResponse {
   message?: string;
 }
 
+/** Make wijst één veld af (bv. een kortingscode die niet bruikbaar is); er is niets verwerkt. */
+export class VeldAfgewezen extends Error {
+  readonly veld: string;
+  constructor(veld: string, message: string) {
+    super(message);
+    this.veld = veld;
+  }
+}
+
 export interface Transport {
   provider: 'make' | 'web3forms' | 'formspree';
   webhookUrl: string;
@@ -102,7 +113,8 @@ async function parse(res: Response): Promise<LeadResponse> {
   const text = await res.text();
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   try {
-    const json = JSON.parse(text) as Partial<LeadResponse> & { success?: boolean };
+    const json = JSON.parse(text) as Partial<LeadResponse> & { success?: boolean; veld?: string };
+    if (json.ok === false && json.veld) throw new VeldAfgewezen(json.veld, json.message || 'Dit veld is niet goed.');
     if (json.ok === false || json.success === false) throw new Error(json.message || 'Afgewezen');
     return {
       ok: true,

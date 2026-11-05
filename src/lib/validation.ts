@@ -101,6 +101,19 @@ export function normalizeUrl(input: string): Result {
   }
 }
 
+/**
+ * Kortingscode voor Review Plus credits (optioneel), zoals RP-K7M2-X9QF: 8 tekens zonder 0/O/1/I.
+ * Hoofdletters, spaties, streepjes en het voorvoegsel RP maken niet uit; zelfde regel als in aioplus-app.
+ * Of de code echt bruikbaar is, controleert Make bij de app.
+ */
+export function validateKortingscode(input: string): Result {
+  let s = input.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (!s) return ok('');
+  if (s.length === 8) s = `RP${s}`;
+  const m = /^RP([A-HJ-NP-Z2-9]{4})([A-HJ-NP-Z2-9]{4})$/.exec(s);
+  return m ? ok(`RP-${m[1]}-${m[2]}`) : fail(input, 'Dit lijkt geen kortingscode. Een code ziet eruit als RP-K7M2-X9QF.');
+}
+
 export function required(input: string, message: string): Result {
   return input.trim() ? ok(input.trim()) : fail(input, message);
 }
