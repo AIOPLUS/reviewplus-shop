@@ -52,6 +52,7 @@ Bron van waarheid in code: `src/lib/client/lead.ts` (`LeadPayload`). Wijzig code
 | `maatwerk.wensen` | string \| null | Vrije tekst (max. 500 tekens), alleen bij `interesse = true` |
 | `heeft_betaalde_extras` | boolean | Zo ja → Mollie-betaling aanmaken |
 | `bedrag_extras_indicatief` | number | Alleen ter controle. **Make herberekent uit `/products.json`.** |
+| `kortingscode` | string \| null | Review Plus credits, genormaliseerd als `RP-K7M2-X9QF`. Alleen gevuld bij betaalde extra's, anders `null`. Zie "Kortingscode" hieronder. Het veld staat pas in de shop als de GitHub-variabele `PUBLIC_KORTINGSCODE=1` is gezet; tot dan altijd `null`. |
 | `vragen.huidige_reviewtool` | string \| null | `geen`, `anders` (uitbreidbaar) |
 | `vragen.huidige_reviewtool_anders` | string \| null | Vrije tekst bij "anders" |
 | `vragen.aantal_google_reviews` | string \| null | `0-10`, `11-50`, `51-100`, `101-250`, `250+`, `weet-niet` |
@@ -119,6 +120,7 @@ Vastgelegd bij het eerste bezoek in de sessie (`sessionStorage`), overschreven a
   "maatwerk": { "interesse": true, "wensen": "50 QR-kaarten in onze huiskleur groen, logo volgt per mail" },
   "heeft_betaalde_extras": true,
   "bedrag_extras_indicatief": 19.9,
+  "kortingscode": "RP-K7M2-X9QF",
   "vragen": { "huidige_reviewtool": "anders", "huidige_reviewtool_anders": "Trustoo", "aantal_google_reviews": "11-50" },
   "toestemming": { "actievoorwaarden_privacy": true, "contact_opvolging": true, "nieuwsbrief": false, "tekst_versie": "v1-2026-09" },
   "attributie": {
@@ -135,6 +137,19 @@ Vastgelegd bij het eerste bezoek in de sessie (`sessionStorage`), overschreven a
   }
 }
 ```
+
+## Kortingscode (Review Plus credits)
+
+Een klant wisselt in de app credits in voor een eenmalige code en vult die in stap 3 van `/aanvragen` in. Het veld verschijnt alleen als er betaalde extra's in het mandje zitten; de gratis producten krijgen geen korting. De shop controleert alleen de vorm. Of de code bruikbaar is en hoeveel er afgaat, weet alleen de app (hooguit de helft van de bestelling; de rest gaat als credits terug). API: `aioplus-app/docs/API.md`, kopje Kortingscodes; plan in de hub `docs/app/BELONINGEN.md`.
+
+Wat Make doet bij `aanvraag` en `extras_betalen` met een `kortingscode`:
+
+1. **Vóór alles** (vóór de dubbelcheck, Teamleader en mails): `POST /api/v1/kortingscodes/controleer` met `code` en `bedrag_cent` (het bedrag van de extra's uit `/products.json`, **incl. btw**, in cent). Bij `geldig: false`: antwoord `{ "ok": false, "veld": "kortingscode", "message": <melding> }` en stop. Dan is er niets verwerkt, en mag dezelfde `lead_ref` daarna opnieuw binnenkomen.
+2. **Vlak vóór het aanmaken van de Mollie-betaling**: `POST /api/v1/kortingscodes/gebruik` met `code`, `bedrag_cent` en `bestelling` = `lead_ref` (dan geeft "probeer opnieuw" hetzelfde antwoord). Maak de betaling aan voor het bedrag min `korting_cent`, en zet de code en de korting in de omschrijving en metadata van de betaling. Geeft gebruik toch `409` (net door een andere bestelling gebruikt): antwoord zoals bij stap 1.
+3. **Betaling mislukt, geannuleerd of verlopen** (Mollie-webhook): `POST /api/v1/kortingscodes/vrijgeven` met `code` en `bestelling` = `lead_ref`. Kiest de klant daarna "Extra's alsnog afrekenen", dan komt `extras_betalen` met dezelfde code en begint het bij stap 1.
+4. **Factuur in Teamleader**: korting als aparte regel ("Kortingscode RP-…, Review Plus credits"), zodat btw over het lagere bedrag gaat.
+
+Lokaal: de mock-webhook wijst `RP-ZZZZ-ZZZZ` af en geeft voor elke andere code € 10 korting.
 
 ## Nieuwsbrief-payload
 
@@ -188,6 +203,7 @@ Gebruik in Make de module **Webhooks → Webhook response**:
 | Gelukt, met betaalde extra's | `200` | `{ "ok": true, "checkoutUrl": "https://www.mollie.com/checkout/…" }` |
 | Dubbele aanvraag (al eerder gratis ontvangen) | `200` | `{ "ok": true, "duplicate": true }` (de site gaat gewoon door; Make stuurt de vriendelijke mail) |
 | Turnstile ongeldig / spam | `200` | `{ "ok": true }` (niets verwerken, bot geen signaal geven) |
+| Kortingscode niet bruikbaar (niets verwerkt) | `200` | `{ "ok": false, "veld": "kortingscode", "message": "<melding van de app>" }` (de shop toont de melding bij het veld; de klant past de code aan of maakt hem leeg en verstuurt opnieuw met dezelfde `lead_ref`) |
 | Ongeldige data | `422` | `{ "ok": false, "message": "…" }` |
 
 Header in de response: `Content-Type: application/json`. Voeg **geen** `Access-Control-Allow-Origin` toe: Make stuurt `*` al mee, en dubbel wordt door de browser geweigerd.

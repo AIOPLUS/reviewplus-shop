@@ -1,14 +1,14 @@
 import type { PublicProduct } from '@/lib/catalog';
 import { formatPrice } from '@/lib/format';
 import {
-  normalizeUrl, required, validateCompanyNumber, validateEmail, validatePhone, validatePostcode, validateVat,
+  normalizeUrl, required, validateCompanyNumber, validateEmail, validateKortingscode, validatePhone, validatePostcode, validateVat,
   type CountryCode, type Result,
 } from '@/lib/validation';
 import { getAttribution } from './attribution';
 import { track } from './analytics';
 import { clearExtras, extrasCount, getCart, onCartChange, setExtra, setTotemDemo, type Cart } from './cart';
 import { fireLeadConversion } from './consent';
-import { newLeadRef, PAYLOAD_VERSION, submitLead, type LeadLine, type LeadPayload } from './lead';
+import { newLeadRef, PAYLOAD_VERSION, submitLead, VeldAfgewezen, type LeadLine, type LeadPayload } from './lead';
 import { readJSON, remove, writeJSON } from './storage';
 import { formatteerPostcode, kvkAutofill } from './kvk-autofill';
 
@@ -35,6 +35,7 @@ const VALIDATORS: Record<string, Validator> = {
   huisnummer: (v) => (/^\d{1,5}\s?[a-zA-Z]?$/.test(v.trim()) ? { ok: true, value: v.trim() } : { ok: false, value: v, error: 'Vul je huisnummer in.' }),
   straat: (v) => required(v, 'Vul je straat in.'),
   plaats: (v) => required(v, 'Vul je plaats in.'),
+  kortingscode: (v) => validateKortingscode(v),
 };
 
 const STEP_FIELDS: Record<number, string[]> = {
@@ -80,6 +81,13 @@ export function initFlow(): void {
   const maatwerk = (): boolean => Boolean((field('maatwerk') as HTMLInputElement | null)?.checked);
   const syncMaatwerk = () => {
     $('[data-maatwerk-wensen]')!.hidden = !maatwerk();
+  };
+  /** Het kortingscodeveld bestaat alleen met FEATURES.kortingscode, en telt alleen bij betaalde extra's. */
+  const kortingActief = (): boolean => Boolean($('[data-kortingscode-wrap]')) && extrasAmount(getCart()) > 0;
+  const kortingscode = (): string | null => {
+    if (!kortingActief()) return null;
+    const r = validateKortingscode(val('kortingscode'));
+    return r.ok && r.value ? r.value : null;
   };
 
   let step = 1;
@@ -163,6 +171,7 @@ export function initFlow(): void {
       const b = checkboxRequired('akkoord_contact', 'Dit akkoord is nodig om je aanvraag te kunnen behandelen.');
       if (!a && !firstBad) firstBad = field('akkoord_voorwaarden');
       if (!b && !firstBad) firstBad = field('akkoord_contact');
+      if (kortingActief() && !checkField('kortingscode').ok && !firstBad) firstBad = field('kortingscode');
     }
     firstBad?.focus();
     return !firstBad;
@@ -268,6 +277,8 @@ export function initFlow(): void {
     $('[data-extras-total-row]')!.hidden = amount === 0;
     $('[data-free-total-row]')!.hidden = amount > 0;
     $('[data-extras-total]')!.textContent = formatPrice(amount);
+    const kortingWrap = $('[data-kortingscode-wrap]');
+    if (kortingWrap) kortingWrap.hidden = amount === 0;
     const toggle = $<HTMLInputElement>('[data-totem-toggle]');
     if (toggle) toggle.checked = cart.totemDemo;
     const submit = $<HTMLButtonElement>('[data-submit]');
@@ -287,6 +298,8 @@ export function initFlow(): void {
       const n = cart.extras[p.slug] ?? 0;
       if (n) items.push(`<li>${n}× extra ${esc(p.extraEenheid)} (${esc(p.naam)}): ${formatPrice(n * p.prijsExtra)}</li>`);
     }
+    const code = kortingscode();
+    if (code) items.push(`<li>Kortingscode ${esc(code)}: <strong>de korting zie je bij het betalen</strong></li>`);
     if (maatwerk()) items.push('<li>QR-reviewkaarten in je eigen huisstijl: <strong>we sturen je een voorstel</strong> (betaald, los van deze aanvraag)</li>');
     items.push('<li>Verzending: <strong>gratis</strong></li>');
     $('[data-review]')!.innerHTML = `
@@ -420,6 +433,7 @@ export function initFlow(): void {
       },
       heeft_betaalde_extras: producten.some((l) => l.extra > 0),
       bedrag_extras_indicatief: Math.round(extrasAmount(cart) * 100) / 100,
+      kortingscode: kortingscode(),
       vragen: {
         huidige_reviewtool: val('reviewtool') || null,
         huidige_reviewtool_anders: val('reviewtool') === 'anders' ? val('reviewtool_anders') || null : null,
@@ -516,18 +530,24 @@ export function initFlow(): void {
         if (payload.totem_demo) track('totem_gekozen', { plek: 'verzonden' });
       }
       if (res.checkoutUrl) {
-        track('betaling_gestart', { bedrag: payload.bedrag_extras_indicatief });
+        track('betaling_gestart', { bedrag: payload.bedrag_extras_indicatief, kortingscode: Boolean(payload.kortingscode) });
         window.location.href = res.checkoutUrl;
         return;
       }
       remove('session', DRAFT_KEY);
       goToDemoOrThanks(last);
     } catch (err) {
+      window.turnstile?.reset(turnstileId);
+      if (err instanceof VeldAfgewezen && field(err.veld)) {
+        // Make heeft niets verwerkt: de klant past het veld aan (of maakt het leeg) en verstuurt opnieuw.
+        showResult(err.veld, { ok: false, value: '', error: err.message });
+        field(err.veld)!.focus();
+        return;
+      }
       const msg =
         err instanceof Error && err.message === 'turnstile'
           ? 'De beveiligingscontrole is nog niet afgerond. Wacht een paar seconden en probeer het opnieuw.'
           : 'Het versturen is niet gelukt.';
-      window.turnstile?.reset(turnstileId);
       submitError(msg);
     } finally {
       submitting = false;
@@ -621,6 +641,7 @@ export function initFlow(): void {
       syncMaatwerk();
       if (step === 3) renderReview();
     }
+    if (t.name === 'kortingscode' && step === 3) renderReview();
     saveDraft();
   });
   form.addEventListener('focusout', (e) => {
